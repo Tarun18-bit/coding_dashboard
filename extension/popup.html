@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coding Progress Sync</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #09090b;
+      color: #f4f4f5;
+      padding: 16px;
+      font-size: 12px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #27272a;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .icon {
+      width: 24px;
+      height: 24px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      font-weight: bold;
+      font-size: 11px;
+    }
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+    .field {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a1a1aa;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #121215;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: #fafafa;
+      font-size: 11px;
+      outline: none;
+      font-family: monospace;
+    }
+    input:focus {
+      border-color: #52525b;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      margin-bottom: 14px;
+      cursor: pointer;
+    }
+    .checkbox-row input {
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    button {
+      flex: 1;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #f4f4f5;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      background: #3f3f46;
+    }
+    button.primary {
+      background: #fafafa;
+      color: #09090b;
+      border: 1px solid #e4e4e7;
+      font-weight: 600;
+    }
+    button.primary:hover {
+      background: #e4e4e7;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 11px;
+      text-align: center;
+      padding: 4px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.success {
+      display: block;
+      background: #052e16;
+      color: #86efac;
+      border: 1px solid #14532d;
+    }
+    .status.error {
+      display: block;
+      background: #450a0a;
+      color: #fca5a5;
+      border: 1px solid #7f1d1d;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="icon">&gt;_</div>
+    <div>
+      <div class="title">Coding Progress Sync</div>
+      <div style="font-size: 10px; color: #71717a;">LeetCode Auto-Sync Extension</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="dashboardUrl">Dashboard URL</label>
+    <input type="text" id="dashboardUrl" placeholder="http://localhost:3000">
+  </div>
+
+  <div class="field">
+    <label for="syncToken">Sync Secret Token</label>
+    <input type="password" id="syncToken" placeholder="default_sync_secret_key_123">
+  </div>
+
+  <label class="checkbox-row">
+    <input type="checkbox" id="autoSyncEnabled" checked>
+    <span style="font-size: 11px; color: #d4d4d8;">Auto-sync on Accepted problem</span>
+  </label>
+
+  <div class="btn-row">
+    <button type="button" id="manualSyncBtn">Sync Now</button>
+    <button type="button" id="saveBtn" class="primary">Save</button>
+  </div>
+
+  <div id="statusMsg" class="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

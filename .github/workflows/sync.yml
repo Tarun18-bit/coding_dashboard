@@ -1,0 +1,20 @@
+name: Automated 5-Minute Data Sync
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  sync-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dashboard Sync Endpoint
+        run: |
+          echo "Triggering dashboard sync at ${{ secrets.APP_URL }}/api/sync"
+          curl -X POST "${{ secrets.APP_URL }}/api/sync" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --fail \
+            --max-time 30

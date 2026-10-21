@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Coding Progress - LeetCode Auto-Sync",
+  "version": "1.0.0",
+  "description": "Automatically syncs your LeetCode problem solves directly to your Coding Progress Dashboard upon Accepted submissions.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://leetcode.com/*",
+    "*://*.leetcode.com/*",
+    "http://localhost:3000/*",
+    "https://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Coding Progress Auto-Sync Settings"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://leetcode.com/problems/*",
+        "*://*.leetcode.com/problems/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,26 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* DashCode + HackerRank Fusion Palette */
+  --dash-bg: #090D1A;
+  --dash-surface: #0E1628;
+  --dash-elevated: #131E35;
+  --dash-border: #1E293B;
+  --dash-border-subtle: rgba(148, 163, 184, 0.12);
+  --dash-primary: #00EA64;
+  --dash-primary-hover: #00C853;
+  --dash-cyan: #00C2FF;
+  --dash-blue: #0E43FB;
+  --dash-green: #00EA64;
+  --dash-yellow: #FDB52A;
+  --dash-red: #FF5A65;
+  --dash-purple: #CB3CFF;
+  --dash-text: #FFFFFF;
+  --dash-subtext: #94A3B8;
+  --dash-muted: #64748B;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-dash-bg: #090D1A;
+  --color-dash-surface: #0E1628;
+  --color-dash-elevated: #131E35;
+  --color-dash-border: #1E293B;
+  --color-dash-primary: #00EA64;
+  --color-dash-cyan: #00C2FF;
+  --color-dash-blue: #0E43FB;
+  --color-dash-green: #00EA64;
+  --color-dash-yellow: #FDB52A;
+  --color-dash-red: #FF5A65;
+  --color-dash-purple: #CB3CFF;
+  --color-dash-text: #FFFFFF;
+  --color-dash-subtext: #94A3B8;
+  --color-dash-muted: #64748B;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #090D1A;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 234, 100, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(14, 67, 251, 0.08), transparent);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #090D1A;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 9999px;
+  border: 1px solid #090D1A;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* HackerRank + DashDark style card utilities */
+.dash-card {
+  background-color: #0E1628;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 4px 20px -2px rgba(2, 6, 23, 0.7);
+}
+
+.dash-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dash-card-hover:hover {
+  border-color: rgba(0, 234, 100, 0.4);
+  box-shadow: 0 8px 30px -4px rgba(0, 234, 100, 0.15);
+  transform: translateY(-1px);
+}
+
+.glow-green {
+  box-shadow: 0 0 25px -4px rgba(0, 234, 100, 0.45);
+}
+
+.glow-blue {
+  box-shadow: 0 0 25px -4px rgba(14, 67, 251, 0.45);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 25px -4px rgba(0, 194, 255, 0.4);
 }
