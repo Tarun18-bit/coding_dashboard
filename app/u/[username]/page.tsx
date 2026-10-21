@@ -87,7 +87,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
     getDailyWorkout(user.id, stats.weaknesses).catch(() => null),
   ]);
   const companyReadiness = calculateCompanyReadiness(
-    stats.topicBreakdown,
+    stats.allTopicCounts || stats.topicBreakdown,
     stats.totalSolved,
     stats.difficultyBreakdown
   );

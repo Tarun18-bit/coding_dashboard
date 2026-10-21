@@ -44,6 +44,10 @@ export interface DashboardStats {
     tag: string;
     count: number;
   }[];
+  allTopicCounts?: {
+    tag: string;
+    count: number;
+  }[];
   strengths: {
     tag: string;
     count: number;
@@ -287,10 +291,11 @@ export async function getDashboardStats(
     });
   }
 
-  const topicBreakdown = Object.entries(tagCounts)
+  const allTopicCounts = Object.entries(tagCounts)
     .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+    .sort((a, b) => b.count - a.count);
+
+  const topicBreakdown = allTopicCounts.slice(0, 10);
 
   // Derive Strengths (top 3 solved topics)
   const strengths = topicBreakdown.slice(0, 3);
@@ -343,6 +348,7 @@ export async function getDashboardStats(
       streaks,
       heatmapData,
       topicBreakdown,
+      allTopicCounts,
       strengths,
       weaknesses,
       accounts: accountsWithSnapshots,

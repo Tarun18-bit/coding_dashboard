@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
+import { clearStatsCache } from '@/lib/aggregate';
 import { codeforcesFetcher } from '@/lib/platforms/codeforces';
 import { leetcodeFetcher } from '@/lib/platforms/leetcode';
 import { codechefFetcher } from '@/lib/platforms/codechef';
@@ -50,45 +52,81 @@ async function handleSync(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const force = searchParams.get('force') === 'true';
 
+  let targetUserId = DEFAULT_USER_ID;
+  try {
+    const serverSupabase = await createClient();
+    const { data } = await serverSupabase.auth.getUser();
+    if (data?.user?.id) {
+      targetUserId = data.user.id;
+    }
+  } catch {
+    // fallback
+  }
+
+  const queryUserId = searchParams.get('user_id');
+  if (queryUserId) {
+    targetUserId = queryUserId;
+  }
+
   const cfHandle = searchParams.get('cf_handle') || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18';
   const lcHandle = searchParams.get('lc_handle') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
-  const ccHandle = searchParams.get('cc_handle') || process.env.DEFAULT_CODECHEF_HANDLE || '';
+  const ccHandle = searchParams.get('cc_handle') || process.env.DEFAULT_CODECHEF_HANDLE || 'txrun_18';
 
   const results: Record<string, unknown> = {};
 
   try {
-    const { error: userError } = await supabaseAdmin
+    // Ensure target user exists in users table
+    await supabaseAdmin
       .from('users')
-      .upsert({ id: DEFAULT_USER_ID, username: 'default_user' }, { onConflict: 'id' });
+      .upsert({ id: targetUserId, username: targetUserId === DEFAULT_USER_ID ? 'default_user' : 'user' }, { onConflict: 'id' });
 
-    if (userError) {
-      return NextResponse.json(
-        { success: false, error: `Database error: ${userError.message}` },
-        { status: 500 }
-      );
+    // Look up accounts configured for this target user
+    const { data: userAccounts } = await supabaseAdmin
+      .from('accounts')
+      .select('platform, handle')
+      .eq('user_id', targetUserId);
+
+    const syncPromises: Promise<unknown>[] = [];
+
+    if (userAccounts && userAccounts.length > 0) {
+      for (const acc of userAccounts) {
+        if (acc.platform === 'codeforces') {
+          syncPromises.push(syncAccount(targetUserId, 'codeforces', acc.handle, codeforcesFetcher, force));
+        } else if (acc.platform === 'leetcode') {
+          syncPromises.push(syncAccount(targetUserId, 'leetcode', acc.handle, leetcodeFetcher, force));
+        } else if (acc.platform === 'codechef') {
+          syncPromises.push(syncAccount(targetUserId, 'codechef', acc.handle, codechefFetcher, force));
+        }
+      }
+    } else {
+      // If user has no accounts table rows yet, use default handles
+      syncPromises.push(syncAccount(targetUserId, 'codeforces', cfHandle, codeforcesFetcher, force));
+      syncPromises.push(syncAccount(targetUserId, 'leetcode', lcHandle, leetcodeFetcher, force));
+      if (ccHandle) {
+        syncPromises.push(syncAccount(targetUserId, 'codechef', ccHandle, codechefFetcher, force));
+      }
     }
 
-    const syncPromises: Promise<unknown>[] = [
-      syncAccount(DEFAULT_USER_ID, 'codeforces', cfHandle, codeforcesFetcher, force),
-      syncAccount(DEFAULT_USER_ID, 'leetcode', lcHandle, leetcodeFetcher, force),
-    ];
+    const settled = await Promise.allSettled(syncPromises);
 
-    if (ccHandle) {
-      syncPromises.push(syncAccount(DEFAULT_USER_ID, 'codechef', ccHandle, codechefFetcher, force));
+    // Also sync DEFAULT_USER_ID if target was different, so demo profile stays updated
+    if (targetUserId !== DEFAULT_USER_ID) {
+      Promise.allSettled([
+        syncAccount(DEFAULT_USER_ID, 'codeforces', cfHandle, codeforcesFetcher, force),
+        syncAccount(DEFAULT_USER_ID, 'leetcode', lcHandle, leetcodeFetcher, force),
+        syncAccount(DEFAULT_USER_ID, 'codechef', ccHandle, codechefFetcher, force),
+      ]).catch(console.error);
     }
 
-    const [cfResult, lcResult, ccResult] = await Promise.allSettled(syncPromises);
-
-    results.codeforces = cfResult.status === 'fulfilled' ? cfResult.value : { status: 'error', error: (cfResult as PromiseRejectedResult).reason?.message };
-    results.leetcode = lcResult.status === 'fulfilled' ? lcResult.value : { status: 'error', error: (lcResult as PromiseRejectedResult).reason?.message };
-    if (ccHandle && ccResult) {
-      results.codechef = ccResult.status === 'fulfilled' ? ccResult.value : { status: 'error', error: (ccResult as PromiseRejectedResult).reason?.message };
-    }
+    // Invalidate stats cache so dashboard updates instantly
+    clearStatsCache(targetUserId);
+    clearStatsCache(DEFAULT_USER_ID);
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      results,
+      targetUserId,
+      syncedAccounts: settled.length,
     });
   } catch (error: unknown) {
     console.error('[Sync] Global error during sync:', error);

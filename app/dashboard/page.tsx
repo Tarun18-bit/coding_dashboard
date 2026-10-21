@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   ]);
 
   const companyReadiness = calculateCompanyReadiness(
-    stats.topicBreakdown,
+    stats.allTopicCounts || stats.topicBreakdown,
     stats.totalSolved,
     stats.difficultyBreakdown
   );

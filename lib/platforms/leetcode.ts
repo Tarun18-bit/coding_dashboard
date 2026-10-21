@@ -1,4 +1,5 @@
 import { PlatformFetcher, Snapshot, Contest, Submission } from './types';
+import { CURATED_PROBLEMS } from '../sheets-data';
 
 const LEETCODE_GRAPHQL_ENDPOINT = 'https://leetcode.com/graphql';
 const TIMEOUT_MS = 20000;
@@ -220,15 +221,68 @@ export class LeetCodeFetcher implements PlatformFetcher {
         return [];
       }
 
-      return subs.map((submission) => ({
-        platformSubmissionId: String(submission.id ?? `${submission.titleSlug ?? submission.title ?? 'leetcode'}-${submission.timestamp ?? Date.now()}`),
-        problemId: submission.titleSlug || submission.title || 'unknown-problem',
-        title: submission.title || 'Unknown Problem',
-        verdict: 'AC',
-        tags: [],
-        difficulty: null,
-        submittedAt: new Date(Number(submission.timestamp ?? 0) * 1000).toISOString(),
-      }));
+      return subs.map((submission) => {
+        const slug = (submission.titleSlug || '').toLowerCase().trim();
+        const title = (submission.title || '').toLowerCase().trim();
+
+        // Check curated sheets dataset for exact match
+        const match = CURATED_PROBLEMS.find(
+          (p) => p.id.toLowerCase() === slug || p.title.toLowerCase() === title
+        );
+
+        const tags: string[] = [];
+        let difficulty: 'Easy' | 'Medium' | 'Hard' | null = null;
+
+        if (match) {
+          tags.push(match.category.toLowerCase());
+          difficulty = match.difficulty;
+        }
+
+        // Infer tags from problem slug / title keywords
+        const combined = `${slug} ${title}`;
+        if (combined.includes('tree') || combined.includes('bst') || combined.includes('trie')) {
+          if (!tags.includes('trees')) tags.push('trees');
+        }
+        if (combined.includes('graph') || combined.includes('island') || combined.includes('network') || combined.includes('clone-graph')) {
+          if (!tags.includes('graphs')) tags.push('graphs');
+        }
+        if (combined.includes('binary-search') || (combined.includes('search') && !combined.includes('word-search')) || combined.includes('find-minimum') || combined.includes('peak')) {
+          if (!tags.includes('binary search')) tags.push('binary search');
+        }
+        if (combined.includes('dp') || combined.includes('subsequence') || combined.includes('palindrome') || combined.includes('robber') || combined.includes('coin-change') || combined.includes('climbing')) {
+          if (!tags.includes('dynamic programming')) tags.push('dynamic programming');
+        }
+        if (combined.includes('two-sum') || combined.includes('three-sum') || combined.includes('pointer') || combined.includes('container-with-most-water') || combined.includes('trap')) {
+          if (!tags.includes('two pointers')) tags.push('two pointers');
+        }
+        if (combined.includes('window') || combined.includes('substring') || combined.includes('longest-substring')) {
+          if (!tags.includes('sliding window')) tags.push('sliding window');
+        }
+        if (combined.includes('array') || combined.includes('matrix') || combined.includes('duplicate') || combined.includes('product-of-array')) {
+          if (!tags.includes('arrays')) tags.push('arrays');
+        }
+        if (combined.includes('string') || combined.includes('parentheses') || combined.includes('anagram')) {
+          if (!tags.includes('strings')) tags.push('strings');
+        }
+        if (combined.includes('linked-list') || combined.includes('reverse-list') || combined.includes('cycle') || combined.includes('lru')) {
+          if (!tags.includes('linked list')) tags.push('linked list');
+        }
+
+        // Default tag if none matched
+        if (tags.length === 0) {
+          tags.push('algorithms');
+        }
+
+        return {
+          platformSubmissionId: String(submission.id ?? `${submission.titleSlug ?? submission.title ?? 'leetcode'}-${submission.timestamp ?? Date.now()}`),
+          problemId: submission.titleSlug || submission.title || 'unknown-problem',
+          title: submission.title || 'Unknown Problem',
+          verdict: 'AC',
+          tags,
+          difficulty,
+          submittedAt: new Date(Number(submission.timestamp ?? 0) * 1000).toISOString(),
+        };
+      });
     } catch (error: unknown) {
       console.error(`[LeetCode] Error in fetchRecentSubmissions for ${handle}:`, getErrorMessage(error));
       return [];
