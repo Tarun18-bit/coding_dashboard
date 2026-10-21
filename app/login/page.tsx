@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Terminal, Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, User, ShieldCheck } from 'lucide-react';
+import { Terminal, Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, User, ShieldCheck, KeyRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -13,7 +13,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -23,14 +23,22 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
 
     try {
-      if (mode === 'signup') {
+      if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/dashboard`,
+        });
+
+        if (error) throw error;
+
+        setSuccessMsg('Password reset instructions sent! Check your inbox to set a new password.');
+      } else if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -48,7 +56,7 @@ export default function LoginPage() {
           router.push('/dashboard');
           router.refresh();
         } else {
-          setSuccessMsg('Account registered! If confirmation is required, click the link sent to your email, then return here to sign in.');
+          setSuccessMsg('Account registered! If confirmation is required, check your email, then return here to sign in.');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -91,50 +99,71 @@ export default function LoginPage() {
             </div>
           </Link>
           <h2 className="text-2xl font-extrabold tracking-tight text-white">
-            {mode === 'signin' ? 'Sign in to DashCode' : 'Create your Developer Account'}
+            {mode === 'signin' && 'Sign in to DashCode'}
+            {mode === 'signup' && 'Create your Developer Account'}
+            {mode === 'forgot' && 'Reset Your Password'}
           </h2>
           <p className="text-xs text-[#94A3B8]">
-            {mode === 'signin'
-              ? 'Enter your credentials to access your unified coding intelligence'
-              : 'Join to automatically sync Codeforces, LeetCode, and CodeChef'}
+            {mode === 'signin' && 'Enter your credentials to access your unified coding intelligence'}
+            {mode === 'signup' && 'Join to automatically sync Codeforces, LeetCode, and CodeChef'}
+            {mode === 'forgot' && 'Enter your email address and we will send you a password reset link'}
           </p>
         </div>
 
         {/* Auth Card */}
         <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0E1628] p-7 shadow-2xl shadow-[rgba(1,5,17,0.8)] backdrop-blur-xl space-y-5">
           {/* Segmented Mode Switcher */}
-          <div className="grid grid-cols-2 rounded-xl bg-[#090D1A] p-1 border border-[rgba(148,163,184,0.12)]">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signin');
-                setErrorMsg('');
-                setSuccessMsg('');
-              }}
-              className={`rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
-                mode === 'signin'
-                  ? 'bg-[#00EA64] text-[#090D1A] shadow-[0_0_15px_rgba(0,234,100,0.3)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signup');
-                setErrorMsg('');
-                setSuccessMsg('');
-              }}
-              className={`rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
-                mode === 'signup'
-                  ? 'bg-[#00EA64] text-[#090D1A] shadow-[0_0_15px_rgba(0,234,100,0.3)]'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
+          {mode !== 'forgot' ? (
+            <div className="grid grid-cols-2 rounded-xl bg-[#090D1A] p-1 border border-[rgba(148,163,184,0.12)]">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                }}
+                className={`rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
+                  mode === 'signin'
+                    ? 'bg-[#00EA64] text-[#090D1A] shadow-[0_0_15px_rgba(0,234,100,0.3)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                }}
+                className={`rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
+                  mode === 'signup'
+                    ? 'bg-[#00EA64] text-[#090D1A] shadow-[0_0_15px_rgba(0,234,100,0.3)]'
+                    : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-xs font-mono font-bold text-[#00EA64] flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5" /> Password Recovery
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                }}
+                className="text-xs text-[#94A3B8] hover:text-white transition"
+              >
+                ← Back to Sign In
+              </button>
+            </div>
+          )}
 
           {/* Feedback Messages */}
           {errorMsg && (
@@ -152,7 +181,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-4">
             {mode === 'signup' && (
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
@@ -189,29 +218,54 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#090D1A] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:border-[#00EA64] focus:outline-hidden transition"
-                />
+            {mode !== 'forgot' && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+                    Password
+                  </label>
+                  {mode === 'signin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('forgot');
+                        setErrorMsg('');
+                        setSuccessMsg('');
+                      }}
+                      className="text-[11px] text-[#00EA64] hover:underline cursor-pointer"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#090D1A] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:border-[#00EA64] focus:outline-hidden transition"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#00EA64] py-2.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] active:scale-98 disabled:opacity-50 cursor-pointer"
             >
-              <span>{loading ? 'Processing...' : mode === 'signin' ? 'Sign In to Dashboard' : 'Complete Registration'}</span>
+              <span>
+                {loading
+                  ? 'Processing...'
+                  : mode === 'signin'
+                  ? 'Sign In to Dashboard'
+                  : mode === 'signup'
+                  ? 'Complete Registration'
+                  : 'Send Reset Link'}
+              </span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </form>
