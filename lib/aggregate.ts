@@ -135,7 +135,28 @@ function calculateStreaks(activeDatesSet: Set<string>) {
   };
 }
 
-export async function getDashboardStats(userId = '00000000-0000-0000-0000-000000000001'): Promise<DashboardStats> {
+const statsCache = new Map<string, { timestamp: number; data: DashboardStats }>();
+const STATS_CACHE_TTL_MS = 60 * 1000; // 60 seconds fast in-memory cache
+
+export function clearStatsCache(userId?: string) {
+  if (userId) {
+    statsCache.delete(userId);
+  } else {
+    statsCache.clear();
+  }
+}
+
+export async function getDashboardStats(
+  userId = '00000000-0000-0000-0000-000000000001',
+  forceRefresh = false
+): Promise<DashboardStats> {
+  if (!forceRefresh) {
+    const cached = statsCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < STATS_CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
   try {
     const { data: user } = await supabaseAdmin
       .from('users')
@@ -216,7 +237,8 @@ export async function getDashboardStats(userId = '00000000-0000-0000-0000-000000
       .from('submissions')
       .select('id, platform_submission_id, problem_id, title, verdict, tags, difficulty, submitted_at, account_id, accounts!inner(platform)')
       .in('account_id', accountIds)
-      .order('submitted_at', { ascending: false });
+      .order('submitted_at', { ascending: false })
+      .limit(500);
 
     if (allSubs) {
       const typedSubs = allSubs as SubmissionAggregateRow[];
@@ -310,7 +332,7 @@ export async function getDashboardStats(userId = '00000000-0000-0000-0000-000000
     }
   }
 
-    return {
+    const result: DashboardStats = {
       user: user || { id: userId, username: 'default_user' },
       totalSolved,
       difficultyBreakdown: {
@@ -327,6 +349,9 @@ export async function getDashboardStats(userId = '00000000-0000-0000-0000-000000
       ratingHistory,
       recentSubmissions,
     };
+
+    statsCache.set(userId, { timestamp: Date.now(), data: result });
+    return result;
   } catch (err: any) {
     console.error('[Aggregate] Database query error:', err.message);
     return {

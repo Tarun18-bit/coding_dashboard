@@ -28,11 +28,10 @@ export default async function DashboardPage() {
   }
 
   const activeUserId = authUser.id;
-  const stats = await getDashboardStats(activeUserId);
-  const [upcomingContests, sheetProgress, dailyWorkout] = await Promise.all([
-    fetchUpcomingContests().catch(() => []),
+  const [stats, sheetProgress, dailyWorkout] = await Promise.all([
+    getDashboardStats(activeUserId),
     getUserSheetProgress(activeUserId, 'blind75').catch(() => null),
-    getDailyWorkout(activeUserId, stats.weaknesses).catch(() => null),
+    getDailyWorkout(activeUserId).catch(() => null),
   ]);
 
   const companyReadiness = calculateCompanyReadiness(
@@ -85,7 +84,7 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <DashboardTabs
           stats={stats}
-          upcomingContests={upcomingContests}
+          upcomingContests={[]}
           sheetProgress={sheetProgress}
           dailyWorkout={dailyWorkout}
           companyReadiness={companyReadiness}

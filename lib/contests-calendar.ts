@@ -30,7 +30,7 @@ function generateGoogleCalendarUrl(
 }
 
 let cachedContests: { timestamp: number; data: UpcomingContest[] } | null = null;
-const CACHE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes cache
 
 export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
   if (cachedContests && Date.now() - cachedContests.timestamp < CACHE_WINDOW_MS) {
@@ -43,8 +43,8 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
     // 1. Codeforces API
     fetch('https://codeforces.com/api/contest.list?gym=false', {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(8000),
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3000),
+      next: { revalidate: 600 },
     }).then((r) => r.json()),
 
     // 2. LeetCode GraphQL
@@ -57,8 +57,8 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
       body: JSON.stringify({
         query: 'query upcomingContests { upcomingContests { title titleSlug startTime duration } }',
       }),
-      signal: AbortSignal.timeout(8000),
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3000),
+      next: { revalidate: 600 },
     }).then((r) => r.json()),
 
     // 3. CodeChef API
@@ -67,8 +67,8 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
         Accept: 'application/json',
       },
-      signal: AbortSignal.timeout(8000),
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3000),
+      next: { revalidate: 600 },
     }).then((r) => r.json()),
   ]);
 

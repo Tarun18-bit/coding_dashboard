@@ -19,7 +19,8 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
       fetch('/api/contests/upcoming')
         .then((res) => res.json())
         .then((data) => {
-          if (Array.isArray(data)) setContests(data);
+          const list = Array.isArray(data) ? data : data?.contests || [];
+          if (Array.isArray(list) && list.length > 0) setContests(list);
         })
         .catch(console.error)
         .finally(() => setLoading(false));

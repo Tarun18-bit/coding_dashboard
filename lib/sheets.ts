@@ -24,10 +24,22 @@ export interface SheetProgress {
   }[];
 }
 
+const sheetsCache = new Map<string, { timestamp: number; data: SheetProgress }>();
+const SHEETS_CACHE_TTL_MS = 60 * 1000;
+
 export async function getUserSheetProgress(
   userId: string,
-  sheetType: SheetType = 'blind75'
+  sheetType: SheetType = 'blind75',
+  forceRefresh = false
 ): Promise<SheetProgress> {
+  const cacheKey = `${userId}:${sheetType}`;
+  if (!forceRefresh) {
+    const cached = sheetsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < SHEETS_CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
   // 1. Get all accounts for this user
   const { data: accounts } = await supabaseAdmin
     .from('accounts')
@@ -105,7 +117,7 @@ export async function getUserSheetProgress(
     problems,
   }));
 
-  return {
+  const result: SheetProgress = {
     sheetType,
     totalProblems,
     solvedProblems,
@@ -115,4 +127,7 @@ export async function getUserSheetProgress(
     hard: { total: hardTotal, solved: hardSolved },
     categories,
   };
+
+  sheetsCache.set(cacheKey, { timestamp: Date.now(), data: result });
+  return result;
 }
