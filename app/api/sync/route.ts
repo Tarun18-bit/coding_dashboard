@@ -219,7 +219,7 @@ async function syncAccount(
         .from('submissions')
         .upsert(submissionRows, {
           onConflict: 'account_id,platform_submission_id',
-          ignoreDuplicates: true,
+          ignoreDuplicates: false,
         });
 
       if (subError) throw subError;

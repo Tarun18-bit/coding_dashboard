@@ -251,14 +251,43 @@ export async function getDashboardStats(
         const dateKey = new Date(sub.submitted_at).toISOString().slice(0, 10);
         activityMap[dateKey] = (activityMap[dateKey] || 0) + 1;
 
-        if (Array.isArray(sub.tags)) {
-          for (const tag of sub.tags) {
-            if (tag) {
-              if (sub.verdict === 'AC') {
-                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-              } else {
-                failedTagCounts[tag] = (failedTagCounts[tag] || 0) + 1;
-              }
+        let effectiveTags = Array.isArray(sub.tags) && sub.tags.length > 0 ? [...sub.tags] : [];
+
+        // Fallback: Infer standard algorithmic tags from problem title and slug if empty
+        if (effectiveTags.length === 0) {
+          const combined = `${sub.title || ''} ${sub.problem_id || ''}`.toLowerCase();
+          if (combined.includes('tree') || combined.includes('bst') || combined.includes('trie')) {
+            effectiveTags.push('trees');
+          }
+          if (combined.includes('graph') || combined.includes('island') || combined.includes('network')) {
+            effectiveTags.push('graphs');
+          }
+          if (combined.includes('search') || combined.includes('find-minimum') || combined.includes('peak')) {
+            effectiveTags.push('binary search');
+          }
+          if (combined.includes('dp') || combined.includes('subsequence') || combined.includes('palindrome') || combined.includes('robber') || combined.includes('coin-change')) {
+            effectiveTags.push('dynamic programming');
+          }
+          if (combined.includes('two-sum') || combined.includes('three-sum') || combined.includes('pointer') || combined.includes('water')) {
+            effectiveTags.push('two pointers');
+          }
+          if (combined.includes('array') || combined.includes('matrix') || combined.includes('duplicate') || combined.includes('sum')) {
+            effectiveTags.push('arrays');
+          }
+          if (combined.includes('string') || combined.includes('parentheses') || combined.includes('anagram') || combined.includes('word')) {
+            effectiveTags.push('strings');
+          }
+          if (combined.includes('list') || combined.includes('linked')) {
+            effectiveTags.push('linked list');
+          }
+        }
+
+        for (const tag of effectiveTags) {
+          if (tag) {
+            if (sub.verdict === 'AC') {
+              tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            } else {
+              failedTagCounts[tag] = (failedTagCounts[tag] || 0) + 1;
             }
           }
         }
