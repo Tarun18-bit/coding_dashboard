@@ -57,8 +57,8 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
   }
 
   // 3. Fallback for default demo / default user
-  if (!user && (decodedUsername === 'default' || decodedUsername === 'demo')) {
-    user = { id: '00000000-0000-0000-0000-000000000001', username: 'default_user' };
+  if (!user && (decodedUsername === 'default' || decodedUsername === 'demo' || decodedUsername === 'txrun_18' || decodedUsername === 'oggy_18')) {
+    user = { id: '00000000-0000-0000-0000-000000000001', username: 'txrun_18' };
   }
 
   if (!user) {

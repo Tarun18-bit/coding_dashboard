@@ -7,6 +7,7 @@ import { getDailyWorkout } from '@/lib/potd';
 import { computeRpgProfile } from '@/lib/gamification';
 import { Navbar } from '@/components/Navbar';
 import { DashboardTabs } from '@/components/DashboardTabs';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,7 +22,12 @@ export default async function DashboardPage() {
     // Graceful fallback when offline or database paused
   }
 
-  const activeUserId = authUser?.id || '00000000-0000-0000-0000-000000000001';
+  // Protect dashboard: require login so visitors don't see another user's personal stats
+  if (!authUser) {
+    redirect('/login');
+  }
+
+  const activeUserId = authUser.id;
   const stats = await getDashboardStats(activeUserId);
   const [upcomingContests, sheetProgress, dailyWorkout] = await Promise.all([
     fetchUpcomingContests().catch(() => []),

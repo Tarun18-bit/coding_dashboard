@@ -61,10 +61,10 @@ export default function LoginPage() {
         if (error) throw error;
 
         if (data.session) {
-          router.push('/');
+          router.push('/dashboard');
           router.refresh();
         } else {
-          setSuccessMsg('Check your email for the confirmation link to complete registration!');
+          setSuccessMsg('Account created! If confirmation is required, check your email, or sign in below.');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
         if (error) throw error;
 
-        router.push('/');
+        router.push('/dashboard');
         router.refresh();
       }
     } catch (error: unknown) {
