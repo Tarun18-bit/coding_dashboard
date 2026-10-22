@@ -68,13 +68,7 @@ export function DashboardTabs({
         <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-gradient-to-br from-[#00EA64]/10 to-[#0E43FB]/10 blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-[#00EA64] shadow-[0_0_10px_#00EA64]" />
-              <span className="text-[11px] font-mono font-semibold tracking-wider uppercase text-[#00EA64]">
-                HackerRank-Grade Developer Dashboard
-              </span>
-            </div>
+          <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#E2E8F0] to-[#00EA64]">{activeUsername}</span>
             </h1>
