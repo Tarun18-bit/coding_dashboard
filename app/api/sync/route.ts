@@ -6,6 +6,7 @@ import { codeforcesFetcher } from '@/lib/platforms/codeforces';
 import { leetcodeFetcher } from '@/lib/platforms/leetcode';
 import { codechefFetcher } from '@/lib/platforms/codechef';
 import { PlatformFetcher } from '@/lib/platforms/types';
+import { ensurePublicUser } from '@/lib/users';
 
 const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
 const SYNC_CACHE_WINDOW_MS = 60 * 1000; // 60 seconds throttle window
@@ -75,10 +76,8 @@ async function handleSync(req: NextRequest) {
   const results: Record<string, unknown> = {};
 
   try {
-    // Ensure target user exists in users table
-    await supabaseAdmin
-      .from('users')
-      .upsert({ id: targetUserId, username: targetUserId === DEFAULT_USER_ID ? 'default_user' : 'user' }, { onConflict: 'id' });
+    // Ensure target user exists in users table safely
+    await ensurePublicUser(targetUserId, targetUserId === DEFAULT_USER_ID ? 'default_user' : 'user');
 
     // Look up accounts configured for this target user
     const { data: userAccounts } = await supabaseAdmin

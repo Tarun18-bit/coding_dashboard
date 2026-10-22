@@ -61,18 +61,31 @@ async function fetchWithTimeout(url: string, retries = 3, timeoutMs = TIMEOUT_MS
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        throw new Error(`Codeforces API responded with HTTP status ${res.status}`);
+        const errText = await res.text().catch(() => '');
+        const err = new Error(`Codeforces API responded with HTTP status ${res.status}: ${errText}`);
+        if (res.status === 400 || res.status === 404 || errText.toLowerCase().includes('not found')) {
+          (err as unknown as { noRetry: boolean }).noRetry = true;
+        }
+        throw err;
       }
 
       const data = (await res.json()) as { status?: string; result?: unknown; comment?: string };
       if (data.status !== 'OK') {
-        throw new Error(`Codeforces API error: ${data.comment || 'Unknown error'}`);
+        const comment = data.comment || 'Unknown error';
+        const err = new Error(`Codeforces API error: ${comment}`);
+        if (comment.toLowerCase().includes('not found')) {
+          (err as unknown as { noRetry: boolean }).noRetry = true;
+        }
+        throw err;
       }
 
       return data.result;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       lastError = error;
+      if ((error as unknown as { noRetry?: boolean })?.noRetry) {
+        break;
+      }
       if (attempt < retries) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
       }

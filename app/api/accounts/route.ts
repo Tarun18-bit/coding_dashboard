@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/db';
 import { codeforcesFetcher } from '@/lib/platforms/codeforces';
 import { leetcodeFetcher } from '@/lib/platforms/leetcode';
 import { codechefFetcher } from '@/lib/platforms/codechef';
+import { ensurePublicUser } from '@/lib/users';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -28,9 +29,10 @@ export async function POST(req: NextRequest) {
     const cleanPlatform = platform.toLowerCase().trim();
     const cleanHandle = handle.trim();
 
-    await supabaseAdmin.from('users').upsert(
-      { id: userId, username: user?.user_metadata?.user_name || user?.email?.split('@')[0] || 'user' },
-      { onConflict: 'id' }
+    // Safely ensure user exists without unique constraint collision crashes
+    await ensurePublicUser(
+      userId,
+      user?.user_metadata?.user_name || user?.email?.split('@')[0] || 'user'
     );
 
     const { data: account, error: accErr } = await supabaseAdmin
@@ -45,8 +47,11 @@ export async function POST(req: NextRequest) {
     if (accErr) throw accErr;
 
     if (cleanPlatform === 'codeforces') {
-      const [profile, , submissions] = await Promise.all([
-        codeforcesFetcher.fetchProfile(cleanHandle).catch(() => null),
+      const [profile, contests, submissions] = await Promise.all([
+        codeforcesFetcher.fetchProfile(cleanHandle).catch((err) => {
+          console.warn('[Accounts API] Failed to fetch Codeforces profile:', err);
+          return null;
+        }),
         codeforcesFetcher.fetchContests(cleanHandle).catch(() => []),
         codeforcesFetcher.fetchRecentSubmissions(cleanHandle, 50).catch(() => []),
       ]);
@@ -78,8 +83,21 @@ export async function POST(req: NextRequest) {
         }));
         await supabaseAdmin.from('submissions').upsert(rows, { onConflict: 'account_id,platform_submission_id', ignoreDuplicates: true });
       }
+
+      if (contests.length > 0) {
+        await supabaseAdmin.from('contests').delete().eq('account_id', account.id);
+        const contestRows = contests.map((contest) => ({
+          account_id: account.id,
+          contest_name: contest.contestName,
+          date: contest.date,
+          rank: contest.rank,
+          rating_before: contest.ratingBefore,
+          rating_after: contest.ratingAfter,
+        }));
+        await supabaseAdmin.from('contests').insert(contestRows);
+      }
     } else if (cleanPlatform === 'leetcode') {
-      const [profile, , submissions] = await Promise.all([
+      const [profile, contests, submissions] = await Promise.all([
         leetcodeFetcher.fetchProfile(cleanHandle).catch(() => null),
         leetcodeFetcher.fetchContests(cleanHandle).catch(() => []),
         leetcodeFetcher.fetchRecentSubmissions(cleanHandle, 50).catch(() => []),
@@ -111,6 +129,19 @@ export async function POST(req: NextRequest) {
           submitted_at: submission.submittedAt,
         }));
         await supabaseAdmin.from('submissions').upsert(rows, { onConflict: 'account_id,platform_submission_id', ignoreDuplicates: true });
+      }
+
+      if (contests.length > 0) {
+        await supabaseAdmin.from('contests').delete().eq('account_id', account.id);
+        const contestRows = contests.map((contest) => ({
+          account_id: account.id,
+          contest_name: contest.contestName,
+          date: contest.date,
+          rank: contest.rank,
+          rating_before: contest.ratingBefore,
+          rating_after: contest.ratingAfter,
+        }));
+        await supabaseAdmin.from('contests').insert(contestRows);
       }
     } else if (cleanPlatform === 'codechef') {
       const [profile, contests, submissions] = await Promise.all([

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { ensurePublicUser } from '@/lib/users';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -11,11 +12,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Ensure user record exists in users table
+      // Ensure user record exists in users table safely
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const username = user.user_metadata?.user_name || user.email?.split('@')[0] || user.id;
-        await supabase.from('users').upsert({ id: user.id, username }, { onConflict: 'id' });
+        await ensurePublicUser(user.id, username);
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
