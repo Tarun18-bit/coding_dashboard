@@ -21,9 +21,9 @@ export async function GET(request: Request) {
     }
   }
 
-  // If recovery failed, redirect to reset-password with helpful query, else login
-  if (type === 'recovery' || next === '/reset-password') {
-    return NextResponse.redirect(`${origin}/reset-password?error=Invalid or expired password reset link`);
+  // If next is /reset-password, forward cleanly without error so client hash fragment can authenticate
+  if (next === '/reset-password' || type === 'recovery') {
+    return NextResponse.redirect(`${origin}/reset-password`);
   }
 
   return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`);

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Terminal, Lock, ArrowRight, CheckCircle2, AlertCircle, ShieldCheck, KeyRound } from 'lucide-react';
+import { Terminal, Lock, ArrowRight, CheckCircle2, AlertCircle, ShieldCheck, KeyRound, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,44 +10,92 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => {
-    // Check if user has an active recovery session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+  const establishSession = useCallback(async () => {
+    try {
+      // 1. Check existing session first
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) {
         setHasSession(true);
-      } else {
-        // If there's a hash with access_token, the browser client will parse it
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-          setHasSession(true);
-        } else {
-          // Wait slightly for onAuthStateChange to fire
-          setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            setHasSession(!!retrySession);
-          }, 1200);
+        setInitializing(false);
+        return true;
+      }
+
+      // 2. Parse hash fragment (access_token & refresh_token from email link)
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash.startsWith('#')
+          ? window.location.hash.substring(1)
+          : window.location.hash;
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (!error && data.session) {
+            setHasSession(true);
+            setInitializing(false);
+            setErrorMsg('');
+            return true;
+          }
         }
       }
-    };
 
-    checkSession();
+      // 3. Fallback: check query code (if PKCE code parameter is passed)
+      if (typeof window !== 'undefined' && window.location.search) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get('code');
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error && data.session) {
+            setHasSession(true);
+            setInitializing(false);
+            setErrorMsg('');
+            return true;
+          }
+        }
+      }
+
+      // Check one more time after brief delay
+      setTimeout(async () => {
+        const { data: { session: retry } } = await supabase.auth.getSession();
+        setHasSession(!!retry);
+        setInitializing(false);
+      }, 800);
+
+      return false;
+    } catch (err) {
+      console.error('[ResetPassword] Session init error:', err);
+      setInitializing(false);
+      return false;
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    establishSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || session) {
+      if (event === 'PASSWORD_RECOVERY' || (session && event === 'SIGNED_IN')) {
         setHasSession(true);
+        setInitializing(false);
+        setErrorMsg('');
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [establishSession, supabase]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +115,12 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
+      // If session isn't confirmed yet, try parsing hash again
+      let currentHasSession = hasSession;
+      if (!currentHasSession) {
+        currentHasSession = await establishSession();
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
@@ -123,11 +177,24 @@ export default function ResetPasswordPage() {
 
         {/* Card */}
         <div className="rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0E1628] p-7 shadow-2xl shadow-[rgba(1,5,17,0.8)] backdrop-blur-xl space-y-5">
-          <div className="flex items-center gap-2 border-b border-[rgba(148,163,184,0.12)] pb-3">
-            <KeyRound className="h-4 w-4 text-[#00EA64]" />
-            <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              Password Reset Session
-            </span>
+          <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-3">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-[#00EA64]" />
+              <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                Password Reset Session
+              </span>
+            </div>
+            {initializing ? (
+              <span className="flex items-center gap-1.5 text-[10px] text-[#7E89AC] font-mono">
+                <Loader2 className="h-3 w-3 animate-spin text-[#00EA64]" />
+                Verifying...
+              </span>
+            ) : hasSession ? (
+              <span className="flex items-center gap-1 text-[10px] text-[#00EA64] font-mono font-bold">
+                <CheckCircle2 className="h-3 w-3" />
+                Session Active
+              </span>
+            ) : null}
           </div>
 
           {/* Feedback Messages */}
@@ -145,14 +212,14 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {hasSession === false && !errorMsg && !successMsg && (
+          {!initializing && !hasSession && !errorMsg && !successMsg && (
             <div className="rounded-xl border border-[#FFB016]/30 bg-[#FFB016]/10 p-3.5 space-y-2 text-xs text-[#FFB016]">
               <div className="flex items-center gap-2 font-bold">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>Recovery Link Notice</span>
               </div>
               <p className="text-[11px] text-[#AEB9E1] leading-relaxed">
-                If your reset link has expired or was already used, please request a fresh reset link from the login page.
+                If you arrived here directly without clicking the email link, or if the single-use token expired, please request a fresh reset link from the login page.
               </p>
               <div className="pt-1">
                 <Link
