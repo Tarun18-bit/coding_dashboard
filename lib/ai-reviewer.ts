@@ -20,7 +20,10 @@ export interface ReviewResult {
 }
 
 export interface PresetSample {
+  id: string;
   title: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  topic: string;
   language: string;
   code: string;
   company: string;
@@ -28,7 +31,10 @@ export interface PresetSample {
 
 export const PRESET_SAMPLES: PresetSample[] = [
   {
-    title: 'Two Sum (Hash Map O(N))',
+    id: 'two-sum',
+    title: 'Two Sum',
+    difficulty: 'Easy',
+    topic: 'Hash Map',
     language: 'python',
     company: 'Amazon',
     code: `def twoSum(nums: list[int], target: int) -> list[int]:
@@ -41,7 +47,10 @@ export const PRESET_SAMPLES: PresetSample[] = [
     return []`,
   },
   {
-    title: 'Trapping Rain Water (Two Pointers O(1) Space)',
+    id: 'trapping-rain-water',
+    title: 'Trapping Rain Water',
+    difficulty: 'Hard',
+    topic: 'Two Pointers',
     language: 'cpp',
     company: 'Google',
     code: `int trap(vector<int>& height) {
@@ -64,7 +73,10 @@ export const PRESET_SAMPLES: PresetSample[] = [
 }`,
   },
   {
-    title: 'LRU Cache (Hash Map + Doubly Linked List)',
+    id: 'lru-cache',
+    title: 'LRU Cache',
+    difficulty: 'Medium',
+    topic: 'Design & Linked List',
     language: 'typescript',
     company: 'Meta',
     code: `class LRUCache {
@@ -93,6 +105,75 @@ export const PRESET_SAMPLES: PresetSample[] = [
         this.map.set(key, value);
     }
 }`,
+  },
+  {
+    id: 'course-schedule',
+    title: 'Course Schedule',
+    difficulty: 'Medium',
+    topic: 'Graph / Topo Sort',
+    language: 'java',
+    company: 'Microsoft',
+    code: `public boolean canFinish(int numCourses, int[][] prerequisites) {
+    List<List<Integer>> adj = new ArrayList<>();
+    for (int i = 0; i < numCourses; i++) adj.add(new ArrayList<>());
+    int[] inDegree = new int[numCourses];
+    
+    for (int[] pre : prerequisites) {
+        adj.get(pre[1]).add(pre[0]);
+        inDegree[pre[0]]++;
+    }
+    
+    Queue<Integer> q = new LinkedList<>();
+    for (int i = 0; i < numCourses; i++) {
+        if (inDegree[i] == 0) q.offer(i);
+    }
+    
+    int count = 0;
+    while (!q.isEmpty()) {
+        int curr = q.poll();
+        count++;
+        for (int next : adj.get(curr)) {
+            if (--inDegree[next] == 0) q.offer(next);
+        }
+    }
+    return count == numCourses;
+}`,
+  },
+  {
+    id: 'valid-anagram',
+    title: 'Valid Anagram',
+    difficulty: 'Easy',
+    topic: 'Hash Array',
+    language: 'python',
+    company: 'Apple',
+    code: `def isAnagram(s: str, t: str) -> bool:
+    if len(s) != len(t):
+        return False
+        
+    counts = [0] * 26
+    for c1, c2 in zip(s, t):
+        counts[ord(c1) - ord('a')] += 1
+        counts[ord(c2) - ord('a')] -= 1
+        
+    return all(c == 0 for c in counts)`,
+  },
+  {
+    id: 'suboptimal-subarray',
+    title: 'Subarray Sum (Brute Force)',
+    difficulty: 'Medium',
+    topic: 'Prefix Sum Need',
+    language: 'python',
+    company: 'Netflix',
+    code: `def subarraySum(nums: list[int], k: int) -> int:
+    count = 0
+    # Quadratic brute force
+    for i in range(len(nums)):
+        curr_sum = 0
+        for j in range(i, len(nums)):
+            curr_sum += nums[j]
+            if curr_sum == k:
+                count += 1
+    return count`,
   },
 ];
 
