@@ -19,7 +19,18 @@ export interface LeaderboardEntry {
 
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
   try {
-    // 1. Fetch all real registered users (exclude default/demo seed)
+    // 1. Check active Supabase Auth users to prune deleted/orphaned accounts
+    let activeAuthIds: Set<string> | null = null;
+    try {
+      const { data: authList } = await supabaseAdmin.auth.admin.listUsers();
+      if (authList?.users) {
+        activeAuthIds = new Set(authList.users.map((u) => u.id));
+      }
+    } catch {
+      // Graceful fallback if auth admin API is unavailable
+    }
+
+    // 2. Fetch all real registered users (exclude default/demo seed)
     const { data: users, error: userErr } = await supabaseAdmin
       .from('users')
       .select('id, username')
@@ -31,9 +42,22 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
       return [];
     }
 
-    // 2. Fetch stats for each user
+    // Filter out deleted accounts and auto-clean orphans from public.users
+    const validUsers = users.filter((u) => {
+      if (activeAuthIds && !activeAuthIds.has(u.id)) {
+        Promise.resolve(supabaseAdmin.from('users').delete().eq('id', u.id)).catch(() => {});
+        return false;
+      }
+      return true;
+    });
+
+    if (validUsers.length === 0) {
+      return [];
+    }
+
+    // 3. Fetch stats for each user
     const entries: LeaderboardEntry[] = await Promise.all(
-      users.map(async (u) => {
+      validUsers.map(async (u) => {
         const stats = await getDashboardStats(u.id);
 
         let highestRating: number | null = null;
