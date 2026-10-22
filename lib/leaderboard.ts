@@ -19,10 +19,12 @@ export interface LeaderboardEntry {
 
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
   try {
-    // 1. Fetch all registered users
+    // 1. Fetch all real registered users (exclude default/demo seed)
     const { data: users, error: userErr } = await supabaseAdmin
       .from('users')
       .select('id, username')
+      .neq('id', '00000000-0000-0000-0000-000000000001')
+      .neq('username', 'default_user')
       .order('created_at', { ascending: true });
 
     if (userErr || !users || users.length === 0) {

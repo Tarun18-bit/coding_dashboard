@@ -123,7 +123,7 @@ export const AccountModal: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder={platform === 'codeforces' ? 'e.g. tourist' : 'e.g. neal_wu'}
+                  placeholder="e.g. your_handle"
                   value={handle}
                   onChange={(e) => setHandle(e.target.value)}
                   className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3.5 py-2.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#0E43FB] focus:outline-hidden font-mono"

@@ -18,7 +18,7 @@ export default async function LeaderboardPage() {
   }
 
   const currentUsername =
-    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'txrun_18';
+    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'oggy';
 
   const currentUser = authUser
     ? {

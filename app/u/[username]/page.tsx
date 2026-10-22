@@ -178,7 +178,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
               <span className="hidden sm:inline">Leaderboard</span>
             </Link>
             <Link
-              href={`/compare?u1=${displayName}&u2=striver`}
+              href={`/compare?u1=${encodeURIComponent(displayName)}`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#CB3CFF] hover:text-white"
             >
               <Swords className="h-3.5 w-3.5 text-[#CB3CFF]" />

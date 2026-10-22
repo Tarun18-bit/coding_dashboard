@@ -27,14 +27,14 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   }
 
   const defaultUser =
-    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'txrun_18';
+    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'oggy';
 
   const u1Name = params.u1 ? decodeURIComponent(params.u1) : defaultUser;
-  const u2Name = params.u2 ? decodeURIComponent(params.u2) : 'striver';
+  const u2Name = params.u2 ? decodeURIComponent(params.u2) : '';
 
   const [user1, user2] = await Promise.all([
     getCompareProfile(u1Name),
-    getCompareProfile(u2Name),
+    u2Name ? getCompareProfile(u2Name) : Promise.resolve(null),
   ]);
 
   const currentUser = authUser

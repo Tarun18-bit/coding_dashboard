@@ -254,7 +254,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </td>
                     <td className="py-3.5 px-3.5 text-right">
                       <Link
-                        href={`/compare?u1=${currentUsername || 'txrun_18'}&u2=${user.username}`}
+                        href={`/compare?u1=${encodeURIComponent(currentUsername || 'oggy')}&u2=${encodeURIComponent(user.username)}`}
                         className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#0E43FB] hover:text-white"
                         title="1v1 Compare"
                       >
