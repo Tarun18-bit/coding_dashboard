@@ -54,6 +54,12 @@ export function DashboardTabs({
 }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'practice' | 'interview' | 'rpg'>('overview');
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+      window.location.href = `/reset-password${window.location.hash}`;
+    }
+  }, []);
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, badge: `${stats.totalSolved} solved` },
     { id: 'practice', label: 'Practice & Roadmaps', icon: BookOpen, badge: 'POTD Ready' },

@@ -23,6 +23,32 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  React.useEffect(() => {
+    // Auto-detect password recovery tokens or redirect parameters
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      if (
+        hash.includes('type=recovery') ||
+        search.includes('type=recovery') ||
+        search.includes('mode=reset')
+      ) {
+        router.replace(`/reset-password${hash || search}`);
+        return;
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        router.replace('/reset-password');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router, supabase]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -32,7 +58,7 @@ export default function LoginPage() {
     try {
       if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
         });
 
         if (error) throw error;

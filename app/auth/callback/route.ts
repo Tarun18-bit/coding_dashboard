@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/dashboard';
+  const type = searchParams.get('type');
+  const next = searchParams.get('next') ?? (type === 'recovery' ? '/reset-password' : '/dashboard');
 
   if (code) {
     const supabase = await createClient();
@@ -20,6 +21,10 @@ export async function GET(request: Request) {
     }
   }
 
-  // Return the user to an error page with instructions
+  // If recovery failed, redirect to reset-password with helpful query, else login
+  if (type === 'recovery' || next === '/reset-password') {
+    return NextResponse.redirect(`${origin}/reset-password?error=Invalid or expired password reset link`);
+  }
+
   return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`);
 }
