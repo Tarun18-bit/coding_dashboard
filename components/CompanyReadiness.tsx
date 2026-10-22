@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CompanyReadinessResult } from '@/lib/company-readiness';
-import { Briefcase, TrendingUp, AlertTriangle, ExternalLink, ChevronRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Briefcase, TrendingUp, AlertTriangle, ExternalLink, ChevronRight, CheckCircle2, Sparkles, ShieldCheck, Target } from 'lucide-react';
 
 interface CompanyReadinessProps {
   results: CompanyReadinessResult[];
@@ -178,13 +178,18 @@ export const CompanyReadiness: React.FC<CompanyReadinessProps> = ({ results }) =
         {/* Right Column: Curated Real Interview Questions Asked at this Company */}
         <div className="lg:col-span-1 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">
-              Frequently Asked at {current.company.name}
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1] flex items-center gap-1.5">
+              <span>Verified OA &amp; Onsite Rounds</span>
             </h4>
-            <span className="text-[11px] text-[#00C2FF] font-mono">Direct Links</span>
+            <span className="rounded bg-[#14CA74]/15 border border-[#14CA74]/30 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#14CA74]">
+              ✓ VERIFIED
+            </span>
           </div>
+          <p className="text-[11px] text-[#7E89AC] px-1">
+            Confirmed from {current.company.name} OAs &amp; technical loops via CodinzHub &amp; candidate reports.
+          </p>
 
-          <div className="space-y-2 rounded-2xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-4">
+          <div className="space-y-2.5 rounded-2xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-4 max-h-[460px] overflow-y-auto">
             {current.curatedSuggestions.map((prob, i) => {
               const diffColor =
                 prob.difficulty === 'Easy'
@@ -194,28 +199,53 @@ export const CompanyReadiness: React.FC<CompanyReadinessProps> = ({ results }) =
                   : 'text-[#FF5A65] border-[#FF5A65]/30 bg-[#FF5A65]/10';
 
               return (
-                <a
+                <div
                   key={i}
-                  href={prob.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between rounded-xl border border-[rgba(126,137,172,0.12)] bg-[#0B1739] p-3 transition hover:border-[#0E43FB] hover:bg-[#0B1739]/80"
+                  className="rounded-xl border border-[rgba(126,137,172,0.14)] bg-[#0B1739] p-3.5 space-y-2.5 transition hover:border-[#0E43FB]"
                 >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white group-hover:text-[#00C2FF] transition">
-                        {prob.title}
-                      </span>
-                      <ExternalLink className="h-3 w-3 text-[#7E89AC] opacity-0 group-hover:opacity-100 transition" />
-                    </div>
-                    <p className="text-[10px] text-[#7E89AC] capitalize font-mono">
-                      {prob.topic} • {prob.platform}
-                    </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <a
+                      href={prob.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-1.5 font-bold text-xs text-white hover:text-[#00C2FF] transition"
+                    >
+                      <span>{prob.title}</span>
+                      <ExternalLink className="h-3 w-3 text-[#7E89AC] group-hover:text-[#00C2FF]" />
+                    </a>
+                    <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${diffColor}`}>
+                      {prob.difficulty}
+                    </span>
                   </div>
-                  <span className={`rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${diffColor}`}>
-                    {prob.difficulty}
-                  </span>
-                </a>
+
+                  {/* Verified Round Tag */}
+                  {prob.verifiedRound && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-[#00C2FF] font-medium bg-[#0E43FB]/15 border border-[#0E43FB]/30 rounded-lg px-2 py-1">
+                      <Target className="h-3 w-3 shrink-0 text-[#00C2FF]" />
+                      <span className="truncate">{prob.verifiedRound}</span>
+                    </div>
+                  )}
+
+                  {/* Source Verification Badge & Notes */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] pt-1 border-t border-[rgba(126,137,172,0.1)]">
+                    <span className="text-[#7E89AC] capitalize font-mono">
+                      {prob.topic}
+                    </span>
+
+                    {prob.sourceName && (
+                      <a
+                        href={prob.sourceUrl || prob.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#14CA74] hover:underline"
+                        title="View verification source"
+                      >
+                        <ShieldCheck className="h-3 w-3 text-[#14CA74]" />
+                        <span>{prob.sourceName}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>

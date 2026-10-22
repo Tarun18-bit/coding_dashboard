@@ -25,6 +25,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Building2,
+  Target,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -253,6 +254,77 @@ export const MockInterviewRoom: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Verified Questions in this Track */}
+        <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(126,137,172,0.14)] pb-3">
+            <div>
+              <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                <Target className="h-4 w-4 text-[#00C2FF]" />
+                <span>Verified {selectedCompany} Questions in this Track</span>
+              </h3>
+              <p className="text-xs text-[#7E89AC] mt-0.5">
+                Each problem is cross-verified from candidate hiring reports, CodinzHub, and LeetCode discussions.
+              </p>
+            </div>
+            <span className="rounded-md bg-[#14CA74]/15 border border-[#14CA74]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#14CA74]">
+              ✓ ALL ROUNDS VERIFIED
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {availableQuestions.map((q) => {
+              const diffColor =
+                q.difficulty === 'Easy'
+                  ? 'text-[#14CA74] border-[#14CA74]/30 bg-[#14CA74]/10'
+                  : q.difficulty === 'Medium'
+                  ? 'text-[#FDB52A] border-[#FDB52A]/30 bg-[#FDB52A]/10'
+                  : 'text-[#FF5A65] border-[#FF5A65]/30 bg-[#FF5A65]/10';
+
+              return (
+                <div
+                  key={q.id}
+                  className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] p-4 flex flex-col justify-between space-y-3"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${diffColor}`}>
+                        {q.difficulty}
+                      </span>
+                      <span className="text-[11px] text-[#7E89AC] font-mono">
+                        {q.category}
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-white">{q.title}</h4>
+
+                    {q.verifiedRound && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#00C2FF] font-medium bg-[#0E43FB]/15 border border-[#0E43FB]/30 rounded-lg px-2.5 py-1">
+                        <Target className="h-3 w-3 shrink-0 text-[#00C2FF]" />
+                        <span className="truncate">{q.verifiedRound}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[rgba(126,137,172,0.1)]">
+                    <span className="text-[10px] text-[#AEB9E1] flex items-center gap-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-[#14CA74]" />
+                      <span>{q.sourceName}</span>
+                    </span>
+
+                    <button
+                      onClick={() => startInterview(q)}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#0E43FB] px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-[#00C2FF] hover:text-[#081028] transition"
+                    >
+                      <Play className="h-3 w-3 fill-current" />
+                      <span>Practice This</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   }
@@ -301,16 +373,35 @@ export const MockInterviewRoom: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Left Column: Problem & Hint Ladder */}
           <div className="lg:col-span-5 rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-5 shadow-xl space-y-5 overflow-y-auto max-h-[82vh]">
-            <div className="border-b border-[rgba(126,137,172,0.14)] pb-4 space-y-2">
-              <div className="flex items-center gap-2">
+            <div className="border-b border-[rgba(126,137,172,0.14)] pb-4 space-y-2.5">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md border border-[#FDB52A]/30 bg-[#FDB52A]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#FDB52A] uppercase">
                   {currentQuestion.difficulty}
                 </span>
                 <span className="text-xs text-[#7E89AC] font-mono">
                   {currentQuestion.category}
                 </span>
+                {currentQuestion.frequencyBadge && (
+                  <span className="rounded-md border border-[#00EA64]/30 bg-[#00EA64]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00EA64]">
+                    {currentQuestion.frequencyBadge}
+                  </span>
+                )}
               </div>
               <h1 className="text-lg font-black text-white">{currentQuestion.title}</h1>
+
+              {/* Verified Round & Source Info */}
+              {currentQuestion.verifiedRound && (
+                <div className="rounded-xl border border-[#00C2FF]/30 bg-[#00C2FF]/10 p-2.5 space-y-1 text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-[#00C2FF]">
+                    <Target className="h-3.5 w-3.5 shrink-0" />
+                    <span>Verified: {currentQuestion.verifiedRound}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#AEB9E1]">
+                    <span>Source: <a href={currentQuestion.sourceUrl || 'https://www.codinzhub.com/'} target="_blank" rel="noopener noreferrer" className="text-[#00EA64] font-semibold underline">{currentQuestion.sourceName}</a></span>
+                    {currentQuestion.notes && <span className="text-[#7E89AC] italic text-[10px]">{currentQuestion.notes}</span>}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Description */}

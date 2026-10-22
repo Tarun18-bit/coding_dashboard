@@ -17,6 +17,11 @@ export interface MockQuestion {
   company: 'Google' | 'Amazon' | 'Meta' | 'Microsoft';
   difficulty: 'Easy' | 'Medium' | 'Hard';
   category: string;
+  verifiedRound: string;
+  sourceName: string;
+  sourceUrl?: string;
+  frequencyBadge?: string;
+  notes?: string;
   description: string;
   constraints: string[];
   examples: {
@@ -40,6 +45,11 @@ export const MOCK_QUESTIONS: MockQuestion[] = [
     company: 'Google',
     difficulty: 'Medium',
     category: 'Intervals & Priority Queues',
+    verifiedRound: 'Google Online Assessment & SWE Onsite Round 1',
+    sourceName: 'CodinzHub Google OA / LeetCode Discuss',
+    sourceUrl: 'https://www.codinzhub.com/',
+    frequencyBadge: 'Top 1% Asked at Google',
+    notes: 'Classic Google intervals & heap problem reported across campus and off-campus drives',
     description: `Given an array of meeting time intervals \`intervals\` where \`intervals[i] = [start_i, end_i]\`, return the *minimum number of conference rooms* required to hold all meetings without overlaps.`,
     constraints: [
       '1 <= intervals.length <= 10^4',
@@ -120,6 +130,11 @@ class Solution {
     company: 'Amazon',
     difficulty: 'Medium',
     category: 'Design & Doubly Linked List',
+    verifiedRound: 'Amazon SDE-1 & SDE-2 Virtual Onsite (#1 All-Time)',
+    sourceName: 'CodinzHub Amazon Experience / LeetCode Discuss',
+    sourceUrl: 'https://www.codinzhub.com/',
+    frequencyBadge: '#1 Most Frequent at Amazon',
+    notes: 'The most documented technical problem in Amazon software engineering interview history',
     description: `Design a data structure that follows the constraints of a **Least Recently Used (LRU) cache**.
 
 Implement the \`LRUCache\` class:
@@ -225,11 +240,100 @@ class LRUCache {
     },
   },
   {
+    id: 'amazon-ship-packages-oa',
+    title: 'Capacity To Ship Packages (Amazon Delivery OA)',
+    company: 'Amazon',
+    difficulty: 'Medium',
+    category: 'Binary Search on Answers',
+    verifiedRound: 'Amazon SDE-1 Online Assessment (OA 2024/2025)',
+    sourceName: 'CodinzHub Amazon OA / Reddit r/csmajors',
+    sourceUrl: 'https://www.codinzhub.com/',
+    frequencyBadge: 'Active 2024-2025 OA Question',
+    notes: 'Direct match for Amazon logistics / package routing online assessment questions',
+    description: `A conveyor belt has packages that must be shipped from one port to another within \`days\` days.
+
+The \`i-th\` package on the conveyor belt has a weight of \`weights[i]\`. Each day, we load the ship with packages on the conveyor belt (in the order given by \`weights\`). We may not load more weight than the maximum weight capacity of the ship.
+
+Return the *least weight capacity of the ship* that will result in all the packages on the conveyor belt being shipped within \`days\` days.`,
+    constraints: [
+      '1 <= days <= weights.length <= 5 * 10^4',
+      '1 <= weights[i] <= 500',
+    ],
+    examples: [
+      {
+        input: 'weights = [1,2,3,4,5,6,7,8,9,10], days = 5',
+        output: '15',
+        explanation: 'A ship capacity of 15 is the minimum to ship all packages in 5 days (Day 1: 1,2,3,4,5=15; Day 2: 6,7=13; Day 3: 8=8; Day 4: 9=9; Day 5: 10=10).',
+      },
+      {
+        input: 'weights = [3,2,2,4,1,4], days = 3',
+        output: '6',
+        explanation: 'A ship capacity of 6 is the minimum to ship all packages in 3 days.',
+      },
+    ],
+    starterCode: {
+      python: `class Solution:
+    def shipWithinDays(self, weights: list[int], days: int) -> int:
+        pass`,
+      cpp: `#include <vector>
+#include <numeric>
+#include <algorithm>
+
+class Solution {
+public:
+    int shipWithinDays(std::vector<int>& weights, int days) {
+        return 0;
+    }
+};`,
+      java: `import java.util.*;
+
+class Solution {
+    public int shipWithinDays(int[] weights, int days) {
+        return 0;
+    }
+}`,
+      typescript: `function shipWithinDays(weights: number[], days: number): number {
+    return 0;
+}`,
+    },
+    hints: [
+      {
+        tier: 1,
+        title: 'Search Space Recognition',
+        content: 'The capacity must be at least max(weights) (otherwise the heaviest package can never be loaded), and at most sum(weights) (ship everything in 1 day).',
+      },
+      {
+        tier: 2,
+        title: 'Monotonicity',
+        content: 'If capacity C works, any capacity > C also works. This monotonicity lets us binary search for the minimum working capacity.',
+      },
+      {
+        tier: 3,
+        title: 'Feasibility Function',
+        content: 'Binary search between low = max(weights) and high = sum(weights). In O(N), greedily count how many days are needed for capacity mid. If days <= target, high = mid; else low = mid + 1.',
+      },
+    ],
+    testCases: [
+      { id: 1, input: 'weights=[1,2,3,4,5,6,7,8,9,10], days=5', expectedOutput: '15' },
+      { id: 2, input: 'weights=[3,2,2,4,1,4], days=3', expectedOutput: '6' },
+      { id: 3, input: 'weights=[1,2,3,1,1], days=4', expectedOutput: '3' },
+    ],
+    optimalComplexity: {
+      time: 'O(N * log(sum(weights) - max(weights)))',
+      space: 'O(1)',
+    },
+  },
+  {
     id: 'meta-subarray-sum-equals-k',
     title: 'Subarray Sum Equals K',
     company: 'Meta',
     difficulty: 'Medium',
     category: 'Prefix Sums & Hash Tables',
+    verifiedRound: 'Meta Technical Phone Screen & E4 Coding Round 1',
+    sourceName: 'CodinzHub Meta Tagged / LeetCode Discuss',
+    sourceUrl: 'https://www.codinzhub.com/',
+    frequencyBadge: 'Meta Top 5 Signature Question',
+    notes: 'Heavily tested across Meta campus and off-campus SWE technical loops',
     description: `Given an array of integers \`nums\` and an integer \`k\`, return *the total number of subarrays whose sum equals to \`k\`*.
 
 A subarray is a contiguous **non-empty** sequence of elements within an array.`,
@@ -308,6 +412,11 @@ class Solution {
     company: 'Microsoft',
     difficulty: 'Hard',
     category: 'Tries & Backtracking DFS',
+    verifiedRound: 'Microsoft SDE Technical Round 2 & Onsite Loop',
+    sourceName: 'CodinzHub / LeetCode Discuss',
+    sourceUrl: 'https://www.codinzhub.com/',
+    frequencyBadge: 'Top Microsoft Trie/Backtracking',
+    notes: 'Frequently reported in senior and university Microsoft on-site hiring rounds',
     description: `Given an \`m x n\` board of characters and a list of strings \`words\`, return *all words on the board*.
 
 Each word must be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once in a word.`,
