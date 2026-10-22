@@ -96,3 +96,78 @@ body {
 .glow-cyan {
   box-shadow: 0 0 25px -4px rgba(0, 194, 255, 0.4);
 }
+
+/* Print Styles for Clean ATS Resume PDF Generation */
+@media print {
+  @page {
+    margin: 12mm 15mm;
+    size: auto;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    background-image: none !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide navigation, modals backdrop, buttons, and tools during print */
+  header,
+  nav,
+  .print\:hidden,
+  button,
+  [role="dialog"] > div:first-child {
+    display: none !important;
+  }
+
+  /* Reset modal positioning to full document page */
+  [role="dialog"],
+  .fixed.inset-0 {
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #printable-resume {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  #printable-resume * {
+    color: #111827 !important;
+    background-color: transparent !important;
+    border-color: #e5e7eb !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  #printable-resume .text-white {
+    color: #111827 !important;
+  }
+
+  #printable-resume .text-\[\#00C2FF\],
+  #printable-resume .text-\[\#00EA64\],
+  #printable-resume .text-\[\#14CA74\] {
+    color: #047857 !important;
+  }
+
+  #printable-resume .bg-\[\#0B1739\],
+  #printable-resume .bg-\[\#0A1330\],
+  #printable-resume .bg-\[\#081028\] {
+    background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+  }
+}

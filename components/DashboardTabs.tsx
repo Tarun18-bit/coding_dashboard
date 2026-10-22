@@ -32,6 +32,8 @@ import { ContestCalendar } from '@/components/ContestCalendar';
 import { DailyWorkoutCard } from '@/components/DailyWorkout';
 import { RpgProfileCard } from '@/components/RpgProfileCard';
 import { ProfileHero } from '@/components/ProfileHero';
+import { ExportResumeModal } from '@/components/ExportResumeModal';
+import { BadgeModal } from '@/components/BadgeModal';
 
 interface DashboardTabsProps {
   stats: any;
@@ -84,7 +86,7 @@ export function DashboardTabs({
           </div>
 
           {/* Quick Action Pill Banner */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-2 rounded-xl border border-[rgba(148,163,184,0.15)] bg-[#090D1A]/80 px-3.5 py-2">
               <Flame className="h-4 w-4 text-[#FFB016] animate-pulse" />
               <div>
@@ -93,12 +95,27 @@ export function DashboardTabs({
               </div>
             </div>
 
+            <ExportResumeModal
+              username={activeUsername}
+              totalSolved={stats.totalSolved}
+              difficulty={stats.difficultyBreakdown}
+              streaks={stats.streaks}
+              accounts={stats.accounts?.map((a: any) => ({ platform: a.platform, handle: a.handle, rating: a.latestSnapshot?.rating })) || []}
+              companyReadiness={companyReadiness?.map((c: any) => ({ company: c.company?.name || c.company, score: c.overallScore || c.score })) || []}
+              strengths={stats.strengths || []}
+              rpgTitle={rpgProfile?.title}
+              rpgLevel={rpgProfile?.level}
+              buttonVariant="hero"
+            />
+
+            <BadgeModal username={activeUsername} buttonVariant="hero" />
+
             <button
               onClick={() => setActiveTab('practice')}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-4 py-2.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-4 py-2.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] hover:scale-[1.02] cursor-pointer"
             >
               <Zap className="h-4 w-4" />
-              <span>Resume Daily Workout</span>
+              <span>Daily Workout</span>
             </button>
           </div>
         </div>

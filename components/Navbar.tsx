@@ -40,7 +40,7 @@ interface NavbarProps {
 
 export function Navbar({
   currentUser,
-  activeUsername = 'txrun_18',
+  activeUsername = 'oggy',
   stats,
   rpgProfile,
   resumeData,
@@ -199,21 +199,19 @@ export function Navbar({
 
             {toolsOpen && (
               <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#0E1628] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100 space-y-1">
-                {stats && rpgProfile && resumeData && (
-                  <div className="[&>button]:w-full [&>button]:justify-start [&>button]:bg-transparent [&>button]:border-transparent [&>button]:px-2.5 [&>button]:py-2 [&>button]:rounded-lg [&>button]:text-xs [&>button]:text-[#94A3B8] hover:[&>button]:text-white hover:[&>button]:bg-[#131E35]">
-                    <ExportResumeModal
-                      username={activeUsername}
-                      totalSolved={stats.totalSolved}
-                      difficulty={stats.difficultyBreakdown}
-                      streaks={stats.streaks}
-                      accounts={resumeData.accountsSummary}
-                      companyReadiness={resumeData.readinessSummary}
-                      strengths={stats.strengths}
-                      rpgTitle={rpgProfile.title}
-                      rpgLevel={rpgProfile.level}
-                    />
-                  </div>
-                )}
+                <div className="[&>button]:w-full [&>button]:justify-start [&>button]:bg-transparent [&>button]:border-transparent [&>button]:px-2.5 [&>button]:py-2 [&>button]:rounded-lg [&>button]:text-xs [&>button]:text-[#94A3B8] hover:[&>button]:text-white hover:[&>button]:bg-[#131E35]">
+                  <ExportResumeModal
+                    username={activeUsername}
+                    totalSolved={stats?.totalSolved || 0}
+                    difficulty={stats?.difficultyBreakdown || { easy: 0, medium: 0, hard: 0 }}
+                    streaks={stats?.streaks || { currentStreak: 0, longestStreak: 0 }}
+                    accounts={resumeData?.accountsSummary || []}
+                    companyReadiness={resumeData?.readinessSummary || []}
+                    strengths={stats?.strengths || []}
+                    rpgTitle={rpgProfile?.title || 'Problem Solver'}
+                    rpgLevel={rpgProfile?.level || 1}
+                  />
+                </div>
 
                 <div className="[&>button]:w-full [&>button]:justify-start [&>button]:bg-transparent [&>button]:border-transparent [&>button]:px-2.5 [&>button]:py-2 [&>button]:rounded-lg [&>button]:text-xs [&>button]:text-[#94A3B8] hover:[&>button]:text-white hover:[&>button]:bg-[#131E35]">
                   <BadgeModal username={activeUsername} />

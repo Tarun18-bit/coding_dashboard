@@ -5,13 +5,20 @@ import { Code, Check, X, Sparkles, Copy, ExternalLink } from 'lucide-react';
 
 interface BadgeModalProps {
   username?: string;
+  buttonVariant?: 'hero' | 'nav';
 }
 
-export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' }) => {
+export const BadgeModal: React.FC<BadgeModalProps> = ({
+  username = 'oggy',
+  buttonVariant = 'nav',
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [copiedType, setCopiedType] = useState<'md' | 'html' | 'url' | null>(null);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : 'https://coding-dashboard-two.vercel.app';
+
   const badgeUrl = `${origin}/api/badge/${encodeURIComponent(username)}`;
   const profileUrl = `${origin}/u/${encodeURIComponent(username)}`;
 
@@ -28,14 +35,24 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3.5 py-1.5 text-xs font-semibold text-[#AEB9E1] shadow-sm transition hover:border-[#0E43FB] hover:bg-[#0B1739] hover:text-white active:scale-98"
-        title="Get GitHub README Badge"
-      >
-        <Code className="h-3.5 w-3.5 text-[#CB3CFF]" />
-        <span>GitHub Badge</span>
-      </button>
+      {buttonVariant === 'hero' ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl border border-[rgba(203,60,255,0.3)] bg-[#CB3CFF]/15 px-3.5 py-2 text-xs font-bold text-[#CB3CFF] shadow-sm transition hover:bg-[#CB3CFF]/25 hover:border-[#CB3CFF] cursor-pointer"
+          title="Get Auto-Updating GitHub README Badge"
+        >
+          <Code className="h-4 w-4 text-[#CB3CFF]" />
+          <span>GitHub Badge</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-[#94A3B8] hover:text-white hover:bg-[#131E35] transition text-left cursor-pointer"
+        >
+          <Code className="h-3.5 w-3.5 text-[#CB3CFF]" />
+          <span>GitHub README Badge</span>
+        </button>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081028]/85 backdrop-blur-md animate-fade-in">
@@ -48,7 +65,7 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Dynamic GitHub Profile Badge</h3>
-                  <p className="text-[11px] text-[#7E89AC]">Auto-updating SVG badge for your GitHub README & Portfolio</p>
+                  <p className="text-[11px] text-[#7E89AC]">Auto-updating SVG badge for your GitHub README &amp; Portfolio</p>
                 </div>
               </div>
               <button
@@ -61,9 +78,12 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
 
             {/* Live Visual Preview */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#AEB9E1]">
-                Live Preview
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#AEB9E1]">
+                  Live Preview
+                </label>
+                <span className="text-[10px] text-[#14CA74] font-mono">Auto-refreshed via API</span>
+              </div>
               <div className="flex justify-center rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#081028] p-4 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -82,12 +102,12 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
                 </label>
                 <button
                   onClick={() => copyToClipboard(markdownSnippet, 'md')}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00C2FF] hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00C2FF] hover:underline cursor-pointer"
                 >
                   {copiedType === 'md' ? (
                     <>
                       <Check className="h-3 w-3 text-[#14CA74]" />
-                      <span className="text-[#14CA74]">Copied!</span>
+                      <span className="text-[#14CA74]">Copied to Clipboard!</span>
                     </>
                   ) : (
                     <>
@@ -110,7 +130,7 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
                 </label>
                 <button
                   onClick={() => copyToClipboard(badgeUrl, 'url')}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00C2FF] hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00C2FF] hover:underline cursor-pointer"
                 >
                   {copiedType === 'url' ? (
                     <>
@@ -134,7 +154,10 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({ username = 'txrun_18' })
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end pt-2 border-t border-[rgba(126,137,172,0.14)]">
+            <div className="flex justify-between items-center pt-2 border-t border-[rgba(126,137,172,0.14)]">
+              <span className="text-[10px] text-[#7E89AC]">
+                Paste into your GitHub profile repo (e.g. <code>username/README.md</code>)
+              </span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}

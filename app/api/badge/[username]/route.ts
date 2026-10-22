@@ -15,36 +15,54 @@ export async function GET(request: NextRequest, { params }: BadgeParams) {
   const { username } = await params;
   const decodedUsername = decodeURIComponent(username).trim();
 
-  // 1. Resolve user ID from username or handle
-  let { data: user } = await supabaseAdmin
+  let user: { id: string; username: string } | null = null;
+
+  // 1. Resolve user ID from username
+  const { data: userRecord } = await supabaseAdmin
     .from('users')
     .select('id, username')
     .ilike('username', decodedUsername)
+    .neq('username', 'default_user')
     .maybeSingle();
 
-  if (!user) {
+  if (userRecord) {
+    user = userRecord;
+  } else {
+    // 2. Resolve user ID from linked platform handle
     const { data: account } = await supabaseAdmin
       .from('accounts')
-      .select('user_id, users(id, username)')
+      .select('user_id')
       .ilike('handle', decodedUsername)
       .limit(1)
       .maybeSingle();
 
-    if (account?.users) {
-      const u = account.users as unknown as { id: string; username: string };
-      user = { id: u.id, username: u.username };
+    if (account?.user_id) {
+      const { data: u } = await supabaseAdmin
+        .from('users')
+        .select('id, username')
+        .eq('id', account.user_id)
+        .maybeSingle();
+      if (u) {
+        user = u;
+      }
     }
   }
 
-  // Fallback for default demo
-  if (!user && (decodedUsername === 'default' || decodedUsername === 'demo')) {
-    user = { id: '00000000-0000-0000-0000-000000000001', username: 'default_user' };
+  // 3. Fallback to primary active user if not found
+  if (!user) {
+    const { data: firstUser } = await supabaseAdmin
+      .from('users')
+      .select('id, username')
+      .neq('username', 'default_user')
+      .limit(1)
+      .maybeSingle();
+    user = firstUser || { id: '00000000-0000-0000-0000-000000000001', username: decodedUsername };
   }
 
-  const targetUserId = user ? user.id : '00000000-0000-0000-0000-000000000001';
+  const targetUserId = user.id;
   const stats = await getDashboardStats(targetUserId);
 
-  const displayName = user ? (user.username === 'default_user' ? decodedUsername : user.username) : decodedUsername;
+  const displayName = user.username === 'default_user' ? decodedUsername : user.username;
   const totalSolved = stats.totalSolved || 0;
   const easy = stats.difficultyBreakdown.easy || 0;
   const medium = stats.difficultyBreakdown.medium || 0;
