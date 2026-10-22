@@ -319,7 +319,7 @@ export function analyzeSolutionLocally(
     },
     {
       question: `Can you parallelize this algorithm across multiple CPU cores or worker threads?`,
-      interviewerIntent: `Standard ${targetCompany} question testing distributed computing intuition and race-condition awareness.`,
+      interviewerIntent: 'Standard question testing distributed computing intuition and race-condition awareness.',
       suggestedApproach: 'Partition the input into chunks, run worker threads on disjoint slices, and reduce the partial results with atomic locks or concurrent maps.',
     },
     {

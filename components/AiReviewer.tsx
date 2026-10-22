@@ -35,25 +35,14 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
-const COMPANY_OPTIONS = [
-  { name: 'Google', color: 'from-[#4285F4] to-[#34A853]' },
-  { name: 'Meta', color: 'from-[#0668E1] to-[#00C2FF]' },
-  { name: 'Amazon', color: 'from-[#FF9900] to-[#FDB52A]' },
-  { name: 'Microsoft', color: 'from-[#00A4EF] to-[#7FBA00]' },
-  { name: 'Apple', color: 'from-[#999999] to-[#E2E8F0]' },
-  { name: 'Netflix', color: 'from-[#E50914] to-[#B81D24]' },
-  { name: 'General', color: 'from-[#0E43FB] to-[#00C2FF]' },
-];
-
 export const AiReviewer: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<PresetSample>(PRESET_SAMPLES[0]);
   const [code, setCode] = useState(PRESET_SAMPLES[0].code);
   const [language, setLanguage] = useState(PRESET_SAMPLES[0].language);
-  const [company, setCompany] = useState(PRESET_SAMPLES[0].company);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState('');
   const [result, setResult] = useState<ReviewResult | null>(() =>
-    analyzeSolutionLocally(PRESET_SAMPLES[0].code, PRESET_SAMPLES[0].language, PRESET_SAMPLES[0].company)
+    analyzeSolutionLocally(PRESET_SAMPLES[0].code, PRESET_SAMPLES[0].language)
   );
   const [activeTab, setActiveTab] = useState<'overview' | 'optimal' | 'questions'>('overview');
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(0);
@@ -107,9 +96,8 @@ export const AiReviewer: React.FC = () => {
     setSelectedPreset(preset);
     setCode(preset.code);
     setLanguage(preset.language);
-    setCompany(preset.company);
     setIsOptimalRevealed(false);
-    setResult(analyzeSolutionLocally(preset.code, preset.language, preset.company));
+    setResult(analyzeSolutionLocally(preset.code, preset.language));
   };
 
   const handleAnalyze = () => {
@@ -126,7 +114,7 @@ export const AiReviewer: React.FC = () => {
     }, 450);
 
     setTimeout(() => {
-      setResult(analyzeSolutionLocally(code, language, company));
+      setResult(analyzeSolutionLocally(code, language));
       setIsAnalyzing(false);
       setAnalysisStep('');
     }, 650);
@@ -135,8 +123,7 @@ export const AiReviewer: React.FC = () => {
   const handleResetToPreset = () => {
     setCode(selectedPreset.code);
     setLanguage(selectedPreset.language);
-    setCompany(selectedPreset.company);
-    setResult(analyzeSolutionLocally(selectedPreset.code, selectedPreset.language, selectedPreset.company));
+    setResult(analyzeSolutionLocally(selectedPreset.code, selectedPreset.language));
   };
 
   const handleClearCode = () => {
@@ -160,7 +147,7 @@ export const AiReviewer: React.FC = () => {
 
   const handleCopyReport = () => {
     if (!result) return;
-    const report = `# AI Code Review Summary - ${company} Focus
+    const report = `# AI Code Review Summary
 - **Verdict:** ${result.verdict} Complexity (${result.qualityScore}/100)
 - **Time Complexity:** ${result.timeComplexity} (${result.timeExplanation})
 - **Space Complexity:** ${result.spaceComplexity} (${result.spaceExplanation})
@@ -205,7 +192,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
         <div className="absolute left-1/4 bottom-0 -mb-16 h-48 w-48 rounded-full bg-[#14CA74]/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#00C2FF]/40 bg-[#00C2FF]/10 px-3 py-1 text-xs font-bold text-[#00C2FF] shadow-[0_0_15px_rgba(0,194,255,0.2)]">
                 <Bot className="h-3.5 w-3.5" />
@@ -218,36 +205,11 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-              Solution Complexity &amp; Interview Reviewer
+              Solution Complexity &amp; Code Reviewer
             </h1>
             <p className="text-xs sm:text-sm text-[#AEB9E1] leading-relaxed">
-              Analyze code solutions with production-grade AST inspection. Evaluate exact Big-O Time &amp; Space limits, spot memory bottlenecks, and train on real follow-up questions asked in FAANG technical rounds.
+              Analyze code solutions with AST inspection. Evaluate exact Big-O Time &amp; Space limits, spot memory bottlenecks, and train on real algorithmic follow-up questions and edge case drills.
             </p>
-          </div>
-
-          {/* Target Company Selector */}
-          <div className="flex flex-col gap-2.5 rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#070D21]/80 backdrop-blur-md p-4 min-w-[240px]">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7E89AC]">
-                Target Interview Standard:
-              </span>
-              <span className="text-[11px] font-bold text-[#00C2FF]">{company}</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {COMPANY_OPTIONS.map((c) => (
-                <button
-                  key={c.name}
-                  onClick={() => setCompany(c.name)}
-                  className={`rounded-xl px-2.5 py-1.5 text-[11px] font-bold transition text-center ${
-                    company === c.name
-                      ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-md'
-                      : 'border border-[rgba(126,137,172,0.15)] bg-[#0A1330] text-[#AEB9E1] hover:text-white hover:border-[#00C2FF]/40'
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -281,7 +243,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                 >
                   <div className="flex items-center justify-between gap-1 w-full mb-1">
                     <span className="text-[10px] font-bold uppercase text-[#7E89AC] truncate">
-                      {preset.company}
+                      {preset.topic}
                     </span>
                     <span className={`rounded-md border px-1.5 py-0.2 text-[9px] font-mono font-bold ${diffColor}`}>
                       {preset.difficulty}
@@ -290,7 +252,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                   <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-[#D1DBF9]'}`}>
                     {preset.title}
                   </span>
-                  <span className="text-[10px] text-[#7E89AC] truncate">{preset.topic}</span>
+                  <span className="text-[10px] text-[#00C2FF] font-mono truncate">{preset.language.toUpperCase()}</span>
                 </button>
               );
             })}
@@ -460,11 +422,10 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                         {result.verdict === 'Optimal' ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
                         {result.verdict} Complexity
                       </span>
-                      <span className="text-[11px] text-[#7E89AC]">for {company} Interview</span>
                     </div>
                     <p className="text-xs text-[#AEB9E1]">
                       {result.verdict === 'Optimal'
-                        ? 'Production-ready efficiency. Meets rigorous FAANG latency limits.'
+                        ? 'Production-ready efficiency. Scalable and within optimal latency limits.'
                         : 'Functional but risks Time Limit Exceeded (TLE) or excessive auxiliary memory.'}
                     </p>
                   </div>
@@ -572,7 +533,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                   }`}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />
-                  <span>FAANG Follow-Ups (5)</span>
+                  <span>Follow-Up Drills (5)</span>
                 </button>
               </div>
 
@@ -719,21 +680,21 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                 </div>
               )}
 
-              {/* Tab Content 3: FAANG Interview Follow-Ups */}
+              {/* Tab Content 3: Technical Follow-Ups */}
               {activeTab === 'questions' && (
                 <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-5 shadow-2xl space-y-4">
                   <div className="flex items-center justify-between border-b border-[rgba(126,137,172,0.14)] pb-3">
                     <div className="flex items-center gap-2">
                       <HelpCircle className="h-4 w-4 text-[#FDB52A]" />
                       <h3 className="text-sm font-bold text-white">
-                        {company} Technical Interview Follow-Up Drill
+                        Algorithm Follow-Up Questions &amp; Scenarios
                       </h3>
                     </div>
                     <span className="text-[10px] font-mono text-[#7E89AC]">5 Questions Prepared</span>
                   </div>
 
                   <p className="text-xs text-[#AEB9E1] leading-relaxed">
-                    FAANG interviewers evaluate seniority based on how you respond to scaling limits, infinite memory constraints, and concurrency edge cases after solving the base problem.
+                    Evaluates how your solution adapts to scaling constraints, memory limits, and streaming data after the base algorithm is implemented.
                   </p>
 
                   <div className="space-y-2.5">
