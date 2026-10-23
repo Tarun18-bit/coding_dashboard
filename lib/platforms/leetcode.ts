@@ -2,7 +2,13 @@ import { PlatformFetcher, Snapshot, Contest, Submission } from './types';
 import { CURATED_PROBLEMS } from '../sheets-data';
 
 const LEETCODE_GRAPHQL_ENDPOINT = 'https://leetcode.com/graphql';
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 8000;
+const BUNDLE_CACHE_TTL_MS = 15000;
+
+const inflightBundleCache = new Map<
+  string,
+  { timestamp: number; promise: Promise<Record<string, unknown>> }
+>();
 
 type LeetCodeDifficultyCount = { difficulty?: string; count?: number };
 type LeetCodeContestHistoryItem = {
@@ -39,7 +45,7 @@ function getErrorMessage(error: unknown): string {
 async function fetchLeetCodeGraphQL(
   query: string,
   variables: Record<string, unknown>,
-  retries = 3
+  retries = 2
 ): Promise<Record<string, unknown>> {
   let lastError: unknown = null;
 
@@ -67,21 +73,87 @@ async function fetchLeetCodeGraphQL(
       }
 
       const data = (await res.json()) as GraphQLResult;
-      if (data.errors && data.errors.length > 0) {
-        throw new Error(`LeetCode GraphQL error: ${data.errors[0]?.message || 'Query failed'}`);
+      if (data.errors && data.errors.length > 0 && !data.data) {
+        const msg = data.errors[0]?.message || 'Query failed';
+        const err = new Error(`LeetCode GraphQL error: ${msg}`);
+        if (msg.toLowerCase().includes('not exist') || msg.toLowerCase().includes('not found')) {
+          (err as unknown as { noRetry: boolean }).noRetry = true;
+        }
+        throw err;
       }
 
       return (data.data || {}) as Record<string, unknown>;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       lastError = error;
+      if ((error as unknown as { noRetry?: boolean })?.noRetry) {
+        break;
+      }
       if (attempt < retries) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 400));
       }
     }
   }
 
   throw new Error(`LeetCode request failed after ${retries} attempts. Last error: ${getErrorMessage(lastError) || 'Network error'}`);
+}
+
+const COMPLETE_USER_QUERY = `
+  query userCompleteData($username: String!, $limit: Int!) {
+    matchedUser(username: $username) {
+      username
+      profile {
+        ranking
+        reputation
+      }
+      submissionCalendar
+      submitStatsGlobal {
+        acSubmissionNum {
+          difficulty
+          count
+          submissions
+        }
+      }
+    }
+    userContestRanking(username: $username) {
+      rating
+      globalRanking
+      topPercentage
+      attendedContestsCount
+    }
+    userContestRankingHistory(username: $username) {
+      attended
+      rating
+      ranking
+      contest {
+        title
+        startTime
+      }
+    }
+    recentAcSubmissionList(username: $username, limit: $limit) {
+      id
+      title
+      titleSlug
+      timestamp
+    }
+  }
+`;
+
+function fetchCompleteLeetCodeBundle(handle: string, limit = 50): Promise<Record<string, unknown>> {
+  const key = `${handle.trim().toLowerCase()}:${limit}`;
+  const now = Date.now();
+  const cached = inflightBundleCache.get(key);
+  if (cached && now - cached.timestamp < BUNDLE_CACHE_TTL_MS) {
+    return cached.promise;
+  }
+
+  const promise = fetchLeetCodeGraphQL(COMPLETE_USER_QUERY, { username: handle.trim(), limit }).catch((err) => {
+    inflightBundleCache.delete(key);
+    throw err;
+  });
+
+  inflightBundleCache.set(key, { timestamp: now, promise });
+  return promise;
 }
 
 export class LeetCodeFetcher implements PlatformFetcher {
@@ -91,34 +163,8 @@ export class LeetCodeFetcher implements PlatformFetcher {
    * Fetch profile stats, solved problem counts, and submission calendar
    */
   async fetchProfile(handle: string): Promise<Snapshot> {
-    const query = `
-      query userProfileData($username: String!) {
-        matchedUser(username: $username) {
-          username
-          profile {
-            ranking
-            reputation
-          }
-          submissionCalendar
-          submitStatsGlobal {
-            acSubmissionNum {
-              difficulty
-              count
-              submissions
-            }
-          }
-        }
-        userContestRanking(username: $username) {
-          rating
-          globalRanking
-          topPercentage
-          attendedContestsCount
-        }
-      }
-    `;
-
     try {
-      const data = await fetchLeetCodeGraphQL(query, { username: handle });
+      const data = await fetchCompleteLeetCodeBundle(handle, 50);
       const matchedUser = data.matchedUser as { submitStatsGlobal?: { acSubmissionNum?: LeetCodeDifficultyCount[] }; [key: string]: unknown } | undefined;
 
       if (!matchedUser) {
@@ -156,22 +202,8 @@ export class LeetCodeFetcher implements PlatformFetcher {
    * Fetch contest ranking and participation history
    */
   async fetchContests(handle: string): Promise<Contest[]> {
-    const query = `
-      query userContestHistory($username: String!) {
-        userContestRankingHistory(username: $username) {
-          attended
-          rating
-          ranking
-          contest {
-            title
-            startTime
-          }
-        }
-      }
-    `;
-
     try {
-      const data = await fetchLeetCodeGraphQL(query, { username: handle });
+      const data = await fetchCompleteLeetCodeBundle(handle, 50);
       const history = data.userContestRankingHistory as LeetCodeContestHistoryItem[] | undefined;
 
       if (!Array.isArray(history)) {
@@ -202,19 +234,8 @@ export class LeetCodeFetcher implements PlatformFetcher {
    * Fetch recent accepted submissions
    */
   async fetchRecentSubmissions(handle: string, limit = 50): Promise<Submission[]> {
-    const query = `
-      query recentAcSubmissions($username: String!, $limit: Int!) {
-        recentAcSubmissionList(username: $username, limit: $limit) {
-          id
-          title
-          titleSlug
-          timestamp
-        }
-      }
-    `;
-
     try {
-      const data = await fetchLeetCodeGraphQL(query, { username: handle, limit });
+      const data = await fetchCompleteLeetCodeBundle(handle, limit);
       const subs = data.recentAcSubmissionList as LeetCodeRecentSubmission[] | undefined;
 
       if (!Array.isArray(subs)) {

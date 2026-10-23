@@ -26,10 +26,26 @@ function seededRandom(seed: string): number {
   return Math.abs(hash);
 }
 
+const potdCache = new Map<string, { timestamp: number; data: DailyWorkout }>();
+const POTD_CACHE_TTL_MS = 60 * 1000;
+
+export function clearPotdCache(userId?: string) {
+  if (userId) {
+    potdCache.delete(userId);
+  } else {
+    potdCache.clear();
+  }
+}
+
 export async function getDailyWorkout(
   userId: string,
   userWeaknesses: { tag: string; reason?: string }[] = []
 ): Promise<DailyWorkout> {
+  const cached = potdCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < POTD_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD in UTC
 
   // 1. Get user solved problems
@@ -121,11 +137,14 @@ export async function getDailyWorkout(
   const isCompletedToday = solvedTodayCount === workoutProblems.length;
   const streakProtected = solvedTodayCount > 0;
 
-  return {
+  const result: DailyWorkout = {
     dateStr: today,
     todayTargetTopic,
     problems: workoutProblems,
     isCompletedToday,
     streakProtected,
   };
+
+  potdCache.set(userId, { timestamp: Date.now(), data: result });
+  return result;
 }

@@ -19,34 +19,38 @@ export interface CompareProfile {
   topicBreakdown: Record<string, number>;
 }
 
+const compareCache = new Map<string, { timestamp: number; data: CompareProfile }>();
+const COMPARE_CACHE_TTL_MS = 60 * 1000;
+
 export async function getCompareProfile(identifier: string): Promise<CompareProfile | null> {
   const cleanId = identifier.trim();
   if (!cleanId) return null;
 
-  try {
-    // 1. Check local users table
-    let { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, username')
-      .ilike('username', cleanId)
-      .maybeSingle();
+  const cacheKey = cleanId.toLowerCase();
+  const cached = compareCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < COMPARE_CACHE_TTL_MS) {
+    return cached.data;
+  }
 
-    // 2. Check accounts table by handle
-    if (!user) {
-      const { data: account } = await supabaseAdmin
+  try {
+    // 1. Check local users table and accounts table in parallel (1 round-trip instead of 2)
+    const [{ data: directUser }, { data: account }] = await Promise.all([
+      supabaseAdmin.from('users').select('id, username').ilike('username', cleanId).maybeSingle(),
+      supabaseAdmin
         .from('accounts')
         .select('user_id, users(id, username)')
         .ilike('handle', cleanId)
         .limit(1)
-        .maybeSingle();
+        .maybeSingle(),
+    ]);
 
-      if (account?.users) {
-        const u = account.users as unknown as { id: string; username: string };
-        user = { id: u.id, username: u.username };
-      }
+    let user = directUser;
+    if (!user && account?.users) {
+      const u = account.users as unknown as { id: string; username: string };
+      user = { id: u.id, username: u.username };
     }
 
-    // 3. If found in database, return aggregated profile
+    // 2. If found in database, return aggregated profile
     if (user) {
       const stats = await getDashboardStats(user.id);
 
@@ -69,7 +73,7 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
         topicMap[item.tag] = item.count;
       }
 
-      return {
+      const resolved: CompareProfile = {
         username: user.username || cleanId,
         totalSolved: stats.totalSolved,
         difficulty: {
@@ -84,9 +88,11 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
         platforms,
         topicBreakdown: topicMap,
       };
+      compareCache.set(cacheKey, { timestamp: Date.now(), data: resolved });
+      return resolved;
     }
 
-    // 4. If not registered locally, fetch live public profile from LeetCode or Codeforces!
+    // 3. If not registered locally, fetch live public profile from LeetCode or Codeforces!
     const [lcResult, cfResult] = await Promise.allSettled([
       leetcodeFetcher.fetchProfile(cleanId),
       codeforcesFetcher.fetchProfile(cleanId),
@@ -96,7 +102,7 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
     const cfProfile = cfResult.status === 'fulfilled' ? cfResult.value : null;
 
     if (lcProfile && lcProfile.solvedTotal > 0) {
-      return {
+      const resolved: CompareProfile = {
         username: cleanId,
         totalSolved: lcProfile.solvedTotal,
         difficulty: {
@@ -111,10 +117,12 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
         platforms: ['LeetCode'],
         topicBreakdown: {},
       };
+      compareCache.set(cacheKey, { timestamp: Date.now(), data: resolved });
+      return resolved;
     }
 
     if (cfProfile && (cfProfile.solvedTotal > 0 || cfProfile.rating)) {
-      return {
+      const resolved: CompareProfile = {
         username: cleanId,
         totalSolved: cfProfile.solvedTotal,
         difficulty: {
@@ -129,6 +137,8 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
         platforms: ['Codeforces'],
         topicBreakdown: {},
       };
+      compareCache.set(cacheKey, { timestamp: Date.now(), data: resolved });
+      return resolved;
     }
 
     return null;

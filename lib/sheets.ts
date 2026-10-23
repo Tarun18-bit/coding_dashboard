@@ -27,6 +27,18 @@ export interface SheetProgress {
 const sheetsCache = new Map<string, { timestamp: number; data: SheetProgress }>();
 const SHEETS_CACHE_TTL_MS = 60 * 1000;
 
+export function clearSheetsCache(userId?: string) {
+  if (userId) {
+    for (const key of sheetsCache.keys()) {
+      if (key.startsWith(`${userId}:`)) {
+        sheetsCache.delete(key);
+      }
+    }
+  } else {
+    sheetsCache.clear();
+  }
+}
+
 export async function getUserSheetProgress(
   userId: string,
   sheetType: SheetType = 'blind75',

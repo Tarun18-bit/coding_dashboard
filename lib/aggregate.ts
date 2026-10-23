@@ -1,4 +1,6 @@
 import { supabaseAdmin } from './db';
+import { clearSheetsCache } from './sheets';
+import { clearPotdCache } from './potd';
 
 export interface HeatmapDay {
   date: string; // YYYY-MM-DD
@@ -148,6 +150,8 @@ export function clearStatsCache(userId?: string) {
   } else {
     statsCache.clear();
   }
+  clearSheetsCache(userId);
+  clearPotdCache(userId);
 }
 
 export async function getDashboardStats(
@@ -162,36 +166,69 @@ export async function getDashboardStats(
   }
 
   try {
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, username')
-      .eq('id', userId)
-      .maybeSingle();
-
-  const { data: accountsData } = await supabaseAdmin
-    .from('accounts')
-    .select('*')
-    .eq('user_id', userId);
-
-  const accounts = accountsData || [];
-  const accountIds = accounts.map((a) => a.id);
-
-  let totalSolved = 0;
-  let totalEasy = 0;
-  let totalMedium = 0;
-  let totalHard = 0;
-
-  const activityMap: Record<string, number> = {};
-
-  const accountsWithSnapshots = await Promise.all(
-    accounts.map(async (acc) => {
-      const { data: latestSnap } = await supabaseAdmin
-        .from('snapshots')
+    const [{ data: user }, { data: accountsData }] = await Promise.all([
+      supabaseAdmin.from('users').select('id, username').eq('id', userId).maybeSingle(),
+      supabaseAdmin
+        .from('accounts')
         .select('*')
-        .eq('account_id', acc.id)
-        .order('taken_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .eq('user_id', userId)
+        .order('last_synced_at', { ascending: false, nullsFirst: false }),
+    ]);
+
+    // Deduplicate accounts by platform (keep the most recently synced row per platform so linking twice never double-counts)
+    const seenPlatforms = new Set<string>();
+    const accounts: any[] = [];
+    for (const acc of accountsData || []) {
+      const platKey = String(acc.platform || '').toLowerCase().trim();
+      if (!seenPlatforms.has(platKey)) {
+        seenPlatforms.add(platKey);
+        accounts.push(acc);
+      }
+    }
+
+    const accountIds = accounts.map((a) => a.id);
+
+    let totalSolved = 0;
+    let totalEasy = 0;
+    let totalMedium = 0;
+    let totalHard = 0;
+
+    const activityMap: Record<string, number> = {};
+
+    // Fetch latest snapshots, submissions, and contests ALL IN PARALLEL (1 round-trip instead of 3!)
+    const [latestSnapshots, allSubsRes, contestsRes] =
+      accountIds.length > 0
+        ? await Promise.all([
+            Promise.all(
+              accounts.map((acc) =>
+                supabaseAdmin
+                  .from('snapshots')
+                  .select('*')
+                  .eq('account_id', acc.id)
+                  .order('taken_at', { ascending: false })
+                  .limit(1)
+                  .maybeSingle()
+                  .then((r) => r.data)
+              )
+            ),
+            supabaseAdmin
+              .from('submissions')
+              .select(
+                'id, platform_submission_id, problem_id, title, verdict, tags, difficulty, submitted_at, account_id, accounts!inner(platform)'
+              )
+              .in('account_id', accountIds)
+              .order('submitted_at', { ascending: false })
+              .limit(500),
+            supabaseAdmin
+              .from('contests')
+              .select('*, accounts!inner(platform)')
+              .in('account_id', accountIds)
+              .order('date', { ascending: true }),
+          ])
+        : [[], { data: null }, { data: null }];
+
+    const accountsWithSnapshots = accounts.map((acc, idx) => {
+      const latestSnap = latestSnapshots[idx];
 
       if (latestSnap) {
         totalSolved += latestSnap.solved_total || 0;
@@ -229,20 +266,14 @@ export async function getDashboardStats(
             }
           : null,
       };
-    })
-  );
+    });
 
-  const tagCounts: Record<string, number> = {};
-  const failedTagCounts: Record<string, number> = {};
-  let recentSubmissions: DashboardStats['recentSubmissions'] = [];
+    const tagCounts: Record<string, number> = {};
+    const failedTagCounts: Record<string, number> = {};
+    let recentSubmissions: DashboardStats['recentSubmissions'] = [];
 
-  if (accountIds.length > 0) {
-    const { data: allSubs } = await supabaseAdmin
-      .from('submissions')
-      .select('id, platform_submission_id, problem_id, title, verdict, tags, difficulty, submitted_at, account_id, accounts!inner(platform)')
-      .in('account_id', accountIds)
-      .order('submitted_at', { ascending: false })
-      .limit(500);
+    if (accountIds.length > 0) {
+      const allSubs = allSubsRes.data;
 
     if (allSubs) {
       const typedSubs = allSubs as SubmissionAggregateRow[];
@@ -346,24 +377,16 @@ export async function getDashboardStats(
   }
 
   let ratingHistory: DashboardStats['ratingHistory'] = [];
-  if (accountIds.length > 0) {
-    const { data: contests } = await supabaseAdmin
-      .from('contests')
-      .select('*, accounts!inner(platform)')
-      .in('account_id', accountIds)
-      .order('date', { ascending: true });
-
-    if (contests) {
-      const typedContests = contests as ContestAggregateRow[];
-      ratingHistory = typedContests
-        .filter((contest): contest is ContestAggregateRow & { rating_after: number } => contest.rating_after !== null)
-        .map((contest) => ({
-          date: new Date(contest.date).toISOString().slice(0, 10),
-          rating: contest.rating_after,
-          contestName: contest.contest_name,
-          platform: contest.accounts?.platform || 'codeforces',
-        }));
-    }
+  if (accountIds.length > 0 && contestsRes.data) {
+    const typedContests = contestsRes.data as ContestAggregateRow[];
+    ratingHistory = typedContests
+      .filter((contest): contest is ContestAggregateRow & { rating_after: number } => contest.rating_after !== null)
+      .map((contest) => ({
+        date: new Date(contest.date).toISOString().slice(0, 10),
+        rating: contest.rating_after,
+        contestName: contest.contest_name,
+        platform: contest.accounts?.platform || 'codeforces',
+      }));
   }
 
     const result: DashboardStats = {

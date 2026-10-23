@@ -1,26 +1,54 @@
 import { PlatformFetcher, Snapshot, Contest, Submission } from './types';
 
 const CODECHEF_BASE = 'https://www.codechef.com';
+const CC_CACHE_TTL_MS = 15000;
+const ccProfileHtmlCache = new Map<
+  string,
+  { timestamp: number; promise: Promise<string | null> }
+>();
+
 const DEFAULT_HEADERS = {
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 };
 
-async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3): Promise<Response | null> {
+async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 2): Promise<Response | null> {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, {
         ...options,
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(8000),
       });
       if (res.ok) return res;
+      if (res.status === 404) return null;
     } catch {
       if (i === retries - 1) return null;
-      await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
     }
   }
   return null;
+}
+
+function getSharedProfileHtml(handle: string): Promise<string | null> {
+  const key = handle.trim().toLowerCase();
+  const now = Date.now();
+  const cached = ccProfileHtmlCache.get(key);
+  if (cached && now - cached.timestamp < CC_CACHE_TTL_MS) {
+    return cached.promise;
+  }
+
+  const promise = fetchWithRetry(`${CODECHEF_BASE}/users/${encodeURIComponent(handle.trim())}`, {
+    headers: DEFAULT_HEADERS,
+  })
+    .then((res) => (res ? res.text() : null))
+    .catch(() => {
+      ccProfileHtmlCache.delete(key);
+      return null;
+    });
+
+  ccProfileHtmlCache.set(key, { timestamp: now, promise });
+  return promise;
 }
 
 /** Extracts Drupal.settings JSON from CodeChef profile page HTML */
@@ -115,16 +143,13 @@ export class CodeChefFetcher implements PlatformFetcher {
     };
 
     try {
-      const res = await fetchWithRetry(`${CODECHEF_BASE}/users/${encodeURIComponent(handle)}`, {
-        headers: DEFAULT_HEADERS,
-      });
+      const html = await getSharedProfileHtml(handle);
 
-      if (!res) {
+      if (!html) {
         console.warn(`[CodeChef] Could not reach profile page for ${handle}`);
         return empty;
       }
 
-      const html = await res.text();
       const settings = extractDrupalSettings(html);
 
       if (!settings) {
@@ -173,13 +198,9 @@ export class CodeChefFetcher implements PlatformFetcher {
 
   async fetchContests(handle: string): Promise<Contest[]> {
     try {
-      const res = await fetchWithRetry(`${CODECHEF_BASE}/users/${encodeURIComponent(handle)}`, {
-        headers: DEFAULT_HEADERS,
-      });
+      const html = await getSharedProfileHtml(handle);
+      if (!html) return [];
 
-      if (!res) return [];
-
-      const html = await res.text();
       const settings = extractDrupalSettings(html);
       if (!settings) return [];
 
