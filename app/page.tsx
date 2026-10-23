@@ -141,94 +141,123 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card 1 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00EA64]/40 transition group">
+          <Link
+            href={authUser ? '/dashboard' : '/login?mode=signup'}
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00EA64]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#00EA64]/10 border border-[#00EA64]/30 flex items-center justify-center text-[#00EA64]">
               <Layers className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#00EA64] transition">
-              Unified Platform Analytics
+            <h3 className="text-base font-bold text-white group-hover:text-[#00EA64] transition flex items-center justify-between">
+              <span>Unified Platform Analytics</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#00EA64]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Never switch tabs between Codeforces, LeetCode, and CodeChef again. View combined solved counts, unified difficulty breakdowns, and rating progression.
             </p>
-          </div>
+          </Link>
 
           {/* Card 2 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00C2FF]/40 transition group">
+          <Link
+            href="/sheets"
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00C2FF]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#00C2FF]/10 border border-[#00C2FF]/30 flex items-center justify-center text-[#00C2FF]">
               <BookOpen className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#00C2FF] transition">
-              Blind 75 &amp; NeetCode Tracker
+            <h3 className="text-base font-bold text-white group-hover:text-[#00C2FF] transition flex items-center justify-between">
+              <span>Blind 75 &amp; NeetCode Tracker</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#00C2FF]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Problems are automatically marked as solved whenever you submit on LeetCode or Codeforces. Stay on track for your tech company interviews.
             </p>
-          </div>
+          </Link>
 
           {/* Card 3 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#FDB52A]/40 transition group">
+          <Link
+            href="/mock-interview"
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#FDB52A]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#FDB52A]/10 border border-[#FDB52A]/30 flex items-center justify-center text-[#FDB52A]">
               <Clock className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#FDB52A] transition">
-              FAANG Mock Interview Arena
+            <h3 className="text-base font-bold text-white group-hover:text-[#FDB52A] transition flex items-center justify-between">
+              <span>FAANG Mock Interview Arena</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#FDB52A]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Practice under real 45-minute timed exam constraints with scratchpads, progressive hints, built-in code editor, and final performance scorecards.
             </p>
-          </div>
+          </Link>
 
           {/* Card 4 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#CB3CFF]/40 transition group">
+          <Link
+            href="/reviewer"
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#CB3CFF]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#CB3CFF]/10 border border-[#CB3CFF]/30 flex items-center justify-center text-[#CB3CFF]">
               <Bot className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#CB3CFF] transition">
-              AI Code Complexity Reviewer
+            <h3 className="text-base font-bold text-white group-hover:text-[#CB3CFF] transition flex items-center justify-between">
+              <span>AI Code Complexity Reviewer</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#CB3CFF]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Instant Big-O time and space complexity detection, code smell warnings, interview follow-up simulator, and concealed optimal solutions.
             </p>
-          </div>
+          </Link>
 
           {/* Card 5 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#FF5A65]/40 transition group">
+          <Link
+            href="/clans"
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#FF5A65]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#FF5A65]/10 border border-[#FF5A65]/30 flex items-center justify-center text-[#FF5A65]">
               <Trophy className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#FF5A65] transition">
-              Clans &amp; 1v1 Arena
+            <h3 className="text-base font-bold text-white group-hover:text-[#FF5A65] transition flex items-center justify-between">
+              <span>Clans &amp; 1v1 Arena</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#FF5A65]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Form study circles with your friends, compete on weekly problem targets, and challenge any competitive programmer head-to-head.
             </p>
-          </div>
+          </Link>
 
           {/* Card 6 */}
-          <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00EA64]/40 transition group">
+          <Link
+            href="/u/oggy"
+            className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-6 shadow-xl space-y-3.5 hover:border-[#00EA64]/40 hover:-translate-y-0.5 transition group block"
+          >
             <div className="h-10 w-10 rounded-xl bg-[#00EA64]/10 border border-[#00EA64]/30 flex items-center justify-center text-[#00EA64]">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <h3 className="text-base font-bold text-white group-hover:text-[#00EA64] transition">
-              ATS Resume &amp; README Badge
+            <h3 className="text-base font-bold text-white group-hover:text-[#00EA64] transition flex items-center justify-between">
+              <span>ATS Resume &amp; README Badge</span>
+              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#00EA64]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
               Generate a recruiter-ready technical interview progress sheet in 1 click or embed a dynamic stats badge in your GitHub README.
             </p>
-          </div>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-[rgba(148,163,184,0.12)] bg-[#080C17] py-8 text-center text-xs text-[#64748B]">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} DashCode. Built for competitive programmers worldwide.</p>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="hover:text-white transition">Sign In</Link>
-            <Link href="/login?mode=signup" className="hover:text-white transition">Register</Link>
-            <Link href="/u/txrun_18" className="hover:text-white transition">Demo Portfolio</Link>
+        <div className="max-w-7xl mx-auto px-4 space-y-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© {new Date().getFullYear()} DashCode. Built for competitive programmers worldwide.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="hover:text-white transition">Sign In</Link>
+              <Link href="/login?mode=signup" className="hover:text-white transition">Register</Link>
+              <Link href="/u/oggy" className="hover:text-white transition">Demo Portfolio</Link>
+            </div>
           </div>
+          <p className="text-[11px] text-[#475569] text-left sm:text-center">
+            DashCode is an independent analytics &amp; practice companion and is not affiliated with or endorsed by LeetCode, Codeforces, CodeChef, Google, Amazon, Meta, or Microsoft. Problem links direct to their respective official platforms.
+          </p>
         </div>
       </footer>
     </div>

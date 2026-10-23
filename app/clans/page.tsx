@@ -1,6 +1,7 @@
 import { ClanRoom } from '@/components/ClanRoom';
 import { Navbar } from '@/components/Navbar';
 import { createClient } from '@/lib/supabase/server';
+import { getGlobalLeaderboard } from '@/lib/leaderboard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,19 +16,33 @@ export default async function ClansPage() {
     // offline or static fallback
   }
 
+  const directoryUsers = await getGlobalLeaderboard().catch(() => []);
+
   const currentUsername =
     user?.user_metadata?.user_name ||
     user?.email?.split('@')[0] ||
     'oggy';
 
+  const currentUser = user
+    ? {
+        id: user.id,
+        email: user.email,
+        username: currentUsername,
+      }
+    : null;
+
   return (
     <div className="min-h-screen bg-[#090D1A] text-white selection:bg-[#00EA64] selection:text-[#090D1A] pb-16">
       {/* HackerRank-style Navigation Bar */}
-      <Navbar />
+      <Navbar currentUser={currentUser} activeUsername={currentUsername} />
 
       {/* Main Container */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        <ClanRoom currentUsername={currentUsername} currentUserId={user?.id || 'me'} />
+        <ClanRoom
+          currentUsername={currentUsername}
+          currentUserId={user?.id || 'me'}
+          directoryUsers={directoryUsers}
+        />
       </main>
     </div>
   );

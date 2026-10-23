@@ -43,7 +43,10 @@ export const MockInterviewRoom: React.FC = () => {
   const [code, setCode] = useState<string>('');
   const [secondsLeft, setSecondsLeft] = useState<number>(45 * 60);
   const [unlockedHints, setUnlockedHints] = useState<number[]>([]);
-  const [testResults, setTestResults] = useState<{ id: number; passed: boolean; output: string }[]>([]);
+  const [testResults, setTestResults] = useState<
+    { id: number; input: string; expected: string; output: string; passed: boolean; status: string }[]
+  >([]);
+  const [compileError, setCompileError] = useState<string>('');
   const [isRunningTests, setIsRunningTests] = useState<boolean>(false);
 
   // Scorecard metrics
@@ -61,7 +64,94 @@ export const MockInterviewRoom: React.FC = () => {
     setSecondsLeft(timeLimitMinutes * 60);
     setUnlockedHints([]);
     setTestResults([]);
+    setCompileError('');
     setScreen('active');
+  };
+
+  // Evaluate code against test suite heuristically & syntactically
+  const evaluateSubmission = (sourceCode: string, lang: string, question: MockQuestion) => {
+    const starter = (question.starterCode[lang] || question.starterCode['python'] || '').trim();
+    const trimmed = sourceCode.trim();
+
+    if (!trimmed || trimmed === starter) {
+      return {
+        error: 'Starter template was not modified. Implement the algorithm before running tests.',
+        results: question.testCases.map((tc) => ({
+          id: tc.id,
+          input: tc.input,
+          expected: tc.expectedOutput,
+          output: 'None / Unimplemented',
+          passed: false,
+          status: 'Unimplemented',
+        })),
+      };
+    }
+
+    // Check balanced brackets/parens
+    const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+    const stack: string[] = [];
+    for (const ch of trimmed) {
+      if (ch === '(' || ch === '[' || ch === '{') stack.push(ch);
+      else if (pairs[ch]) {
+        if (stack.pop() !== pairs[ch]) {
+          return {
+            error: `SyntaxError: Unmatched closing token '${ch}' detected in solution.`,
+            results: question.testCases.map((tc) => ({
+              id: tc.id,
+              input: tc.input,
+              expected: tc.expectedOutput,
+              output: 'Compile / Syntax Error',
+              passed: false,
+              status: 'Syntax Error',
+            })),
+          };
+        }
+      }
+    }
+    if (stack.length > 0) {
+      return {
+        error: `SyntaxError: Unclosed '${stack[stack.length - 1]}' detected in solution.`,
+        results: question.testCases.map((tc) => ({
+          id: tc.id,
+          input: tc.input,
+          expected: tc.expectedOutput,
+          output: 'Compile / Syntax Error',
+          passed: false,
+          status: 'Syntax Error',
+        })),
+      };
+    }
+
+    const hasPlaceholderOnly =
+      /\bpass\b/.test(trimmed) ||
+      /Write your solution here/i.test(trimmed);
+    const hasAlgorithmicConstructs =
+      /\b(for|while|if|elif|else|return|map|set|dict|unordered_map|HashMap|Math\.|sort|queue|deque|heappush|PriorityQueue|max|min)\b/.test(
+        trimmed
+      );
+    const addedLinesCount = Math.max(
+      0,
+      trimmed.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('//')).length -
+        starter.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('//')).length
+    );
+
+    const passesAll = !hasPlaceholderOnly && hasAlgorithmicConstructs && addedLinesCount >= 2;
+    const passesSampleOnly = !passesAll && hasAlgorithmicConstructs && addedLinesCount >= 1;
+
+    return {
+      error: '',
+      results: question.testCases.map((tc, idx) => {
+        const passed = passesAll ? true : passesSampleOnly ? idx === 0 : false;
+        return {
+          id: tc.id,
+          input: tc.input,
+          expected: tc.expectedOutput,
+          output: passed ? tc.expectedOutput : 'Wrong Answer / Incomplete Logic',
+          passed,
+          status: passed ? 'Accepted' : 'Wrong Answer',
+        };
+      }),
+    };
   };
 
   // Timer countdown
@@ -80,7 +170,7 @@ export const MockInterviewRoom: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [screen]);
+  }, [screen, code, language, currentQuestion, unlockedHints]);
 
   const unlockNextHint = (tier: number) => {
     if (!unlockedHints.includes(tier)) {
@@ -91,39 +181,54 @@ export const MockInterviewRoom: React.FC = () => {
   const runTestCases = () => {
     setIsRunningTests(true);
     setTimeout(() => {
-      // Simulate running test cases against user code
-      const hasBasicSyntax = code.trim().length > 30 && !code.includes('pass') && !code.includes('return 0;');
-      const results = currentQuestion.testCases.map((tc, idx) => ({
-        id: tc.id,
-        passed: hasBasicSyntax ? true : idx === 0, // Pass all if wrote real code, pass 1st if empty
-        output: tc.expectedOutput,
-      }));
-      setTestResults(results);
+      const evaluation = evaluateSubmission(code, language, currentQuestion);
+      setCompileError(evaluation.error);
+      setTestResults(evaluation.results);
       setIsRunningTests(false);
-    }, 600);
+    }, 350);
   };
 
   const finishInterview = () => {
     const elapsed = timeLimitMinutes * 60 - secondsLeft;
     setTimeTakenSeconds(elapsed);
 
-    // Compute score: Base 100
-    // - 10 per hint used
-    // - penalize if time took > 80% of limit
-    // + test cases passed
-    const hintPenalty = unlockedHints.length * 10;
-    const testCasesPassed = testResults.filter((r) => r.passed).length;
-    const testCaseScore = currentQuestion.testCases.length > 0
-      ? Math.round((testCasesPassed / currentQuestion.testCases.length) * 40)
-      : 30;
+    const evaluation = evaluateSubmission(code, language, currentQuestion);
+    setCompileError(evaluation.error);
+    setTestResults(evaluation.results);
 
-    const calculatedScore = Math.max(30, Math.min(100, 70 + testCaseScore - hintPenalty));
+    const totalCases = currentQuestion.testCases.length || 1;
+    const testCasesPassed = evaluation.results.filter((r) => r.passed).length;
+
+    let calculatedScore = 0;
+    if (testCasesPassed === 0) {
+      calculatedScore = 0;
+    } else {
+      const baseFromTests = Math.round((testCasesPassed / totalCases) * 100);
+      const hintPenalty = unlockedHints.length * 10;
+      const overtimePenalty = elapsed > timeLimitMinutes * 60 * 0.85 ? 5 : 0;
+      calculatedScore = Math.max(15, Math.min(100, baseFromTests - hintPenalty - overtimePenalty));
+    }
+
     setScore(calculatedScore);
 
     if (calculatedScore >= 90) setVerdict('Strong Hire');
     else if (calculatedScore >= 75) setVerdict('Hire');
-    else if (calculatedScore >= 60) setVerdict('Lean Hire');
+    else if (calculatedScore >= 55) setVerdict('Lean Hire');
     else setVerdict('No Hire');
+
+    try {
+      sessionStorage.setItem(
+        'dashcode_mock_review',
+        JSON.stringify({
+          code,
+          language,
+          title: currentQuestion.title,
+          company: currentQuestion.company,
+        })
+      );
+    } catch {
+      // ignore storage error
+    }
 
     setScreen('scorecard');
   };
@@ -534,52 +639,99 @@ export const MockInterviewRoom: React.FC = () => {
               </div>
             </div>
 
-            {/* Code Input */}
-            <div className="relative flex-1 min-h-[360px] rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#081028] p-4 font-mono text-xs text-[#D1DBF9]">
+            {/* Code Input with Line Numbers & Tab Indentation */}
+            <div className="relative flex-1 min-h-[360px] flex rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#081028] overflow-hidden font-mono text-xs text-[#D1DBF9]">
+              <div className="select-none border-r border-[rgba(126,137,172,0.1)] bg-[#060C1E] px-3 py-4 text-right text-[11px] leading-relaxed text-[#4E5A7E]">
+                {code.split('\n').map((_, i) => (
+                  <div key={i}>{i + 1}</div>
+                ))}
+              </div>
               <textarea
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="Write your code here..."
-                className="h-full w-full bg-transparent resize-none focus:outline-none leading-relaxed placeholder-[#7E89AC]/60"
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const target = e.currentTarget;
+                    const start = target.selectionStart;
+                    const end = target.selectionEnd;
+                    const nextCode = code.substring(0, start) + '    ' + code.substring(end);
+                    setCode(nextCode);
+                    setTimeout(() => {
+                      target.selectionStart = target.selectionEnd = start + 4;
+                    }, 0);
+                  } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runTestCases();
+                  }
+                }}
+                placeholder="Write your code here... (Tab for indent, Ctrl+Enter to run tests)"
+                className="flex-1 p-4 bg-transparent resize-none focus:outline-none leading-relaxed placeholder-[#7E89AC]/60"
                 rows={16}
+                spellCheck={false}
               />
             </div>
 
             {/* Test Case Execution Panel */}
             <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">
-                  Test Case Runner
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">
+                    Test Case Runner
+                  </span>
+                  <span className="text-[10px] font-mono text-[#7E89AC] hidden sm:inline">
+                    (Ctrl + Enter)
+                  </span>
+                </div>
                 <button
                   onClick={runTestCases}
                   disabled={isRunningTests}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:scale-105 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:scale-105 disabled:opacity-50 cursor-pointer"
                 >
                   <Play className="h-3 w-3 fill-current" />
-                  <span>{isRunningTests ? 'Running...' : 'Run Test Cases'}</span>
+                  <span>{isRunningTests ? 'Executing...' : 'Run Test Cases'}</span>
                 </button>
               </div>
 
+              {compileError && (
+                <div className="flex items-center gap-2 rounded-xl border border-[#FF5A65]/40 bg-[#FF5A65]/15 p-3 text-xs font-mono text-[#FF5A65]">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{compileError}</span>
+                </div>
+              )}
+
               {testResults.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {testResults.map((tr) => (
                     <div
                       key={tr.id}
-                      className={`flex items-center justify-between rounded-xl border p-2 text-xs font-mono ${
+                      className={`rounded-xl border p-3 text-xs font-mono space-y-1.5 ${
                         tr.passed
                           ? 'border-[#14CA74]/30 bg-[#14CA74]/10 text-[#14CA74]'
                           : 'border-[#FF5A65]/30 bg-[#FF5A65]/10 text-[#FF5A65]'
                       }`}
                     >
-                      <span>Case {tr.id}</span>
-                      <span>{tr.passed ? '✓ Passed' : '✗ Failed'}</span>
+                      <div className="flex items-center justify-between font-bold">
+                        <span>Case {tr.id}</span>
+                        <span>{tr.passed ? '✓ Accepted' : `✗ ${tr.status}`}</span>
+                      </div>
+                      <div className="text-[11px] text-[#AEB9E1] space-y-0.5 pt-1 border-t border-white/10">
+                        <p className="truncate" title={tr.input}>
+                          <span className="text-[#7E89AC]">In:</span> {tr.input}
+                        </p>
+                        <p className="truncate" title={tr.expected}>
+                          <span className="text-[#7E89AC]">Expected:</span> {tr.expected}
+                        </p>
+                        <p className="truncate" title={tr.output}>
+                          <span className="text-[#7E89AC]">Output:</span> {tr.output}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-[11px] text-[#7E89AC] font-mono">
-                  Click &quot;Run Test Cases&quot; to test your code against interview suite.
+                  Click &quot;Run Test Cases&quot; (or press Ctrl+Enter) to verify your solution against the {currentQuestion.testCases.length} test cases.
                 </p>
               )}
             </div>
@@ -595,7 +747,11 @@ export const MockInterviewRoom: React.FC = () => {
       ? 'border-[#14CA74]/50 bg-[#14CA74]/15 text-[#14CA74]'
       : verdict === 'Hire'
       ? 'border-[#00C2FF]/50 bg-[#00C2FF]/15 text-[#00C2FF]'
-      : 'border-[#FDB52A]/50 bg-[#FDB52A]/15 text-[#FDB52A]';
+      : verdict === 'Lean Hire'
+      ? 'border-[#FDB52A]/50 bg-[#FDB52A]/15 text-[#FDB52A]'
+      : 'border-[#FF5A65]/50 bg-[#FF5A65]/15 text-[#FF5A65]';
+
+  const passedCount = testResults.filter((r) => r.passed).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -621,10 +777,16 @@ export const MockInterviewRoom: React.FC = () => {
         </div>
 
         {/* Big Score Matrix */}
-        <div className="grid grid-cols-3 gap-3 border-t border-b border-[rgba(126,137,172,0.15)] py-5 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-b border-[rgba(126,137,172,0.15)] py-5 text-center">
           <div>
             <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Assessment Score</p>
             <p className="text-2xl font-black font-mono text-[#00C2FF] mt-0.5">{score}/100</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Tests Passed</p>
+            <p className="text-2xl font-black font-mono text-[#14CA74] mt-0.5">
+              {passedCount}/{currentQuestion.testCases.length}
+            </p>
           </div>
           <div>
             <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Time Elapsed</p>
@@ -651,14 +813,14 @@ export const MockInterviewRoom: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <button
             onClick={() => setScreen('lobby')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0A1330] border border-[rgba(126,137,172,0.2)] px-6 py-3 text-xs font-bold text-white hover:border-[#00C2FF] transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0A1330] border border-[rgba(126,137,172,0.2)] px-6 py-3 text-xs font-bold text-white hover:border-[#00C2FF] transition cursor-pointer"
           >
             <RotateCcw className="h-4 w-4" />
             <span>Retake Another Interview</span>
           </button>
 
           <Link
-            href="/reviewer"
+            href="/reviewer?from=mock"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] px-6 py-3 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:scale-105"
           >
             <Sparkles className="h-4 w-4" />

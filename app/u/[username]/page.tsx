@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
 import { getDashboardStats } from '@/lib/aggregate';
 import { StatCard } from '@/components/StatCard';
 import { PlatformCard } from '@/components/PlatformCard';
@@ -33,6 +34,15 @@ interface PublicProfileProps {
 export default async function PublicProfilePage({ params }: PublicProfileProps) {
   const { username } = await params;
   const decodedUsername = decodeURIComponent(username).trim();
+
+  let authUser: any = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    authUser = data?.user ?? null;
+  } catch {
+    // ignore
+  }
 
   // 1. Try to find user by username in users table
   let { data: user } = await supabaseAdmin
@@ -198,10 +208,10 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             />
             <ShareButton username={displayName} />
             <Link
-              href="/login"
+              href={authUser ? '/dashboard' : '/login?mode=signup'}
               className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-4 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#0B34C7]"
             >
-              <span>Build Yours</span>
+              <span>{authUser ? 'My Dashboard' : 'Build Yours'}</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>
@@ -216,7 +226,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             username={displayName}
             rpgTitle={rpgProfile.title}
             rpgLevel={rpgProfile.level}
-            isEditable={true}
+            isEditable={Boolean(authUser && authUser.id === user.id)}
           />
         </section>
 

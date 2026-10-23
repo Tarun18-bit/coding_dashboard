@@ -19,8 +19,34 @@ interface DailyWorkoutProps {
   initialWorkout: DailyWorkout;
 }
 
+const MANUAL_SOLVES_KEY = 'dashcode_manual_sheet_solves_v1';
+
 export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }) => {
   const [timeLeft, setTimeLeft] = useState('');
+  const [manualOverrides, setManualOverrides] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(MANUAL_SOLVES_KEY);
+      if (raw) {
+        setManualOverrides(JSON.parse(raw));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleSolved = (problemId: string, currentSolved: boolean) => {
+    setManualOverrides((prev) => {
+      const next = { ...prev, [problemId]: !currentSolved };
+      try {
+        localStorage.setItem(MANUAL_SOLVES_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Countdown to next UTC midnight
   useEffect(() => {
@@ -41,7 +67,13 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
     return () => clearInterval(interval);
   }, []);
 
-  const solvedCount = initialWorkout.problems.filter((p) => p.isSolved).length;
+  const enrichedProblems = initialWorkout.problems.map((p) => ({
+    ...p,
+    isSolved: manualOverrides[p.id] !== undefined ? manualOverrides[p.id] : p.isSolved,
+  }));
+
+  const solvedCount = enrichedProblems.filter((p) => p.isSolved).length;
+  const isStreakProtected = initialWorkout.streakProtected || solvedCount > 0;
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl space-y-6">
@@ -67,7 +99,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
 
         {/* Status Pills */}
         <div className="flex items-center gap-2.5">
-          {initialWorkout.streakProtected ? (
+          {isStreakProtected ? (
             <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#14CA74]/30 bg-[#14CA74]/10 px-3 py-1.5 text-xs font-bold text-[#14CA74]">
               <ShieldCheck className="h-4 w-4" />
               <span>Streak Protected</span>
@@ -88,7 +120,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
 
       {/* 3 Workout Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {initialWorkout.problems.map((problem) => {
+        {enrichedProblems.map((problem) => {
           const isEasy = problem.difficulty === 'Easy';
           const isMed = problem.difficulty === 'Medium';
           const isHard = problem.difficulty === 'Hard';
@@ -133,17 +165,24 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
 
               {/* Card Footer / Action */}
               <div className="flex items-center justify-between border-t border-[rgba(126,137,172,0.14)] pt-3.5">
-                {problem.isSolved ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#14CA74]">
-                    <CheckCircle2 className="h-4 w-4 drop-shadow-[0_0_8px_rgba(20,202,116,0.8)]" />
-                    <span>Completed</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7E89AC]">
-                    <Circle className="h-4 w-4 opacity-50" />
-                    <span>Pending</span>
-                  </span>
-                )}
+                <button
+                  type="button"
+                  onClick={() => toggleSolved(problem.id, problem.isSolved)}
+                  title={problem.isSolved ? 'Click to mark pending' : 'Click to mark completed'}
+                  className="cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none"
+                >
+                  {problem.isSolved ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#14CA74]">
+                      <CheckCircle2 className="h-4 w-4 drop-shadow-[0_0_8px_rgba(20,202,116,0.8)]" />
+                      <span>Completed</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7E89AC] hover:text-[#14CA74] transition-colors">
+                      <Circle className="h-4 w-4 opacity-70" />
+                      <span>Mark Done</span>
+                    </span>
+                  )}
+                </button>
 
                 <a
                   href={problem.url}

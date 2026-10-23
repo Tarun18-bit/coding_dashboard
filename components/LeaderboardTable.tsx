@@ -136,7 +136,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </div>
                   </div>
                   <Link
-                    href={`/compare?u1=${currentUsername || 'txrun_18'}&u2=${entry.username}`}
+                    href={`/compare?u1=${encodeURIComponent(currentUsername || 'oggy')}&u2=${encodeURIComponent(entry.username)}`}
                     className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#AEB9E1] hover:border-[#0E43FB] hover:text-white transition"
                     title={`Compare with @${entry.username}`}
                   >

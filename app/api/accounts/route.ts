@@ -206,3 +206,60 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required to unlink an account' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const platform = searchParams.get('platform')?.toLowerCase().trim();
+    const accountId = searchParams.get('id')?.trim();
+
+    if (!platform && !accountId) {
+      return NextResponse.json(
+        { success: false, error: 'Platform or account ID is required' },
+        { status: 400 }
+      );
+    }
+
+    let query = supabaseAdmin.from('accounts').select('id').eq('user_id', user.id);
+    if (accountId) {
+      query = query.eq('id', accountId);
+    } else if (platform) {
+      query = query.ilike('platform', platform);
+    }
+
+    const { data: matchingAccounts, error: findErr } = await query;
+    if (findErr) throw findErr;
+
+    const idsToDelete = (matchingAccounts || []).map((a) => a.id);
+    if (idsToDelete.length > 0) {
+      await Promise.all([
+        supabaseAdmin.from('snapshots').delete().in('account_id', idsToDelete),
+        supabaseAdmin.from('submissions').delete().in('account_id', idsToDelete),
+        supabaseAdmin.from('contests').delete().in('account_id', idsToDelete),
+      ]);
+      const { error: delErr } = await supabaseAdmin
+        .from('accounts')
+        .delete()
+        .in('id', idsToDelete)
+        .eq('user_id', user.id);
+      if (delErr) throw delErr;
+    }
+
+    clearStatsCache(user.id);
+    return NextResponse.json({ success: true, deletedCount: idsToDelete.length });
+  } catch (error: unknown) {
+    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+  }
+}

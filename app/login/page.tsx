@@ -28,13 +28,22 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
       const search = window.location.search;
+      const params = new URLSearchParams(search);
+      const requestedMode = params.get('mode');
+
       if (
         hash.includes('type=recovery') ||
         search.includes('type=recovery') ||
-        search.includes('mode=reset')
+        requestedMode === 'reset'
       ) {
         router.replace(`/reset-password${hash || search}`);
         return;
+      }
+
+      if (requestedMode === 'signup' || requestedMode === 'register') {
+        setMode('signup');
+      } else if (requestedMode === 'forgot') {
+        setMode('forgot');
       }
     }
 
@@ -210,14 +219,16 @@ export default function LoginPage() {
           <form onSubmit={handleAuth} className="space-y-4">
             {mode === 'signup' && (
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+                <label htmlFor="auth-username" className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
                   Username
                 </label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                   <input
+                    id="auth-username"
                     type="text"
                     required
+                    autoComplete="username"
                     placeholder="e.g. alex_coder"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -228,14 +239,16 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+              <label htmlFor="auth-email" className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
                 Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                 <input
+                  id="auth-email"
                   type="email"
                   required
+                  autoComplete="email"
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -247,7 +260,7 @@ export default function LoginPage() {
             {mode !== 'forgot' && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+                  <label htmlFor="auth-password" className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
                     Password
                   </label>
                   {mode === 'signin' && (
@@ -267,8 +280,11 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                   <input
+                    id="auth-password"
                     type="password"
                     required
+                    minLength={6}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

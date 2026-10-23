@@ -34,6 +34,7 @@ import { RpgProfileCard } from '@/components/RpgProfileCard';
 import { ProfileHero } from '@/components/ProfileHero';
 import { ExportResumeModal } from '@/components/ExportResumeModal';
 import { BadgeModal } from '@/components/BadgeModal';
+import { AccountModal } from '@/components/AccountModal';
 
 interface DashboardTabsProps {
   stats: any;
@@ -212,7 +213,20 @@ export function DashboardTabs({
             </div>
 
             {stats.accounts.length === 0 ? (
-              <p className="text-xs text-[#64748B] py-4 text-center">No accounts linked yet.</p>
+              <div className="rounded-xl border border-dashed border-[#00EA64]/30 bg-[#090D1A]/70 p-6 text-center space-y-4">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#00EA64]/10 border border-[#00EA64]/30 text-[#00EA64]">
+                  <Layers className="h-6 w-6" />
+                </div>
+                <div className="space-y-1 max-w-md mx-auto">
+                  <h3 className="text-sm font-bold text-white">Connect Your First Coding Handle</h3>
+                  <p className="text-xs text-[#94A3B8] leading-relaxed">
+                    Link your <strong className="text-white">LeetCode</strong>, <strong className="text-white">Codeforces</strong>, or <strong className="text-white">CodeChef</strong> username to automatically pull solved problems, 365-day activity heatmaps, and contest ratings.
+                  </p>
+                </div>
+                <div className="flex items-center justify-center pt-1">
+                  <AccountModal />
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {stats.accounts.map((acc: any) => (
@@ -227,6 +241,7 @@ export function DashboardTabs({
                     rating={acc.latestSnapshot?.rating}
                     maxRating={acc.latestSnapshot?.maxRating}
                     lastSyncedAt={acc.lastSyncedAt}
+                    allowUnlink={true}
                   />
                 ))}
               </div>
@@ -331,7 +346,7 @@ export function DashboardTabs({
                         </td>
                         <td className="py-3 px-4 text-right">
                           <Link
-                            href="/reviewer"
+                            href={`/reviewer?problem=${encodeURIComponent(sub.title)}&platform=${encodeURIComponent(sub.platform)}`}
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00EA64] hover:underline"
                           >
                             <Bot className="h-3 w-3" />

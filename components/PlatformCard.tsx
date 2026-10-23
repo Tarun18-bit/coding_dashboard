@@ -1,6 +1,9 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowUpRight, Trash2, Loader2 } from 'lucide-react';
 
 interface PlatformCardProps {
   platform: string;
@@ -12,6 +15,7 @@ interface PlatformCardProps {
   rating?: number | null;
   maxRating?: number | null;
   lastSyncedAt?: string | null;
+  allowUnlink?: boolean;
 }
 
 export const PlatformCard: React.FC<PlatformCardProps> = ({
@@ -24,8 +28,29 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
   rating,
   maxRating,
   lastSyncedAt,
+  allowUnlink = false,
 }) => {
+  const router = useRouter();
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
   const p = platform.toLowerCase();
+
+  const handleUnlink = async () => {
+    setUnlinking(true);
+    try {
+      const res = await fetch(`/api/accounts?platform=${encodeURIComponent(p)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setConfirmUnlink(false);
+        router.refresh();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setUnlinking(false);
+    }
+  };
 
   const getPlatformMeta = () => {
     switch (p) {
@@ -71,13 +96,46 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
             <h3 className="mt-1 text-sm font-semibold text-white font-mono">@{handle}</h3>
           </div>
         </div>
-        <Link
-          href={`/platform/${platform.toLowerCase()}`}
-          className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#AEB9E1] transition hover:border-[#0E43FB] hover:bg-[#0E43FB] hover:text-white"
-          title={`View ${platform} details`}
-        >
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </Link>
+        <div className="flex items-center gap-1.5">
+          {allowUnlink && (
+            confirmUnlink ? (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={unlinking}
+                  onClick={handleUnlink}
+                  className="rounded-lg border border-[#FF5A65]/40 bg-[#FF5A65]/15 px-2 py-1 text-[10px] font-bold text-[#FF5A65] hover:bg-[#FF5A65] hover:text-white transition cursor-pointer disabled:opacity-50"
+                >
+                  {unlinking ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Unlink'}
+                </button>
+                <button
+                  type="button"
+                  disabled={unlinking}
+                  onClick={() => setConfirmUnlink(false)}
+                  className="rounded-lg border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-2 py-1 text-[10px] font-semibold text-[#7E89AC] hover:text-white transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmUnlink(true)}
+                className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#7E89AC] transition hover:border-[#FF5A65]/40 hover:text-[#FF5A65] cursor-pointer"
+                title={`Unlink ${platform} handle`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )
+          )}
+          <Link
+            href={`/platform/${platform.toLowerCase()}?handle=${encodeURIComponent(handle)}`}
+            className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#AEB9E1] transition hover:border-[#0E43FB] hover:bg-[#0E43FB] hover:text-white"
+            title={`View ${platform} details`}
+          >
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[rgba(126,137,172,0.14)] pt-3.5">

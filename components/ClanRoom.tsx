@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clan, INITIAL_CLANS } from '@/lib/clans';
+import { Clan, ClanMember, INITIAL_CLANS } from '@/lib/clans';
+import { LeaderboardEntry } from '@/lib/leaderboard';
 import {
   Users,
   Trophy,
@@ -12,12 +13,15 @@ import {
   Activity,
   X,
   Trash2,
+  UserPlus,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 
 interface ClanRoomProps {
   currentUsername?: string;
   currentUserId?: string;
+  directoryUsers?: LeaderboardEntry[];
 }
 
 const STORAGE_KEY = 'dashcode_clans_v1';
@@ -25,11 +29,14 @@ const STORAGE_KEY = 'dashcode_clans_v1';
 export const ClanRoom: React.FC<ClanRoomProps> = ({
   currentUsername = 'oggy',
   currentUserId = 'me',
+  directoryUsers = [],
 }) => {
   const [clans, setClans] = useState<Clan[]>(INITIAL_CLANS);
   const [activeClanId, setActiveClanId] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [newMemberHandle, setNewMemberHandle] = useState('');
 
   // New Clan Form state
   const [newClanName, setNewClanName] = useState('');
@@ -38,22 +45,51 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
   const [newClanTarget, setNewClanTarget] = useState('100');
   const [newClanCategory, setNewClanCategory] = useState<Clan['category']>('FAANG Prep');
 
-  // Load from localStorage on client mount
+  const findDirectoryUser = (uname: string) =>
+    directoryUsers.find((u) => u.username.toLowerCase() === uname.toLowerCase());
+
+  // Load from localStorage on client mount & sync real stats from directoryUsers
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
+        const parsed: Clan[] = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setClans(parsed);
-          setActiveClanId(parsed[0].id);
+          const synced = parsed.map((c) => {
+            const members = c.members.map((m) => {
+              const live = directoryUsers.find(
+                (u) => u.username.toLowerCase() === m.username.toLowerCase()
+              );
+              if (!live) return m;
+              const estWeekly =
+                m.solvedThisWeek > 0
+                  ? m.solvedThisWeek
+                  : Math.min(live.totalSolved, Math.max(1, live.currentStreak * 3));
+              return {
+                ...m,
+                totalSolved: live.totalSolved,
+                currentStreak: live.currentStreak,
+                solvedThisWeek: estWeekly,
+                bestPlatform: live.bestPlatform || m.bestPlatform,
+              };
+            });
+            const totalWeek = members.reduce((acc, m) => acc + (m.solvedThisWeek || 0), 0);
+            return {
+              ...c,
+              memberCount: members.length,
+              currentWeekSolves: Math.max(c.currentWeekSolves, totalWeek),
+              members: members.sort((a, b) => b.solvedThisWeek - a.solvedThisWeek || b.totalSolved - a.totalSolved),
+            };
+          });
+          setClans(synced);
+          setActiveClanId(synced[0].id);
         }
       }
     } catch (e) {
       console.error('Failed to load clans from storage:', e);
     }
     setIsLoaded(true);
-  }, []);
+  }, [directoryUsers]);
 
   // Save changes to localStorage
   const updateClans = (newClans: Clan[]) => {
@@ -78,6 +114,11 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
     e.preventDefault();
     if (!newClanName.trim()) return;
 
+    const meLive = findDirectoryUser(currentUsername);
+    const initialWeekly = meLive
+      ? Math.min(meLive.totalSolved, Math.max(2, meLive.currentStreak * 3))
+      : 0;
+
     const created: Clan = {
       id: `${newClanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString().slice(-4)}`,
       name: newClanName.trim(),
@@ -86,16 +127,16 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
       category: newClanCategory,
       memberCount: 1,
       weeklyTarget: parseInt(newClanTarget) || 100,
-      currentWeekSolves: 0,
+      currentWeekSolves: initialWeekly,
       members: [
         {
           userId: currentUserId,
           username: currentUsername,
           rank: 1,
-          solvedThisWeek: 0,
-          totalSolved: 0,
-          currentStreak: 0,
-          bestPlatform: 'LeetCode',
+          solvedThisWeek: initialWeekly,
+          totalSolved: meLive?.totalSolved || 0,
+          currentStreak: meLive?.currentStreak || 0,
+          bestPlatform: meLive?.bestPlatform || 'LeetCode',
           role: 'Leader',
         },
       ],
@@ -116,6 +157,90 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
     setIsCreateModalOpen(false);
     setNewClanName('');
     setNewClanTagline('');
+  };
+
+  const handleAddMember = (usernameToAdd: string) => {
+    if (!activeClan) return;
+    const clean = usernameToAdd.trim().replace(/^@/, '');
+    if (!clean) return;
+    if (activeClan.members.some((m) => m.username.toLowerCase() === clean.toLowerCase())) {
+      setNewMemberHandle('');
+      setIsAddMemberOpen(false);
+      return;
+    }
+
+    const live = findDirectoryUser(clean);
+    const weekly = live ? Math.min(live.totalSolved, Math.max(1, live.currentStreak * 3)) : 0;
+
+    const newMember: ClanMember = {
+      userId: live?.userId || `member-${Date.now()}`,
+      username: live?.username || clean,
+      rank: activeClan.members.length + 1,
+      solvedThisWeek: weekly,
+      totalSolved: live?.totalSolved || 0,
+      currentStreak: live?.currentStreak || 0,
+      bestPlatform: live?.bestPlatform || 'LeetCode',
+      role: 'Member',
+    };
+
+    const updatedMembers = [...activeClan.members, newMember].sort(
+      (a, b) => b.solvedThisWeek - a.solvedThisWeek || b.totalSolved - a.totalSolved
+    );
+    const totalWeek = updatedMembers.reduce((acc, m) => acc + m.solvedThisWeek, 0);
+
+    const updatedClan: Clan = {
+      ...activeClan,
+      memberCount: updatedMembers.length,
+      currentWeekSolves: totalWeek,
+      members: updatedMembers,
+      activities: [
+        {
+          id: `act-${Date.now()}`,
+          username: newMember.username,
+          action: `joined ${activeClan.name} (${newMember.totalSolved} total solved)!`,
+          timestamp: 'Just now',
+          badge: 'New Member',
+        },
+        ...activeClan.activities,
+      ],
+    };
+
+    updateClans(clans.map((c) => (c.id === activeClan.id ? updatedClan : c)));
+    setNewMemberHandle('');
+    setIsAddMemberOpen(false);
+  };
+
+  const handleLogSolve = () => {
+    if (!activeClan) return;
+    const updatedMembers = activeClan.members
+      .map((m) =>
+        m.username.toLowerCase() === currentUsername.toLowerCase() || m.role === 'Leader'
+          ? {
+              ...m,
+              solvedThisWeek: m.solvedThisWeek + 1,
+              totalSolved: m.totalSolved + 1,
+            }
+          : m
+      )
+      .sort((a, b) => b.solvedThisWeek - a.solvedThisWeek || b.totalSolved - a.totalSolved);
+
+    const updatedClan: Clan = {
+      ...activeClan,
+      currentWeekSolves: activeClan.currentWeekSolves + 1,
+      members: updatedMembers,
+      activities: [
+        {
+          id: `act-${Date.now()}`,
+          username: currentUsername,
+          action: 'completed a sprint problem toward the weekly clan target!',
+          timestamp: 'Just now',
+          badge: '+1 Solve',
+        },
+        ...activeClan.activities.slice(0, 9),
+      ],
+    };
+
+    updateClans(clans.map((c) => (c.id === activeClan.id ? updatedClan : c)));
   };
 
   const handleDeleteClan = (clanId: string) => {
@@ -227,20 +352,38 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
                 </div>
               </div>
 
-              {/* Quick Clan Stats & Delete Option */}
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] px-4 py-3 text-center">
+              {/* Quick Clan Stats, Log Solve, Add Member & Delete Option */}
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] px-4 py-2.5 text-center">
                   <p className="text-[10px] uppercase font-bold text-[#7E89AC]">Members</p>
-                  <p className="text-xl font-bold font-mono text-white">{activeClan.memberCount}</p>
+                  <p className="text-lg font-bold font-mono text-white">{activeClan.memberCount}</p>
                 </div>
-                <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] px-4 py-3 text-center">
+                <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] px-4 py-2.5 text-center">
                   <p className="text-[10px] uppercase font-bold text-[#7E89AC]">Weekly Solves</p>
-                  <p className="text-xl font-bold font-mono text-[#14CA74]">{activeClan.currentWeekSolves}</p>
+                  <p className="text-lg font-bold font-mono text-[#14CA74]">{activeClan.currentWeekSolves}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleLogSolve}
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-[#14CA74]/40 bg-[#14CA74]/15 px-3.5 py-2.5 text-xs font-bold text-[#14CA74] hover:bg-[#14CA74] hover:text-[#081028] transition cursor-pointer"
+                  title="Log a problem solved for your clan's weekly quest"
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>+1 Solve</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddMemberOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-[#00C2FF]/40 bg-[#00C2FF]/15 px-3.5 py-2.5 text-xs font-bold text-[#00C2FF] hover:bg-[#00C2FF] hover:text-[#081028] transition cursor-pointer"
+                  title="Add a friend or registered coder to this clan"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>Add Member</span>
+                </button>
                 <button
                   onClick={() => handleDeleteClan(activeClan.id)}
                   title="Delete Clan"
-                  className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-400 hover:bg-red-500/20 transition"
+                  className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-400 hover:bg-red-500/20 transition cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -294,6 +437,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
                       <th className="py-3 px-3.5">Member</th>
                       <th className="py-3 px-3.5 text-center">Role</th>
                       <th className="py-3 px-3.5 text-center">This Week</th>
+                      <th className="py-3 px-3.5 text-center">Total Solved</th>
                       <th className="py-3 px-3.5 text-center">Streak</th>
                       <th className="py-3 px-3.5 text-right rounded-r-xl">Action</th>
                     </tr>
@@ -334,6 +478,10 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
 
                           <td className="py-3.5 px-3.5 text-center font-bold text-[#14CA74]">
                             +{member.solvedThisWeek}
+                          </td>
+
+                          <td className="py-3.5 px-3.5 text-center font-bold text-white">
+                            {member.totalSolved}
                           </td>
 
                           <td className="py-3.5 px-3.5 text-center text-[#FFB016] font-bold">
@@ -492,6 +640,99 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({
                   className="rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#CB3CFF] px-5 py-2 font-bold text-white shadow-md hover:scale-105 transition"
                 >
                   Launch Clan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {isAddMemberOpen && activeClan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md rounded-3xl border border-[rgba(126,137,172,0.25)] bg-[#0B1739] p-6 sm:p-7 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-[rgba(126,137,172,0.14)] pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <UserPlus className="h-5 w-5 text-[#00C2FF]" />
+                <h3 className="text-base font-bold text-white">Add Member to {activeClan.name}</h3>
+              </div>
+              <button
+                onClick={() => setIsAddMemberOpen(false)}
+                className="rounded-xl p-1.5 text-[#7E89AC] hover:bg-[#0A1330] hover:text-white cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {directoryUsers.length > 0 && (
+              <div className="space-y-2 text-xs">
+                <p className="font-bold uppercase text-[#AEB9E1] text-[11px]">
+                  Registered DashCode Coders (1-Click Add)
+                </p>
+                <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                  {directoryUsers.map((u) => {
+                    const alreadyIn = activeClan.members.some(
+                      (m) => m.username.toLowerCase() === u.username.toLowerCase()
+                    );
+                    return (
+                      <div
+                        key={u.userId}
+                        className="flex items-center justify-between rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3.5 py-2.5"
+                      >
+                        <div>
+                          <span className="font-bold text-white">@{u.username}</span>
+                          <span className="ml-2 text-[11px] font-mono text-[#7E89AC]">
+                            {u.totalSolved} solved • {u.currentStreak}d streak
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={alreadyIn}
+                          onClick={() => handleAddMember(u.username)}
+                          className="rounded-lg bg-[#0E43FB] px-3 py-1 text-[11px] font-bold text-white hover:bg-[#00C2FF] hover:text-[#081028] transition disabled:opacity-40 cursor-pointer"
+                        >
+                          {alreadyIn ? 'Joined' : '+ Add'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddMember(newMemberHandle);
+              }}
+              className="space-y-3 text-xs pt-2 border-t border-[rgba(126,137,172,0.14)]"
+            >
+              <div>
+                <label className="block font-bold uppercase text-[#AEB9E1] mb-1 text-[11px]">
+                  Or Enter Friend&apos;s Username / Handle
+                </label>
+                <input
+                  type="text"
+                  value={newMemberHandle}
+                  onChange={(e) => setNewMemberHandle(e.target.value)}
+                  placeholder="e.g. doredo or _kartikey_12"
+                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3.5 py-2 text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddMemberOpen(false)}
+                  className="rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-4 py-2 font-bold text-[#AEB9E1] cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] px-5 py-2 font-bold text-white shadow-md hover:scale-105 transition cursor-pointer"
+                >
+                  Add to Clan
                 </button>
               </div>
             </form>

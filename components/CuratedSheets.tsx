@@ -1,24 +1,27 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { SheetProgress, SheetType, EnrichedSheetProblem } from '@/lib/sheets';
+import React, { useState, useMemo, useEffect } from 'react';
+import { SheetProgress, SheetType } from '@/lib/sheets';
 import {
   CheckCircle2,
   Circle,
   ExternalLink,
   Search,
-  Filter,
   Sparkles,
   ChevronDown,
   ChevronUp,
   Layers,
   BookOpen,
   Award,
+  Bot,
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface CuratedSheetsProps {
   initialProgress: Record<SheetType, SheetProgress>;
 }
+
+const MANUAL_SOLVES_KEY = 'dashcode_manual_sheet_solves_v1';
 
 export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress }) => {
   const [activeSheet, setActiveSheet] = useState<SheetType>('blind75');
@@ -26,8 +29,92 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Solved' | 'Unsolved'>('All');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [manualOverrides, setManualOverrides] = useState<Record<string, boolean>>({});
 
-  const progress = initialProgress[activeSheet];
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(MANUAL_SOLVES_KEY);
+      if (raw) {
+        setManualOverrides(JSON.parse(raw));
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  const toggleProblemSolved = (problemId: string, currentSolved: boolean) => {
+    setManualOverrides((prev) => {
+      const next = { ...prev, [problemId]: !currentSolved };
+      try {
+        localStorage.setItem(MANUAL_SOLVES_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  // Recompute sheet progress merging server auto-sync with manual overrides
+  const computedSheets = useMemo(() => {
+    const computeOne = (sheet: SheetProgress | undefined): SheetProgress | undefined => {
+      if (!sheet) return undefined;
+      let solvedProblems = 0;
+      const easy = { solved: 0, total: 0 };
+      const medium = { solved: 0, total: 0 };
+      const hard = { solved: 0, total: 0 };
+
+      const categories = sheet.categories.map((cat) => {
+        let catSolved = 0;
+        const problems = cat.problems.map((p) => {
+          const isSolved =
+            manualOverrides[p.id] !== undefined ? manualOverrides[p.id] : p.isSolved;
+          if (isSolved) {
+            solvedProblems++;
+            catSolved++;
+          }
+          if (p.difficulty === 'Easy') {
+            easy.total++;
+            if (isSolved) easy.solved++;
+          } else if (p.difficulty === 'Medium') {
+            medium.total++;
+            if (isSolved) medium.solved++;
+          } else {
+            hard.total++;
+            if (isSolved) hard.solved++;
+          }
+          return { ...p, isSolved };
+        });
+        return {
+          ...cat,
+          solved: catSolved,
+          problems,
+        };
+      });
+
+      const percent =
+        sheet.totalProblems > 0
+          ? Math.round((solvedProblems / sheet.totalProblems) * 100)
+          : 0;
+
+      return {
+        ...sheet,
+        solvedProblems,
+        percent,
+        easy,
+        medium,
+        hard,
+        categories,
+      };
+    };
+
+    return {
+      blind75: computeOne(initialProgress.blind75)!,
+      neetcode150: computeOne(initialProgress.neetcode150)!,
+      striver: computeOne(initialProgress.striver)!,
+    };
+  }, [initialProgress, manualOverrides]);
+
+  const progress = computedSheets[activeSheet];
 
   const toggleCategory = (cat: string) => {
     setCollapsedCategories((prev) => ({
@@ -85,7 +172,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
               Curated Interview Sheets
             </h2>
             <p className="text-xs md:text-sm text-[#AEB9E1] mt-1">
-              Automatically checks off problems from your synced LeetCode, Codeforces, and CodeChef submissions.
+              Automatically checks off problems from your synced LeetCode, Codeforces, and CodeChef submissions — or click any circle to toggle completion manually.
             </p>
           </div>
 
@@ -93,7 +180,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
           <div className="inline-flex flex-wrap rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-1.5 gap-1.5 text-xs">
             <button
               onClick={() => setActiveSheet('blind75')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'blind75'
                   ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
                   : 'text-[#AEB9E1] hover:text-white'
@@ -102,13 +189,13 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
               <BookOpen className="h-3.5 w-3.5" />
               <span>Blind 75</span>
               <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
-                {initialProgress.blind75?.solvedProblems}/{initialProgress.blind75?.totalProblems}
+                {computedSheets.blind75?.solvedProblems}/{computedSheets.blind75?.totalProblems}
               </span>
             </button>
 
             <button
               onClick={() => setActiveSheet('neetcode150')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'neetcode150'
                   ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
                   : 'text-[#AEB9E1] hover:text-white'
@@ -117,13 +204,13 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
               <Layers className="h-3.5 w-3.5" />
               <span>NeetCode 150</span>
               <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
-                {initialProgress.neetcode150?.solvedProblems}/{initialProgress.neetcode150?.totalProblems}
+                {computedSheets.neetcode150?.solvedProblems}/{computedSheets.neetcode150?.totalProblems}
               </span>
             </button>
 
             <button
               onClick={() => setActiveSheet('striver')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'striver'
                   ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
                   : 'text-[#AEB9E1] hover:text-white'
@@ -132,7 +219,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
               <Award className="h-3.5 w-3.5" />
               <span>Striver SDE Sheet</span>
               <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
-                {initialProgress.striver?.solvedProblems}/{initialProgress.striver?.totalProblems}
+                {computedSheets.striver?.solvedProblems}/{computedSheets.striver?.totalProblems}
               </span>
             </button>
           </div>
@@ -296,11 +383,18 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
                           }`}
                         >
                           <div className="flex items-center gap-3.5">
-                            {problem.isSolved ? (
-                              <CheckCircle2 className="h-5 w-5 text-[#14CA74] drop-shadow-[0_0_8px_rgba(20,202,116,0.6)]" />
-                            ) : (
-                              <Circle className="h-5 w-5 text-[#7E89AC]/50" />
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => toggleProblemSolved(problem.id, problem.isSolved)}
+                              title={problem.isSolved ? 'Mark as unsolved' : 'Mark as solved'}
+                              className="cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none"
+                            >
+                              {problem.isSolved ? (
+                                <CheckCircle2 className="h-5 w-5 text-[#14CA74] drop-shadow-[0_0_8px_rgba(20,202,116,0.6)]" />
+                              ) : (
+                                <Circle className="h-5 w-5 text-[#7E89AC]/50 hover:text-[#14CA74]" />
+                              )}
+                            </button>
                             <div>
                               <a
                                 href={problem.url}
@@ -316,12 +410,20 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <span
                               className={`rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${diffColor}`}
                             >
                               {problem.difficulty}
                             </span>
+                            <Link
+                              href={`/reviewer?problem=${encodeURIComponent(problem.title)}&platform=leetcode`}
+                              className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-[#CB3CFF]/25 bg-[#CB3CFF]/10 px-2.5 py-1 text-[11px] font-semibold text-[#CB3CFF] transition hover:border-[#CB3CFF] hover:text-white"
+                              title="Inspect Complexity in AI Reviewer"
+                            >
+                              <Bot className="h-3 w-3" />
+                              <span>AI Review</span>
+                            </Link>
                             <a
                               href={problem.url}
                               target="_blank"

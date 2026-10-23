@@ -51,9 +51,70 @@ export const AiReviewer: React.FC = () => {
   const [copiedReport, setCopiedReport] = useState(false);
   const [isOptimalRevealed, setIsOptimalRevealed] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+  const [customProblemBanner, setCustomProblemBanner] = useState<{
+    title: string;
+    platform?: string;
+  } | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
+
+  // Auto-load problem context from URL query params or Mock Interview sessionStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const fromMock = params.get('from') === 'mock';
+    const problemQuery = params.get('problem')?.trim();
+    const platformQuery = params.get('platform')?.trim();
+
+    if (fromMock) {
+      try {
+        const savedMock = sessionStorage.getItem('dashcode_mock_review');
+        if (savedMock) {
+          const parsed = JSON.parse(savedMock);
+          if (parsed?.code) {
+            const lang = parsed.language || 'python';
+            setCode(parsed.code);
+            setLanguage(lang);
+            setCustomProblemBanner({
+              title: parsed.title || 'Mock Interview Submission',
+              platform: parsed.company ? `${parsed.company} Mock Arena` : 'Mock Arena',
+            });
+            setResult(analyzeSolutionLocally(parsed.code, lang));
+            return;
+          }
+        }
+      } catch {
+        // ignore storage error
+      }
+    }
+
+    if (problemQuery) {
+      const normalized = problemQuery.toLowerCase();
+      const matchedPreset = PRESET_SAMPLES.find(
+        (p) =>
+          p.title.toLowerCase().includes(normalized) ||
+          normalized.includes(p.title.toLowerCase())
+      );
+
+      setCustomProblemBanner({
+        title: problemQuery,
+        platform: platformQuery || undefined,
+      });
+
+      if (matchedPreset) {
+        setSelectedPreset(matchedPreset);
+        setCode(matchedPreset.code);
+        setLanguage(matchedPreset.language);
+        setResult(analyzeSolutionLocally(matchedPreset.code, matchedPreset.language));
+      } else {
+        const starter = `# Problem: ${problemQuery}${platformQuery ? ` (${platformQuery})` : ''}\n# Paste your solution below and press Ctrl+Enter to inspect its Time & Space complexity\n\ndef solve(nums):\n    seen = {}\n    for i, x in enumerate(nums):\n        seen[x] = i\n    return len(seen)\n`;
+        setCode(starter);
+        setLanguage('python');
+        setResult(analyzeSolutionLocally(starter, 'python'));
+      }
+    }
+  }, []);
 
   // Handle Tab key inside textarea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -94,6 +155,7 @@ export const AiReviewer: React.FC = () => {
 
   const handleSelectPreset = (preset: PresetSample) => {
     setSelectedPreset(preset);
+    setCustomProblemBanner(null);
     setCode(preset.code);
     setLanguage(preset.language);
     setIsOptimalRevealed(false);
@@ -202,6 +264,14 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                 <span className="h-1.5 w-1.5 rounded-full bg-[#14CA74] animate-pulse" />
                 AST Engine Ready
               </span>
+              {customProblemBanner && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#CB3CFF]/40 bg-[#CB3CFF]/15 px-3 py-0.5 text-[11px] font-mono font-bold text-[#CB3CFF]">
+                  <span>Inspecting: {customProblemBanner.title}</span>
+                  {customProblemBanner.platform && (
+                    <span className="uppercase opacity-75">({customProblemBanner.platform})</span>
+                  )}
+                </span>
+              )}
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
