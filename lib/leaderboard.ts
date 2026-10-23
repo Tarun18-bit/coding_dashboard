@@ -17,7 +17,18 @@ export interface LeaderboardEntry {
   connectedPlatforms: string[];
 }
 
-export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
+let cachedLeaderboard: { timestamp: number; data: LeaderboardEntry[] } | null = null;
+const LEADERBOARD_CACHE_TTL_MS = 60 * 1000; // 60s cache for sub-millisecond response
+
+export function clearLeaderboardCache() {
+  cachedLeaderboard = null;
+}
+
+export async function getGlobalLeaderboard(forceRefresh = false): Promise<LeaderboardEntry[]> {
+  if (!forceRefresh && cachedLeaderboard && Date.now() - cachedLeaderboard.timestamp < LEADERBOARD_CACHE_TTL_MS) {
+    return cachedLeaderboard.data;
+  }
+
   try {
     // 1. Check active Supabase Auth users to prune deleted/orphaned accounts
     let activeAuthIds: Set<string> | null = null;
@@ -102,6 +113,11 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     entries.forEach((e, i) => {
       e.rank = i + 1;
     });
+
+    cachedLeaderboard = {
+      timestamp: Date.now(),
+      data: entries,
+    };
 
     return entries;
   } catch (error) {

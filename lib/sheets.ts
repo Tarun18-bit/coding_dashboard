@@ -27,14 +27,21 @@ export interface SheetProgress {
 const sheetsCache = new Map<string, { timestamp: number; data: SheetProgress }>();
 const SHEETS_CACHE_TTL_MS = 60 * 1000;
 
+const userSolvedCache = new Map<
+  string,
+  { timestamp: number; solvedProblemIds: Set<string>; solvedTitles: Set<string> }
+>();
+
 export function clearSheetsCache(userId?: string) {
   if (userId) {
+    userSolvedCache.delete(userId);
     for (const key of sheetsCache.keys()) {
       if (key.startsWith(`${userId}:`)) {
         sheetsCache.delete(key);
       }
     }
   } else {
+    userSolvedCache.clear();
     sheetsCache.clear();
   }
 }
@@ -52,36 +59,49 @@ export async function getUserSheetProgress(
     }
   }
 
-  // 1. Get all accounts for this user
-  const { data: accounts } = await supabaseAdmin
-    .from('accounts')
-    .select('id')
-    .eq('user_id', userId);
-
-  const accountIds = (accounts || []).map((a) => a.id);
-
-  // 2. Fetch all AC submissions
+  // Check shared solved problem IDs cache for this user
   let solvedProblemIds = new Set<string>();
   let solvedTitles = new Set<string>();
+  const cachedSolved = userSolvedCache.get(userId);
 
-  if (accountIds.length > 0) {
-    const { data: subs } = await supabaseAdmin
-      .from('submissions')
-      .select('problem_id, title, verdict, submitted_at')
-      .in('account_id', accountIds)
-      .eq('verdict', 'AC');
+  if (!forceRefresh && cachedSolved && Date.now() - cachedSolved.timestamp < SHEETS_CACHE_TTL_MS) {
+    solvedProblemIds = cachedSolved.solvedProblemIds;
+    solvedTitles = cachedSolved.solvedTitles;
+  } else {
+    // 1. Get all accounts for this user
+    const { data: accounts } = await supabaseAdmin
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId);
 
-    if (subs) {
-      for (const s of subs) {
-        if (s.problem_id) {
-          solvedProblemIds.add(s.problem_id.toLowerCase().trim());
-        }
-        if (s.title) {
-          const normTitle = s.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-          solvedTitles.add(normTitle);
+    const accountIds = (accounts || []).map((a) => a.id);
+
+    // 2. Fetch all AC submissions
+    if (accountIds.length > 0) {
+      const { data: subs } = await supabaseAdmin
+        .from('submissions')
+        .select('problem_id, title, verdict, submitted_at')
+        .in('account_id', accountIds)
+        .eq('verdict', 'AC');
+
+      if (subs) {
+        for (const s of subs) {
+          if (s.problem_id) {
+            solvedProblemIds.add(s.problem_id.toLowerCase().trim());
+          }
+          if (s.title) {
+            const normTitle = s.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+            solvedTitles.add(normTitle);
+          }
         }
       }
     }
+
+    userSolvedCache.set(userId, {
+      timestamp: Date.now(),
+      solvedProblemIds,
+      solvedTitles,
+    });
   }
 
   // 3. Filter problems for requested sheet

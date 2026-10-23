@@ -1,6 +1,7 @@
 import { supabaseAdmin } from './db';
 import { clearSheetsCache } from './sheets';
 import { clearPotdCache } from './potd';
+import { clearLeaderboardCache } from './leaderboard';
 
 export interface HeatmapDay {
   date: string; // YYYY-MM-DD
@@ -152,6 +153,7 @@ export function clearStatsCache(userId?: string) {
   }
   clearSheetsCache(userId);
   clearPotdCache(userId);
+  clearLeaderboardCache();
 }
 
 export async function getDashboardStats(

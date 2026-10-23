@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CompareProfile } from '@/lib/compare';
 import {
   Swords,
@@ -13,6 +13,7 @@ import {
   Search,
   UserPlus,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -33,10 +34,16 @@ export const CompareView: React.FC<CompareViewProps> = ({
   const router = useRouter();
   const [input1, setInput1] = useState(u1Query || 'oggy');
   const [input2, setInput2] = useState(u2Query || '');
+  const [isComparing, setIsComparing] = useState(false);
+
+  useEffect(() => {
+    setIsComparing(false);
+  }, [user1, user2, u1Query, u2Query]);
 
   const handleCompare = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input1.trim()) return;
+    setIsComparing(true);
     const query2 = input2.trim() ? `&u2=${encodeURIComponent(input2.trim())}` : '';
     router.push(`/compare?u1=${encodeURIComponent(input1.trim())}${query2}`);
   };
@@ -85,10 +92,11 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <div className="flex justify-center pt-5">
               <button
                 type="submit"
-                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0E43FB] to-[#CB3CFF] text-white shadow-[0_0_20px_rgba(203,60,255,0.4)] transition hover:scale-105 active:scale-95"
+                disabled={isComparing}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0E43FB] to-[#CB3CFF] text-white shadow-[0_0_20px_rgba(203,60,255,0.4)] transition hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Run Head-to-Head Comparison"
               >
-                <Swords className="h-6 w-6" />
+                {isComparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Swords className="h-6 w-6" />}
               </button>
             </div>
 
@@ -116,10 +124,20 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0E43FB] px-5 py-2 font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#00C2FF] hover:text-[#081028]"
+              disabled={isComparing}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0E43FB] px-5 py-2 font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#00C2FF] hover:text-[#081028] disabled:opacity-50 cursor-pointer"
             >
-              <span>Compare Now</span>
-              <ArrowRight className="h-4 w-4" />
+              {isComparing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Comparing Profiles...</span>
+                </>
+              ) : (
+                <>
+                  <span>Compare Now</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
         </form>
