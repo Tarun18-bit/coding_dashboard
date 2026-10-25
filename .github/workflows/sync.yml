@@ -1,20 +1,51 @@
-name: Automated 5-Minute Data Sync
+name: Automated Data Sync
 
 on:
   schedule:
-    # Runs every 5 minutes
-    - cron: '*/5 * * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+    # Runs once every hour (avoids exhausting GitHub Actions monthly free tier minutes)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows manual on-demand trigger from GitHub Actions UI
 
 jobs:
   sync-dashboard:
+    name: Sync Coding Stats
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Dashboard Sync Endpoint
         run: |
-          echo "Triggering dashboard sync at ${{ secrets.APP_URL }}/api/sync"
-          curl -X POST "${{ secrets.APP_URL }}/api/sync" \
-            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET_TOKEN }}" \
+          # Use configured secrets or fallback to production defaults
+          RAW_URL="${{ secrets.APP_URL }}"
+          RAW_TOKEN="${{ secrets.SYNC_SECRET_TOKEN }}"
+
+          APP_URL="${RAW_URL:-https://coding-dashboard-two.vercel.app}"
+          SYNC_TOKEN="${RAW_TOKEN:-default_sync_secret_key_123}"
+
+          # Strip any trailing slash from APP_URL
+          APP_URL="${APP_URL%/}"
+          ENDPOINT="${APP_URL}/api/sync"
+
+          echo "=========================================="
+          echo "Initiating Data Sync"
+          echo "Target Endpoint: ${ENDPOINT}"
+          echo "=========================================="
+
+          # Request sync endpoint, save body to file and capture status code
+          HTTP_STATUS=$(curl -s -L -o /tmp/sync_response.json -w "%{http_code}" -X POST "${ENDPOINT}" \
+            -H "Authorization: Bearer ${SYNC_TOKEN}" \
             -H "Content-Type: application/json" \
-            --fail \
-            --max-time 30
+            --max-time 60)
+
+          echo "HTTP Status Code: ${HTTP_STATUS}"
+          echo "Response Body:"
+          if [ -f /tmp/sync_response.json ]; then
+            cat /tmp/sync_response.json
+            echo ""
+          fi
+
+          if [ "${HTTP_STATUS}" -ge 200 ] && [ "${HTTP_STATUS}" -lt 300 ]; then
+            echo " Data sync completed successfully!"
+            exit 0
+          else
+            echo " [ERROR] Data sync failed with HTTP status ${HTTP_STATUS}"
+            exit 1
+          fi
