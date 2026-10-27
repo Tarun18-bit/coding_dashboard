@@ -1,9 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
-      "path": "/api/sync?token=default_sync_secret_key_123",
-      "schedule": "0 * * * *"
-    }
-  ]
-}
