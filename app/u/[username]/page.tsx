@@ -22,8 +22,7 @@ import { BadgeModal } from '@/components/BadgeModal';
 import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ArrowLeft, ExternalLink, Activity, Swords, BookOpen, Bot, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface PublicProfileProps {
   params: Promise<{

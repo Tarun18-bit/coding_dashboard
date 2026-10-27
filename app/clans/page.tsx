@@ -1,10 +1,9 @@
 import { ClanRoom } from '@/components/ClanRoom';
 import { Navbar } from '@/components/Navbar';
 import { createClient } from '@/lib/supabase/server';
-import { getGlobalLeaderboard } from '@/lib/leaderboard';
+import { getCachedGlobalLeaderboard } from '@/lib/leaderboard';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function ClansPage() {
   let user: any = null;
@@ -16,7 +15,7 @@ export default async function ClansPage() {
     // offline or static fallback
   }
 
-  const directoryUsers = await getGlobalLeaderboard().catch(() => []);
+  const directoryUsers = await getCachedGlobalLeaderboard().catch(() => []);
 
   const currentUsername =
     user?.user_metadata?.user_name ||

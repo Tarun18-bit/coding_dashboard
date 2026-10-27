@@ -21,9 +21,9 @@ import {
   Calendar,
   Layers
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { StatCard } from '@/components/StatCard';
 import { PlatformCard } from '@/components/PlatformCard';
-import { RatingChart } from '@/components/RatingChart';
 import { Heatmap } from '@/components/Heatmap';
 import { TopicBreakdown } from '@/components/TopicBreakdown';
 import { SkillSummary } from '@/components/SkillSummary';
@@ -35,6 +35,19 @@ import { ProfileHero } from '@/components/ProfileHero';
 import { ExportResumeModal } from '@/components/ExportResumeModal';
 import { BadgeModal } from '@/components/BadgeModal';
 import { AccountModal } from '@/components/AccountModal';
+
+// Code-split heavy Recharts library so initial dashboard render is ultra-fast
+const RatingChart = dynamic(
+  () => import('@/components/RatingChart').then((mod) => mod.RatingChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[280px] w-full flex items-center justify-center bg-[#0D1527] rounded-xl border border-white/5 animate-pulse">
+        <span className="text-xs text-[#64748B]">Loading rating trajectory chart...</span>
+      </div>
+    ),
+  }
+);
 
 interface DashboardTabsProps {
   stats: any;

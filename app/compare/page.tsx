@@ -4,8 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Navbar } from '@/components/Navbar';
 import { Swords } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 30;
 
 interface ComparePageProps {
   searchParams: Promise<{

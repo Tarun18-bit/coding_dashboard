@@ -5,8 +5,7 @@ import { ArrowLeft, ExternalLink, Bot, Trophy, CheckCircle2 } from 'lucide-react
 import { RatingChart } from '@/components/RatingChart';
 import { Navbar } from '@/components/Navbar';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface PlatformPageProps {
   params: Promise<{

@@ -3,8 +3,7 @@ import { CuratedSheets } from '@/components/CuratedSheets';
 import { createClient } from '@/lib/supabase/server';
 import { Navbar } from '@/components/Navbar';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function SheetsPage() {
   let authUser: any = null;

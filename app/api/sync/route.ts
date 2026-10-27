@@ -12,6 +12,8 @@ import { ensurePublicUser } from '@/lib/users';
 
 const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
 const SYNC_CACHE_WINDOW_MS = 60 * 1000; // 60 seconds throttle window
+const BURST_SYNC_WINDOW_MS = 10 * 1000; // 10s burst protection against double clicks
+const lastSyncTimeByTarget = new Map<string, number>();
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -70,6 +72,19 @@ async function handleSync(req: NextRequest) {
   if (queryUserId) {
     targetUserId = queryUserId;
   }
+
+  // Burst debounce protection: Prevent rapid double-clicks from spamming external APIs
+  const now = Date.now();
+  const lastSync = lastSyncTimeByTarget.get(targetUserId);
+  if (lastSync && now - lastSync < BURST_SYNC_WINDOW_MS) {
+    return NextResponse.json({
+      success: true,
+      throttled: true,
+      message: 'Sync was recently executed. Stats are fresh!',
+      targetUserId,
+    });
+  }
+  lastSyncTimeByTarget.set(targetUserId, now);
 
   const cfHandle = searchParams.get('cf_handle') || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18';
   const lcHandle = searchParams.get('lc_handle') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
