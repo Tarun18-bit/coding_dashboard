@@ -64,12 +64,30 @@ CREATE TABLE IF NOT EXISTS submissions (
     CONSTRAINT unique_account_submission UNIQUE (account_id, platform_submission_id)
 );
 
+-- 7. Precomputed Leaderboard Cache table (enables instant O(1) leaderboard queries for 10k+ users)
+CREATE TABLE IF NOT EXISTS leaderboard_cache (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    avatar_seed TEXT NOT NULL,
+    total_solved INTEGER NOT NULL DEFAULT 0,
+    easy INTEGER NOT NULL DEFAULT 0,
+    medium INTEGER NOT NULL DEFAULT 0,
+    hard INTEGER NOT NULL DEFAULT 0,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    longest_streak INTEGER NOT NULL DEFAULT 0,
+    highest_rating INTEGER,
+    best_platform TEXT NOT NULL DEFAULT 'Unrated',
+    connected_platforms TEXT[] DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_snapshots_account_id_taken_at ON snapshots(account_id, taken_at DESC);
 CREATE INDEX IF NOT EXISTS idx_contests_account_id_date ON contests(account_id, date ASC);
 CREATE INDEX IF NOT EXISTS idx_submissions_account_id_submitted_at ON submissions(account_id, submitted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_submissions_verdict ON submissions(verdict);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_cache_ranking ON leaderboard_cache(total_solved DESC, current_streak DESC);
 
 -- Seed default user & accounts if not present
 INSERT INTO users (id, username)

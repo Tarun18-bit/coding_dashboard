@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { clearStatsCache } from '@/lib/aggregate';
+import { updateUserLeaderboardCache } from '@/lib/leaderboard';
+import { revalidatePath } from 'next/cache';
 import { codeforcesFetcher } from '@/lib/platforms/codeforces';
 import { leetcodeFetcher } from '@/lib/platforms/leetcode';
 import { codechefFetcher } from '@/lib/platforms/codechef';
@@ -120,6 +122,16 @@ async function handleSync(req: NextRequest) {
     // Invalidate stats cache so dashboard updates instantly
     clearStatsCache(targetUserId);
     clearStatsCache(DEFAULT_USER_ID);
+
+    try {
+      revalidatePath('/leaderboard');
+      revalidatePath('/dashboard');
+    } catch {
+      // Ignore in non-ISR runtime
+    }
+
+    // Asynchronously update precomputed leaderboard cache row
+    updateUserLeaderboardCache(targetUserId).catch(console.error);
 
     return NextResponse.json({
       success: true,

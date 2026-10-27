@@ -1,11 +1,10 @@
-import { getGlobalLeaderboard } from '@/lib/leaderboard';
+import { getCachedGlobalLeaderboard } from '@/lib/leaderboard';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { createClient } from '@/lib/supabase/server';
 import { Navbar } from '@/components/Navbar';
-import { Trophy, Users } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function LeaderboardPage() {
   let authUser: any = null;
@@ -28,7 +27,7 @@ export default async function LeaderboardPage() {
       }
     : null;
 
-  const entries = await getGlobalLeaderboard();
+  const entries = await getCachedGlobalLeaderboard();
 
   return (
     <div className="min-h-screen bg-[#090D1A] text-white selection:bg-[#00EA64] selection:text-[#090D1A] pb-16">
