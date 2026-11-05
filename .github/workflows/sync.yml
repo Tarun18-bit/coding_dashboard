@@ -13,12 +13,16 @@ jobs:
     steps:
       - name: Trigger Dashboard Sync Endpoint
         run: |
-          # Use configured secrets or fallback to production defaults
           RAW_URL="${{ secrets.APP_URL }}"
-          RAW_TOKEN="${{ secrets.SYNC_SECRET_TOKEN }}"
+          SYNC_TOKEN="${{ secrets.SYNC_SECRET_TOKEN }}"
 
           APP_URL="${RAW_URL:-https://coding-dashboard-two.vercel.app}"
-          SYNC_TOKEN="${RAW_TOKEN:-default_sync_secret_key_123}"
+
+          # Never fall back to a hardcoded token: fail loudly if the secret is missing
+          if [ -z "${SYNC_TOKEN}" ]; then
+            echo " [ERROR] SYNC_SECRET_TOKEN repository secret is not set"
+            exit 1
+          fi
 
           # Strip any trailing slash from APP_URL
           APP_URL="${APP_URL%/}"

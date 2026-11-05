@@ -28,7 +28,13 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const userId = user?.id || '00000000-0000-0000-0000-000000000001';
+    if (!user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required to link an account' },
+        { status: 401 }
+      );
+    }
+    const userId = user.id;
 
     const body = await req.json();
     const { platform, handle } = body;

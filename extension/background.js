@@ -2,7 +2,7 @@
 
 const DEFAULT_SETTINGS = {
   dashboardUrl: 'http://localhost:3000',
-  syncToken: 'default_sync_secret_key_123',
+  syncToken: '', // optional; normally your logged-in dashboard session is used
   autoSyncEnabled: true,
 };
 
@@ -33,14 +33,15 @@ async function handleSyncRequest(payload) {
     return { success: false, error: 'Auto-sync is disabled in extension settings' };
   }
 
-  const syncUrl = `${dashboardUrl}/api/sync?token=${encodeURIComponent(syncToken)}&force=true`;
+  const syncUrl = `${dashboardUrl}/api/sync?force=true`;
 
   try {
     const res = await fetch(syncUrl, {
       method: 'POST',
+      credentials: 'include', // send the dashboard login session cookie
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${syncToken}`,
+        ...(syncToken ? { Authorization: `Bearer ${syncToken}` } : {}),
       },
     });
 

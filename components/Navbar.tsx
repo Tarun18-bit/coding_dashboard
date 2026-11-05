@@ -215,11 +215,13 @@ export function Navbar({
             </div>
           )}
 
-          {/* Sync Button */}
-          <SyncButton token="default_sync_secret_key_123" />
-
-          {/* Add Platform Handle Button */}
-          <AccountModal />
+          {/* Sync & Add Platform require a logged-in session */}
+          {effectiveUser && (
+            <>
+              <SyncButton />
+              <AccountModal />
+            </>
+          )}
 
           {/* Clean Tools Dropdown (Consolidates Resume, GitHub Badge, Share) */}
           <div className="relative" ref={toolsRef}>

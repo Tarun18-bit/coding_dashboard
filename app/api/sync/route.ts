@@ -21,19 +21,19 @@ function getErrorMessage(error: unknown): string {
   return 'Unknown error';
 }
 
-function isAuthorized(req: NextRequest): boolean {
+/**
+ * Returns true only when the request carries the server-side SYNC_SECRET_TOKEN
+ * (used by the scheduled GitHub Action). Fails closed: if no secret is configured,
+ * token-based access is disabled entirely.
+ */
+function hasValidSyncSecret(req: NextRequest): boolean {
   const secret = process.env.SYNC_SECRET_TOKEN;
-  if (!secret) return true;
+  if (!secret) return false;
 
   const authHeader = req.headers.get('authorization');
-  const querySecret = new URL(req.url).searchParams.get('token');
-
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    if (token === secret) return true;
+    if (authHeader.substring(7) === secret) return true;
   }
-
-  if (querySecret === secret) return true;
 
   return false;
 }
@@ -47,30 +47,31 @@ export async function GET(req: NextRequest) {
 }
 
 async function handleSync(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  const { searchParams } = new URL(req.url);
+  const force = searchParams.get('force') === 'true';
+  const isCron = hasValidSyncSecret(req);
+
+  // Logged-in users may only sync their own data.
+  let sessionUserId: string | null = null;
+  try {
+    const serverSupabase = await createClient();
+    const { data } = await serverSupabase.auth.getUser();
+    sessionUserId = data?.user?.id ?? null;
+  } catch {
+    // treated as anonymous
+  }
+
+  if (!isCron && !sessionUserId) {
     return NextResponse.json(
-      { success: false, error: 'Unauthorized: Invalid or missing token' },
+      { success: false, error: 'Please log in to sync your stats.' },
       { status: 401 }
     );
   }
 
-  const { searchParams } = new URL(req.url);
-  const force = searchParams.get('force') === 'true';
-
-  let targetUserId = DEFAULT_USER_ID;
-  try {
-    const serverSupabase = await createClient();
-    const { data } = await serverSupabase.auth.getUser();
-    if (data?.user?.id) {
-      targetUserId = data.user.id;
-    }
-  } catch {
-    // fallback
-  }
-
-  const queryUserId = searchParams.get('user_id');
-  if (queryUserId) {
-    targetUserId = queryUserId;
+  // Only the trusted cron caller may choose an arbitrary target user or handle overrides.
+  let targetUserId = sessionUserId ?? DEFAULT_USER_ID;
+  if (isCron) {
+    targetUserId = searchParams.get('user_id') || sessionUserId || DEFAULT_USER_ID;
   }
 
   // Burst debounce protection: Prevent rapid double-clicks from spamming external APIs
@@ -86,9 +87,10 @@ async function handleSync(req: NextRequest) {
   }
   lastSyncTimeByTarget.set(targetUserId, now);
 
-  const cfHandle = searchParams.get('cf_handle') || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18';
-  const lcHandle = searchParams.get('lc_handle') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
-  const ccHandle = searchParams.get('cc_handle') || process.env.DEFAULT_CODECHEF_HANDLE || 'txrun_18';
+  const override = (key: string) => (isCron ? searchParams.get(key) : null);
+  const cfHandle = override('cf_handle') || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18';
+  const lcHandle = override('lc_handle') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
+  const ccHandle = override('cc_handle') || process.env.DEFAULT_CODECHEF_HANDLE || 'txrun_18';
 
   const results: Record<string, unknown> = {};
 
@@ -114,8 +116,8 @@ async function handleSync(req: NextRequest) {
           syncPromises.push(syncAccount(targetUserId, 'codechef', acc.handle, codechefFetcher, force));
         }
       }
-    } else {
-      // If user has no accounts table rows yet, use default handles
+    } else if (targetUserId === DEFAULT_USER_ID) {
+      // Demo profile with no account rows yet: seed with the default handles
       syncPromises.push(syncAccount(targetUserId, 'codeforces', cfHandle, codeforcesFetcher, force));
       syncPromises.push(syncAccount(targetUserId, 'leetcode', lcHandle, leetcodeFetcher, force));
       if (ccHandle) {
@@ -126,7 +128,7 @@ async function handleSync(req: NextRequest) {
     const settled = await Promise.allSettled(syncPromises);
 
     // Also sync DEFAULT_USER_ID if target was different, so demo profile stays updated
-    if (targetUserId !== DEFAULT_USER_ID) {
+    if (isCron && targetUserId !== DEFAULT_USER_ID) {
       Promise.allSettled([
         syncAccount(DEFAULT_USER_ID, 'codeforces', cfHandle, codeforcesFetcher, force),
         syncAccount(DEFAULT_USER_ID, 'leetcode', lcHandle, leetcodeFetcher, force),

@@ -93,3 +93,11 @@ CREATE INDEX IF NOT EXISTS idx_leaderboard_cache_ranking ON leaderboard_cache(to
 INSERT INTO users (id, username)
 VALUES ('00000000-0000-0000-0000-000000000001', 'default_user')
 ON CONFLICT (username) DO NOTHING;
+
+-- Row Level Security: block direct anon-key access (app uses the service-role key server-side)
+ALTER TABLE users             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accounts          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE snapshots         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contests          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE submissions       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE leaderboard_cache ENABLE ROW LEVEL SECURITY;

@@ -23,7 +23,8 @@ This Chrome extension detects when you solve a problem on LeetCode (**Accepted**
 1. Click on the extension icon in your Chrome toolbar.
 2. Verify or edit your settings:
    - **Dashboard URL**: `http://localhost:3000` (or your deployed Vercel URL, e.g. `https://your-dashboard.vercel.app`)
-   - **Sync Secret Token**: The token set in your `.env.local` (`SYNC_SECRET_TOKEN`)
+   - **Sync Secret Token**: Leave blank. The extension uses your dashboard login, so stay logged in to the dashboard in Chrome.
+   - If you deploy to a different domain, add it to `host_permissions` in `manifest.json`.
    - **Auto-sync**: Checked
 3. Click **"Save"**.
 

@@ -10,7 +10,7 @@
     "*://leetcode.com/*",
     "*://*.leetcode.com/*",
     "http://localhost:3000/*",
-    "https://*/*"
+    "https://coding-dashboard-two.vercel.app/*"
   ],
   "action": {
     "default_popup": "popup.html",

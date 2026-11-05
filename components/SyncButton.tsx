@@ -4,17 +4,13 @@ import React, { useState } from 'react';
 import { RefreshCw, Check, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-interface SyncButtonProps {
-  token?: string;
-}
-
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   return 'Error';
 }
 
-export const SyncButton: React.FC<SyncButtonProps> = ({ token = 'default_sync_secret_key_123' }) => {
+export const SyncButton: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string>('');
@@ -28,12 +24,10 @@ export const SyncButton: React.FC<SyncButtonProps> = ({ token = 'default_sync_se
     setMessage('');
 
     try {
-      const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&force=true`, {
+      // Authenticated via the user's session cookie; the server only syncs the logged-in user.
+      const res = await fetch('/api/sync?force=true', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: 'Bearer ' + token } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const data = await res.json();

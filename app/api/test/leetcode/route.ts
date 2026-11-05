@@ -8,6 +8,10 @@ function getErrorMessage(error: unknown): string {
 }
 
 export async function GET(req: NextRequest) {
+  // Debug-only endpoint: never expose in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+  }
   const { searchParams } = new URL(req.url);
   const username = searchParams.get('username') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
 
