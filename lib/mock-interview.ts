@@ -1,3 +1,5 @@
+import type { RunnerSpec } from '@/lib/code-runner/harness';
+
 export interface MockHint {
   tier: number;
   title: string;
@@ -6,8 +8,16 @@ export interface MockHint {
 
 export interface MockTestCase {
   id: number;
+  /** Human-readable input shown in the UI */
   input: string;
+  /** Human-readable expected output shown in the UI */
   expectedOutput: string;
+  /** Function questions: positional arguments passed to the solution */
+  args?: unknown[];
+  /** Design questions: [method, args][]; first entry is the constructor */
+  ops?: [string, unknown[]][];
+  /** Machine-checked expected value */
+  expected: unknown;
   isCustom?: boolean;
 }
 
@@ -31,6 +41,8 @@ export interface MockQuestion {
   }[];
   starterCode: Record<string, string>;
   hints: MockHint[];
+  /** How the code runner calls the user's solution */
+  runner: RunnerSpec;
   testCases: MockTestCase[];
   optimalComplexity: {
     time: string;
@@ -113,11 +125,17 @@ class Solution {
         content: 'Sort intervals by start time. Iterate through intervals and check if the earliest ending meeting (heap top) has finished before the current meeting starts. If yes, pop it. Always push current end time. The maximum heap size is your answer in O(N log N) time and O(N) space.',
       },
     ],
+    runner: {
+      kind: 'function',
+      method: 'minMeetingRooms',
+      params: [{ name: 'intervals', type: 'int[][]' }],
+      returns: 'int',
+    },
     testCases: [
-      { id: 1, input: '[[0,30],[5,10],[15,20]]', expectedOutput: '2' },
-      { id: 2, input: '[[7,10],[2,4]]', expectedOutput: '1' },
-      { id: 3, input: '[[1,5],[2,6],[3,7],[4,8]]', expectedOutput: '4' },
-      { id: 4, input: '[[1,4],[4,8],[8,12]]', expectedOutput: '1' },
+      { id: 1, input: '[[0,30],[5,10],[15,20]]', expectedOutput: '2', args: [[[0, 30], [5, 10], [15, 20]]], expected: 2 },
+      { id: 2, input: '[[7,10],[2,4]]', expectedOutput: '1', args: [[[7, 10], [2, 4]]], expected: 1 },
+      { id: 3, input: '[[1,5],[2,6],[3,7],[4,8]]', expectedOutput: '4', args: [[[1, 5], [2, 6], [3, 7], [4, 8]]], expected: 4 },
+      { id: 4, input: '[[1,4],[4,8],[8,12]]', expectedOutput: '1', args: [[[1, 4], [4, 8], [8, 12]]], expected: 1 },
     ],
     optimalComplexity: {
       time: 'O(N log N)',
@@ -229,10 +247,44 @@ class LRUCache {
         content: 'Maintain pseudo-head and pseudo-tail dummy nodes. On get(key), move the accessed node to the front. On put(key, val), if key exists update and move to front; if new, insert at front. If size > capacity, remove node right before the tail dummy node.',
       },
     ],
+    runner: {
+      kind: 'design',
+      className: 'LRUCache',
+      ctorParams: ['int'],
+      methods: {
+        get: { params: ['int'], returns: 'int' },
+        put: { params: ['int', 'int'], returns: 'void' },
+      },
+    },
     testCases: [
-      { id: 1, input: 'capacity=2, put(1,1), put(2,2), get(1)', expectedOutput: '1' },
-      { id: 2, input: 'put(3,3), get(2)', expectedOutput: '-1' },
-      { id: 3, input: 'put(4,4), get(1)', expectedOutput: '-1' },
+      {
+        id: 1,
+        input: 'capacity=2, put(1,1), put(2,2), get(1)',
+        expectedOutput: '1',
+        ops: [['LRUCache', [2]], ['put', [1, 1]], ['put', [2, 2]], ['get', [1]]],
+        expected: 1,
+      },
+      {
+        id: 2,
+        input: 'capacity=2, put(1,1), put(2,2), get(1), put(3,3), get(2)',
+        expectedOutput: '-1',
+        ops: [['LRUCache', [2]], ['put', [1, 1]], ['put', [2, 2]], ['get', [1]], ['put', [3, 3]], ['get', [2]]],
+        expected: -1,
+      },
+      {
+        id: 3,
+        input: 'capacity=2, put(1,1), put(2,2), get(1), put(3,3), put(4,4), get(1)',
+        expectedOutput: '-1',
+        ops: [['LRUCache', [2]], ['put', [1, 1]], ['put', [2, 2]], ['get', [1]], ['put', [3, 3]], ['put', [4, 4]], ['get', [1]]],
+        expected: -1,
+      },
+      {
+        id: 4,
+        input: 'capacity=2, put(1,1), put(2,2), put(1,10), put(3,3), get(1)',
+        expectedOutput: '10',
+        ops: [['LRUCache', [2]], ['put', [1, 1]], ['put', [2, 2]], ['put', [1, 10]], ['put', [3, 3]], ['get', [1]]],
+        expected: 10,
+      },
     ],
     optimalComplexity: {
       time: 'O(1) for get and put',
@@ -313,10 +365,19 @@ class Solution {
         content: 'Binary search between low = max(weights) and high = sum(weights). In O(N), greedily count how many days are needed for capacity mid. If days <= target, high = mid; else low = mid + 1.',
       },
     ],
+    runner: {
+      kind: 'function',
+      method: 'shipWithinDays',
+      params: [
+        { name: 'weights', type: 'int[]' },
+        { name: 'days', type: 'int' },
+      ],
+      returns: 'int',
+    },
     testCases: [
-      { id: 1, input: 'weights=[1,2,3,4,5,6,7,8,9,10], days=5', expectedOutput: '15' },
-      { id: 2, input: 'weights=[3,2,2,4,1,4], days=3', expectedOutput: '6' },
-      { id: 3, input: 'weights=[1,2,3,1,1], days=4', expectedOutput: '3' },
+      { id: 1, input: 'weights=[1,2,3,4,5,6,7,8,9,10], days=5', expectedOutput: '15', args: [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5], expected: 15 },
+      { id: 2, input: 'weights=[3,2,2,4,1,4], days=3', expectedOutput: '6', args: [[3, 2, 2, 4, 1, 4], 3], expected: 6 },
+      { id: 3, input: 'weights=[1,2,3,1,1], days=4', expectedOutput: '3', args: [[1, 2, 3, 1, 1], 4], expected: 3 },
     ],
     optimalComplexity: {
       time: 'O(N * log(sum(weights) - max(weights)))',
@@ -395,11 +456,20 @@ class Solution {
         content: 'Let prefix_sum[i] be sum from 0 to i. A subarray sum from j to i equals k if prefix_sum[i] - prefix_sum[j-1] == k. Thus, check if (prefix_sum[i] - k) exists in the map. Runs in O(N) time and O(N) space.',
       },
     ],
+    runner: {
+      kind: 'function',
+      method: 'subarraySum',
+      params: [
+        { name: 'nums', type: 'int[]' },
+        { name: 'k', type: 'int' },
+      ],
+      returns: 'int',
+    },
     testCases: [
-      { id: 1, input: 'nums = [1,1,1], k = 2', expectedOutput: '2' },
-      { id: 2, input: 'nums = [1,2,3], k = 3', expectedOutput: '2' },
-      { id: 3, input: 'nums = [-1,-1,1], k = 0', expectedOutput: '1' },
-      { id: 4, input: 'nums = [1,-1,0], k = 0', expectedOutput: '3' },
+      { id: 1, input: 'nums = [1,1,1], k = 2', expectedOutput: '2', args: [[1, 1, 1], 2], expected: 2 },
+      { id: 2, input: 'nums = [1,2,3], k = 3', expectedOutput: '2', args: [[1, 2, 3], 3], expected: 2 },
+      { id: 3, input: 'nums = [-1,-1,1], k = 0', expectedOutput: '1', args: [[-1, -1, 1], 0], expected: 1 },
+      { id: 4, input: 'nums = [1,-1,0], k = 0', expectedOutput: '3', args: [[1, -1, 0], 0], expected: 3 },
     ],
     optimalComplexity: {
       time: 'O(N)',
@@ -474,9 +544,34 @@ class Solution {
         content: 'Build the Trie. Run DFS backtracking from each cell. If the current character is not in the current Trie node child, prune immediately. When word is found, append to output and remove word marker to avoid duplicates.',
       },
     ],
+    runner: {
+      kind: 'function',
+      method: 'findWords',
+      params: [
+        { name: 'board', type: 'char[][]' },
+        { name: 'words', type: 'string[]' },
+      ],
+      returns: 'string[]',
+      unordered: true,
+    },
     testCases: [
-      { id: 1, input: 'board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"]', expectedOutput: '["eat","oath"]' },
-      { id: 2, input: 'board = [["a","b"],["c","d"]], words = ["abcb"]', expectedOutput: '[]' },
+      {
+        id: 1,
+        input: 'board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"]',
+        expectedOutput: '["eat","oath"] (any order)',
+        args: [
+          [['o', 'a', 'a', 'n'], ['e', 't', 'a', 'e'], ['i', 'h', 'k', 'r'], ['i', 'f', 'l', 'v']],
+          ['oath', 'pea', 'eat', 'rain'],
+        ],
+        expected: ['eat', 'oath'],
+      },
+      {
+        id: 2,
+        input: 'board = [["a","b"],["c","d"]], words = ["abcb"]',
+        expectedOutput: '[]',
+        args: [[['a', 'b'], ['c', 'd']], ['abcb']],
+        expected: [],
+      },
     ],
     optimalComplexity: {
       time: 'O(M * N * 4 * 3^(L-1))',

@@ -1,12 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   MOCK_QUESTIONS,
   MockQuestion,
   MockHint,
   MockTestCase,
 } from '@/lib/mock-interview';
+import {
+  buildPythonProgram,
+  buildJsHarness,
+  gradeOutput,
+  RunnableTest,
+  TestOutcome,
+} from '@/lib/code-runner/harness';
+import { runInBrowser } from '@/lib/code-runner/browser';
+
+type TestResultRow = { id: number; input: string; expected: string; output: string; passed: boolean; status: string };
+type Evaluation = { error: string; results: TestResultRow[]; console: string };
 import {
   Clock,
   Play,
@@ -43,11 +54,18 @@ export const MockInterviewRoom: React.FC = () => {
   const [code, setCode] = useState<string>('');
   const [secondsLeft, setSecondsLeft] = useState<number>(45 * 60);
   const [unlockedHints, setUnlockedHints] = useState<number[]>([]);
-  const [testResults, setTestResults] = useState<
-    { id: number; input: string; expected: string; output: string; passed: boolean; status: string }[]
-  >([]);
+  const [testResults, setTestResults] = useState<TestResultRow[]>([]);
   const [compileError, setCompileError] = useState<string>('');
   const [isRunningTests, setIsRunningTests] = useState<boolean>(false);
+  const [consoleOutput, setConsoleOutput] = useState<string>('');
+  const [runStatusText, setRunStatusText] = useState<string>('');
+  // Cache of the last run so finishing the interview doesn't re-run unchanged code
+  const lastRunRef = useRef<{ key: string; evaluation: Evaluation } | null>(null);
+  // Timer plumbing: wall-clock deadline, a guard so the interview finishes exactly once,
+  // and a ref to the latest finishInterview for the interval callback
+  const deadlineRef = useRef<number>(0);
+  const finishingRef = useRef<boolean>(false);
+  const finishRef = useRef<() => void>(() => {});
 
   // Scorecard metrics
   const [score, setScore] = useState<number>(0);
@@ -65,112 +83,147 @@ export const MockInterviewRoom: React.FC = () => {
     setUnlockedHints([]);
     setTestResults([]);
     setCompileError('');
+    setConsoleOutput('');
+    lastRunRef.current = null;
+    finishingRef.current = false;
+    deadlineRef.current = Date.now() + timeLimitMinutes * 60 * 1000;
     setScreen('active');
   };
 
-  // Evaluate code against test suite heuristically & syntactically
-  const evaluateSubmission = (sourceCode: string, lang: string, question: MockQuestion) => {
+  // Run the solution for real: Python/TypeScript in a browser worker, C++/Java on Judge0
+  const evaluateSubmission = async (sourceCode: string, lang: string, question: MockQuestion): Promise<Evaluation> => {
     const starter = (question.starterCode[lang] || question.starterCode['python'] || '').trim();
     const trimmed = sourceCode.trim();
+    const failAll = (status: string, output: string): TestResultRow[] =>
+      question.testCases.map((tc) => ({
+        id: tc.id,
+        input: tc.input,
+        expected: tc.expectedOutput,
+        output,
+        passed: false,
+        status,
+      }));
 
     if (!trimmed || trimmed === starter) {
       return {
         error: 'Starter template was not modified. Implement the algorithm before running tests.',
-        results: question.testCases.map((tc) => ({
-          id: tc.id,
-          input: tc.input,
-          expected: tc.expectedOutput,
-          output: 'None / Unimplemented',
-          passed: false,
-          status: 'Unimplemented',
-        })),
+        results: failAll('Unimplemented', 'None / Unimplemented'),
+        console: '',
       };
     }
 
-    // Check balanced brackets/parens
-    const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
-    const stack: string[] = [];
-    for (const ch of trimmed) {
-      if (ch === '(' || ch === '[' || ch === '{') stack.push(ch);
-      else if (pairs[ch]) {
-        if (stack.pop() !== pairs[ch]) {
-          return {
-            error: `SyntaxError: Unmatched closing token '${ch}' detected in solution.`,
-            results: question.testCases.map((tc) => ({
-              id: tc.id,
-              input: tc.input,
-              expected: tc.expectedOutput,
-              output: 'Compile / Syntax Error',
-              passed: false,
-              status: 'Syntax Error',
-            })),
-          };
-        }
-      }
-    }
-    if (stack.length > 0) {
-      return {
-        error: `SyntaxError: Unclosed '${stack[stack.length - 1]}' detected in solution.`,
-        results: question.testCases.map((tc) => ({
-          id: tc.id,
-          input: tc.input,
-          expected: tc.expectedOutput,
-          output: 'Compile / Syntax Error',
-          passed: false,
-          status: 'Syntax Error',
-        })),
-      };
-    }
-
-    const hasPlaceholderOnly =
-      /\bpass\b/.test(trimmed) ||
-      /Write your solution here/i.test(trimmed);
-    const hasAlgorithmicConstructs =
-      /\b(for|while|if|elif|else|return|map|set|dict|unordered_map|HashMap|Math\.|sort|queue|deque|heappush|PriorityQueue|max|min)\b/.test(
-        trimmed
-      );
-    const addedLinesCount = Math.max(
-      0,
-      trimmed.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('//')).length -
-        starter.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('//')).length
-    );
-
-    const passesAll = !hasPlaceholderOnly && hasAlgorithmicConstructs && addedLinesCount >= 2;
-    const passesSampleOnly = !passesAll && hasAlgorithmicConstructs && addedLinesCount >= 1;
-
-    return {
-      error: '',
-      results: question.testCases.map((tc, idx) => {
-        const passed = passesAll ? true : passesSampleOnly ? idx === 0 : false;
+    const tests: RunnableTest[] = question.testCases.map((tc) => ({
+      id: tc.id,
+      args: tc.args,
+      ops: tc.ops,
+      expected: tc.expected,
+    }));
+    const toRows = (outcomes: TestOutcome[]): TestResultRow[] =>
+      question.testCases.map((tc) => {
+        const o = outcomes.find((x) => x.id === tc.id);
         return {
           id: tc.id,
           input: tc.input,
           expected: tc.expectedOutput,
-          output: passed ? tc.expectedOutput : 'Wrong Answer / Incomplete Logic',
-          passed,
-          status: passed ? 'Accepted' : 'Wrong Answer',
+          output: o?.output ?? 'Not run',
+          passed: !!o?.passed,
+          status: o?.status ?? 'Not Run',
         };
-      }),
-    };
+      });
+
+    if (lang === 'python' || lang === 'typescript') {
+      const onStatus = (st: 'loading' | 'running') =>
+        setRunStatusText(
+          st === 'loading'
+            ? lang === 'python'
+              ? 'Loading Python runtime (first run downloads it, ~10s)...'
+              : 'Loading TypeScript compiler...'
+            : 'Running tests...'
+        );
+      const run =
+        lang === 'python'
+          ? await runInBrowser({ language: 'python', program: buildPythonProgram(sourceCode, question.runner, tests) }, onStatus)
+          : await runInBrowser(
+              { language: 'typescript', userCode: sourceCode, harness: buildJsHarness(question.runner, tests) },
+              onStatus
+            );
+
+      if (run.compileError) {
+        return { error: run.compileError, results: failAll('Compile Error', 'Compile error'), console: '' };
+      }
+      const graded = gradeOutput(
+        run.stdout,
+        question.runner,
+        tests,
+        run.timedOut ? 'Time Limit Exceeded' : 'Runtime Error',
+        run.timedOut ? 'Time limit exceeded (6s)' : run.fatal || 'No output'
+      );
+      return {
+        error: run.timedOut
+          ? 'Time limit exceeded: your code ran for more than 6 seconds (infinite loop?).'
+          : run.fatal || '',
+        results: toRows(graded.outcomes),
+        console: graded.consoleOutput,
+      };
+    }
+
+    // C++ / Java run on the server via Judge0
+    setRunStatusText('Compiling and running on the server...');
+    try {
+      const res = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: question.id, language: lang, code: sourceCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { error: data.error || 'Run failed', results: failAll('Not Run', 'Not run'), console: '' };
+      }
+      if (data.compileError) {
+        return { error: data.compileError, results: failAll('Compile Error', 'Compile error'), console: '' };
+      }
+      return {
+        error: data.runtimeStatus ? `Program stopped: ${data.runtimeStatus}` : '',
+        results: toRows(data.outcomes || []),
+        console: data.consoleOutput || '',
+      };
+    } catch {
+      return { error: 'Could not reach the code runner.', results: failAll('Not Run', 'Not run'), console: '' };
+    }
   };
 
-  // Timer countdown
+  const applyEvaluation = (evaluation: Evaluation) => {
+    setCompileError(evaluation.error);
+    setTestResults(evaluation.results);
+    setConsoleOutput(evaluation.console);
+  };
+
+  // Runs the tests, reusing the previous result when the code hasn't changed
+  const getEvaluation = async (): Promise<Evaluation> => {
+    const key = `${currentQuestion.id}\u0000${language}\u0000${code}`;
+    if (lastRunRef.current?.key === key) return lastRunRef.current.evaluation;
+    const evaluation = await evaluateSubmission(code, language, currentQuestion);
+    // Don't cache transient failures (rate limits, network) so they can be retried
+    const transient = evaluation.results.every((r) => r.status === 'Not Run');
+    if (!transient) lastRunRef.current = { key, evaluation };
+    return evaluation;
+  };
+
+  // Timer countdown (derived from a wall-clock deadline so it stays accurate in background tabs)
   useEffect(() => {
     if (screen !== 'active') return;
 
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          finishInterview();
-          return 0;
-        }
-        return prev - 1;
-      });
+      const left = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        clearInterval(timer);
+        finishRef.current();
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [screen, code, language, currentQuestion, unlockedHints]);
+  }, [screen]);
 
   const unlockNextHint = (tier: number) => {
     if (!unlockedHints.includes(tier)) {
@@ -178,23 +231,32 @@ export const MockInterviewRoom: React.FC = () => {
     }
   };
 
-  const runTestCases = () => {
+  const runTestCases = async () => {
+    if (isRunningTests) return;
     setIsRunningTests(true);
-    setTimeout(() => {
-      const evaluation = evaluateSubmission(code, language, currentQuestion);
-      setCompileError(evaluation.error);
-      setTestResults(evaluation.results);
+    try {
+      applyEvaluation(await getEvaluation());
+    } finally {
       setIsRunningTests(false);
-    }, 350);
+      setRunStatusText('');
+    }
   };
 
-  const finishInterview = () => {
+  const finishInterview = async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     const elapsed = timeLimitMinutes * 60 - secondsLeft;
     setTimeTakenSeconds(elapsed);
 
-    const evaluation = evaluateSubmission(code, language, currentQuestion);
-    setCompileError(evaluation.error);
-    setTestResults(evaluation.results);
+    setIsRunningTests(true);
+    let evaluation: Evaluation;
+    try {
+      evaluation = await getEvaluation();
+    } finally {
+      setIsRunningTests(false);
+      setRunStatusText('');
+    }
+    applyEvaluation(evaluation);
 
     const totalCases = currentQuestion.testCases.length || 1;
     const testCasesPassed = evaluation.results.filter((r) => r.passed).length;
@@ -232,6 +294,10 @@ export const MockInterviewRoom: React.FC = () => {
 
     setScreen('scorecard');
   };
+
+  useEffect(() => {
+    finishRef.current = finishInterview;
+  });
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -624,8 +690,8 @@ export const MockInterviewRoom: React.FC = () => {
                   className="rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3 py-1 text-xs font-mono text-white focus:outline-none focus:border-[#00C2FF]"
                 >
                   <option value="python">Python 3</option>
-                  <option value="cpp">C++ 20</option>
-                  <option value="java">Java 17</option>
+                  <option value="cpp">C++ (GCC 9)</option>
+                  <option value="java">Java 13</option>
                   <option value="typescript">TypeScript</option>
                 </select>
 
@@ -689,14 +755,24 @@ export const MockInterviewRoom: React.FC = () => {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:scale-105 disabled:opacity-50 cursor-pointer"
                 >
                   <Play className="h-3 w-3 fill-current" />
-                  <span>{isRunningTests ? 'Executing...' : 'Run Test Cases'}</span>
+                  <span>{isRunningTests ? 'Running...' : 'Run Test Cases'}</span>
                 </button>
               </div>
 
+              {isRunningTests && runStatusText && (
+                <p className="text-[11px] font-mono text-[#00C2FF] animate-pulse">{runStatusText}</p>
+              )}
+
+              {(language === 'cpp' || language === 'java') && !isRunningTests && (
+                <p className="text-[10px] font-mono text-[#7E89AC]">
+                  C++/Java run on a server (login required, shared free limit of 50 runs/day). Python &amp; TypeScript run instantly in your browser.
+                </p>
+              )}
+
               {compileError && (
-                <div className="flex items-center gap-2 rounded-xl border border-[#FF5A65]/40 bg-[#FF5A65]/15 p-3 text-xs font-mono text-[#FF5A65]">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{compileError}</span>
+                <div className="flex items-start gap-2 rounded-xl border border-[#FF5A65]/40 bg-[#FF5A65]/15 p-3 text-xs font-mono text-[#FF5A65]">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <pre className="whitespace-pre-wrap break-words max-h-48 overflow-auto">{compileError}</pre>
                 </div>
               )}
 
@@ -733,6 +809,15 @@ export const MockInterviewRoom: React.FC = () => {
                 <p className="text-[11px] text-[#7E89AC] font-mono">
                   Click &quot;Run Test Cases&quot; (or press Ctrl+Enter) to verify your solution against the {currentQuestion.testCases.length} test cases.
                 </p>
+              )}
+
+              {consoleOutput && (
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7E89AC]">Your printed output</span>
+                  <pre className="max-h-32 overflow-auto rounded-xl border border-white/10 bg-[#060C1E] p-2 text-[11px] font-mono text-[#AEB9E1] whitespace-pre-wrap">
+                    {consoleOutput}
+                  </pre>
+                </div>
               )}
             </div>
           </div>

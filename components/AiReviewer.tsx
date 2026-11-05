@@ -44,6 +44,9 @@ export const AiReviewer: React.FC = () => {
   const [result, setResult] = useState<ReviewResult | null>(() =>
     analyzeSolutionLocally(PRESET_SAMPLES[0].code, PRESET_SAMPLES[0].language)
   );
+  // Where the current result came from: a real Gemini review, or the offline keyword estimate
+  const [resultSource, setResultSource] = useState<'ai' | 'estimate'>('estimate');
+  const [reviewNotice, setReviewNotice] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'overview' | 'optimal' | 'questions'>('overview');
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(0);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -159,33 +162,54 @@ export const AiReviewer: React.FC = () => {
     setCode(preset.code);
     setLanguage(preset.language);
     setIsOptimalRevealed(false);
-    setResult(analyzeSolutionLocally(preset.code, preset.language));
+    showEstimate(analyzeSolutionLocally(preset.code, preset.language));
   };
 
-  const handleAnalyze = () => {
-    if (!code.trim()) return;
+  const showEstimate = (estimate: ReviewResult, notice = '') => {
+    setResult(estimate);
+    setResultSource('estimate');
+    setReviewNotice(notice);
+  };
+
+  const handleAnalyze = async () => {
+    if (!code.trim() || isAnalyzing) return;
     setIsAnalyzing(true);
-    setAnalysisStep('Constructing AST & Loop Topology...');
+    setReviewNotice('');
+    setAnalysisStep('Gemini is reviewing your solution (usually 5-20s)...');
 
-    setTimeout(() => {
-      setAnalysisStep('Evaluating Asymptotic Big-O Complexities...');
-    }, 200);
-
-    setTimeout(() => {
-      setAnalysisStep('Synthesizing Interviewer Follow-ups...');
-    }, 450);
-
-    setTimeout(() => {
-      setResult(analyzeSolutionLocally(code, language));
+    try {
+      const res = await fetch('/api/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          language,
+          problem: customProblemBanner?.title || (code === selectedPreset.code ? selectedPreset.title : ''),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success && data.result) {
+        setResult(data.result as ReviewResult);
+        setResultSource('ai');
+        setIsOptimalRevealed(false);
+      } else {
+        showEstimate(
+          analyzeSolutionLocally(code, language),
+          `${data.error || 'AI review unavailable.'} Showing a quick offline estimate instead.`
+        );
+      }
+    } catch {
+      showEstimate(analyzeSolutionLocally(code, language), 'Could not reach the AI service. Showing a quick offline estimate instead.');
+    } finally {
       setIsAnalyzing(false);
       setAnalysisStep('');
-    }, 650);
+    }
   };
 
   const handleResetToPreset = () => {
     setCode(selectedPreset.code);
     setLanguage(selectedPreset.language);
-    setResult(analyzeSolutionLocally(selectedPreset.code, selectedPreset.language));
+    showEstimate(analyzeSolutionLocally(selectedPreset.code, selectedPreset.language));
   };
 
   const handleClearCode = () => {
@@ -278,7 +302,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
               Solution Complexity &amp; Code Reviewer
             </h1>
             <p className="text-xs sm:text-sm text-[#AEB9E1] leading-relaxed">
-              Analyze code solutions with AST inspection. Evaluate exact Big-O Time &amp; Space limits, spot memory bottlenecks, and train on real algorithmic follow-up questions and edge case drills.
+              Get an AI review of your solution from Google Gemini: Big-O time &amp; space analysis, bugs and bottlenecks, an improved solution, and realistic interviewer follow-up questions.
             </p>
           </div>
         </div>
@@ -473,6 +497,23 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
         <div className="lg:col-span-6 space-y-5">
           {result ? (
             <>
+              {/* Result provenance */}
+              <div
+                className={`flex items-start gap-2 rounded-2xl border px-4 py-2.5 text-[11px] font-mono ${
+                  resultSource === 'ai'
+                    ? 'border-[#14CA74]/30 bg-[#14CA74]/10 text-[#14CA74]'
+                    : 'border-[#FDB52A]/30 bg-[#FDB52A]/10 text-[#FDB52A]'
+                }`}
+              >
+                {resultSource === 'ai' ? <Bot className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
+                <span>
+                  {resultSource === 'ai'
+                    ? 'AI review by Google Gemini. AI can make mistakes; double-check complexity claims.'
+                    : reviewNotice ||
+                      'Quick offline estimate based on code patterns (not AI). Click "Run AI Review" for a real analysis.'}
+                </span>
+              </div>
+
               {/* Score & Verdict HUD Card */}
               <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-gradient-to-b from-[#0B1739] to-[#081028] p-5 sm:p-6 shadow-2xl relative overflow-hidden">
                 <div className="absolute right-0 top-0 -mt-8 -mr-8 h-40 w-40 rounded-full bg-[#0E43FB]/15 blur-2xl pointer-events-none" />

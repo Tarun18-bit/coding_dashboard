@@ -9,10 +9,10 @@ Track your stats, contest ratings, submissions, daily streaks, and topic profici
 ## ✨ Features
 
 - 📊 **Combined Multi-Platform Metrics**: Total solved problems, Easy/Medium/Hard breakdown across **Codeforces**, **LeetCode**, and **CodeChef**.
-- ⏱️ **45-Minute Timed Mock Interview Simulator**: Full-length technical assessments for **Google**, **Amazon**, **Meta**, and **Microsoft** with real-time countdown timer, progressive hint ladder, test case runner, and post-interview scorecard.
+- ⏱️ **45-Minute Timed Mock Interview Simulator**: Timed assessments for **Google**, **Amazon**, **Meta**, and **Microsoft** with a countdown timer, progressive hint ladder, a **real test runner** (Python & TypeScript run in your browser via Pyodide/Sucrase; C++ & Java run on Judge0), and a post-interview scorecard.
 - 👥 **Study Circles & Private Clans**: Form study cohorts with college batchmates or friends, track collective weekly problem quests (e.g. *120 Solves this week*), private sprint leaderboards, and team activity streams.
 - 📄 **1-Click ATS Developer Resume & Technical Sheet**: One-click recruiter-ready PDF/print export featuring verified multi-platform stats, contest ratings, topic strengths, and live verification URL.
-- 🤖 **AI Solution Reviewer & FAANG Follow-Ups**: Interactive code analyzer computing Big-O Time & Space complexities ($O(N)$, $O(1)$), code quality ratings, memory bottlenecks, and generating 5 real FAANG interview follow-up questions with model answers.
+- 🤖 **AI Solution Reviewer & FAANG Follow-Ups**: Google Gemini reviews your code for Big-O time & space complexity, bugs and bottlenecks, suggests an improved solution, and generates 5 interviewer follow-up questions. Falls back to a clearly labeled offline estimate when the AI is unavailable.
 - 🎮 **Gamified RPG Level & Mastery Skill Tree**: Dynamic player levels (e.g. *Data Structure Knight*), XP progression, unlockable rarity badges, and an interactive 4-branch Skill Tree modal.
 - 🔥 **Daily Smart POTD & Training Regimen**: Automated daily 3-problem workout (Warmup, Core Challenge, Boss Challenge) targeted at your growth areas with streak protection status.
 - 📚 **Curated Sheet Auto-Sync**: Live interactive roadmaps for **Blind 75**, **NeetCode 150**, and **Striver SDE Sheet** with automated solve detection and filtering.
