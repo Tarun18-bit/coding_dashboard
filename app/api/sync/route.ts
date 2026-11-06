@@ -1,41 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/db';
-import { createClient } from '@/lib/supabase/server';
-import { clearStatsCache } from '@/lib/aggregate';
-import { updateUserLeaderboardCache } from '@/lib/leaderboard';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { codeforcesFetcher } from '@/lib/platforms/codeforces';
-import { leetcodeFetcher } from '@/lib/platforms/leetcode';
-import { codechefFetcher } from '@/lib/platforms/codechef';
-import { PlatformFetcher } from '@/lib/platforms/types';
-import { ensurePublicUser } from '@/lib/users';
+import { createClient } from '@/lib/supabase/server';
+import { syncUser, syncAllUsers, DEFAULT_USER_ID } from '@/lib/sync';
 
-const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
-const SYNC_CACHE_WINDOW_MS = 60 * 1000; // 60 seconds throttle window
-const BURST_SYNC_WINDOW_MS = 10 * 1000; // 10s burst protection against double clicks
+// Vercel Hobby allows 60s; the background job stays inside this budget
+export const maxDuration = 60;
+
+const BURST_SYNC_WINDOW_MS = 10 * 1000; // protects against double clicks
 const lastSyncTimeByTarget = new Map<string, number>();
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  return 'Unknown error';
-}
-
 /**
- * Returns true only when the request carries the server-side SYNC_SECRET_TOKEN
- * (used by the scheduled GitHub Action). Fails closed: if no secret is configured,
- * token-based access is disabled entirely.
+ * True only when the request carries the server-side SYNC_SECRET_TOKEN (the scheduled
+ * GitHub Action). Fails closed: if no secret is configured, token access is disabled.
  */
 function hasValidSyncSecret(req: NextRequest): boolean {
   const secret = process.env.SYNC_SECRET_TOKEN;
   if (!secret) return false;
-
   const authHeader = req.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    if (authHeader.substring(7) === secret) return true;
-  }
-
-  return false;
+  return !!authHeader && authHeader.startsWith('Bearer ') && authHeader.substring(7) === secret;
 }
 
 export async function POST(req: NextRequest) {
@@ -51,243 +33,72 @@ async function handleSync(req: NextRequest) {
   const force = searchParams.get('force') === 'true';
   const isCron = hasValidSyncSecret(req);
 
-  // Logged-in users may only sync their own data.
   let sessionUserId: string | null = null;
   try {
-    const serverSupabase = await createClient();
-    const { data } = await serverSupabase.auth.getUser();
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
     sessionUserId = data?.user?.id ?? null;
   } catch {
     // treated as anonymous
   }
 
   if (!isCron && !sessionUserId) {
-    return NextResponse.json(
-      { success: false, error: 'Please log in to sync your stats.' },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: 'Please log in to sync your stats.' }, { status: 401 });
   }
 
-  // Only the trusted cron caller may choose an arbitrary target user or handle overrides.
-  let targetUserId = sessionUserId ?? DEFAULT_USER_ID;
-  if (isCron) {
-    targetUserId = searchParams.get('user_id') || sessionUserId || DEFAULT_USER_ID;
+  // Scheduled job without a specific user: refresh everyone in the background
+  if (isCron && !searchParams.get('user_id')) {
+    after(async () => {
+      await syncAllUsers(50_000);
+      revalidateDashboards();
+    });
+    return NextResponse.json({ success: true, mode: 'all-users', message: 'Background sync started' }, { status: 202 });
   }
 
-  // Burst debounce protection: Prevent rapid double-clicks from spamming external APIs
+  // Only the trusted cron caller may target another user or override demo handles
+  const targetUserId = isCron ? searchParams.get('user_id') || DEFAULT_USER_ID : sessionUserId!;
+
   const now = Date.now();
   const lastSync = lastSyncTimeByTarget.get(targetUserId);
   if (lastSync && now - lastSync < BURST_SYNC_WINDOW_MS) {
-    return NextResponse.json({
-      success: true,
-      throttled: true,
-      message: 'Sync was recently executed. Stats are fresh!',
-      targetUserId,
-    });
+    return NextResponse.json({ success: true, throttled: true, message: 'Sync was just run. Stats are fresh!' });
   }
   lastSyncTimeByTarget.set(targetUserId, now);
 
-  const override = (key: string) => (isCron ? searchParams.get(key) : null);
-  const cfHandle = override('cf_handle') || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18';
-  const lcHandle = override('lc_handle') || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18';
-  const ccHandle = override('cc_handle') || process.env.DEFAULT_CODECHEF_HANDLE || 'txrun_18';
-
-  const results: Record<string, unknown> = {};
-
-  try {
-    // Ensure target user exists in users table safely
-    await ensurePublicUser(targetUserId, targetUserId === DEFAULT_USER_ID ? 'default_user' : 'user');
-
-    // Look up accounts configured for this target user
-    const { data: userAccounts } = await supabaseAdmin
-      .from('accounts')
-      .select('platform, handle')
-      .eq('user_id', targetUserId);
-
-    const syncPromises: Promise<unknown>[] = [];
-
-    if (userAccounts && userAccounts.length > 0) {
-      for (const acc of userAccounts) {
-        if (acc.platform === 'codeforces') {
-          syncPromises.push(syncAccount(targetUserId, 'codeforces', acc.handle, codeforcesFetcher, force));
-        } else if (acc.platform === 'leetcode') {
-          syncPromises.push(syncAccount(targetUserId, 'leetcode', acc.handle, leetcodeFetcher, force));
-        } else if (acc.platform === 'codechef') {
-          syncPromises.push(syncAccount(targetUserId, 'codechef', acc.handle, codechefFetcher, force));
+  const results = await syncUser(targetUserId, {
+    force,
+    handleOverrides: isCron
+      ? {
+          codeforces: searchParams.get('cf_handle') || undefined,
+          leetcode: searchParams.get('lc_handle') || undefined,
+          codechef: searchParams.get('cc_handle') || undefined,
         }
-      }
-    } else if (targetUserId === DEFAULT_USER_ID) {
-      // Demo profile with no account rows yet: seed with the default handles
-      syncPromises.push(syncAccount(targetUserId, 'codeforces', cfHandle, codeforcesFetcher, force));
-      syncPromises.push(syncAccount(targetUserId, 'leetcode', lcHandle, leetcodeFetcher, force));
-      if (ccHandle) {
-        syncPromises.push(syncAccount(targetUserId, 'codechef', ccHandle, codechefFetcher, force));
-      }
-    }
+      : undefined,
+  });
+  revalidateDashboards();
 
-    const settled = await Promise.allSettled(syncPromises);
-
-    // Also sync DEFAULT_USER_ID if target was different, so demo profile stays updated
-    if (isCron && targetUserId !== DEFAULT_USER_ID) {
-      Promise.allSettled([
-        syncAccount(DEFAULT_USER_ID, 'codeforces', cfHandle, codeforcesFetcher, force),
-        syncAccount(DEFAULT_USER_ID, 'leetcode', lcHandle, leetcodeFetcher, force),
-        syncAccount(DEFAULT_USER_ID, 'codechef', ccHandle, codechefFetcher, force),
-      ]).catch(console.error);
-    }
-
-    // Invalidate stats cache so dashboard updates instantly
-    clearStatsCache(targetUserId);
-    clearStatsCache(DEFAULT_USER_ID);
-
-    try {
-      revalidatePath('/leaderboard');
-      revalidatePath('/dashboard');
-    } catch {
-      // Ignore in non-ISR runtime
-    }
-
-    // Asynchronously update precomputed leaderboard cache row
-    updateUserLeaderboardCache(targetUserId).catch(console.error);
-
-    return NextResponse.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      targetUserId,
-      syncedAccounts: settled.length,
-    });
-  } catch (error: unknown) {
-    console.error('[Sync] Global error during sync:', error);
-    return NextResponse.json({ success: false, error: getErrorMessage(error) }, { status: 500 });
+  const failed = results.filter((r) => r.status === 'error');
+  if (results.length > 0 && failed.length === results.length) {
+    return NextResponse.json(
+      { success: false, error: `Sync failed: ${failed.map((f) => `${f.platform} (${'error' in f ? f.error : ''})`).join(', ')}`, results },
+      { status: 502 }
+    );
   }
+
+  return NextResponse.json({
+    success: true,
+    timestamp: new Date().toISOString(),
+    syncedAccounts: results.length,
+    failedPlatforms: failed.map((f) => f.platform),
+    results,
+  });
 }
 
-/**
- * Generic sync engine for any PlatformFetcher
- */
-async function syncAccount(
-  userId: string,
-  platform: string,
-  handle: string,
-  fetcher: PlatformFetcher,
-  force: boolean
-) {
+function revalidateDashboards() {
   try {
-    const { data: accountData, error: accError } = await supabaseAdmin
-      .from('accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('handle', handle)
-      .maybeSingle();
-
-    if (accError) throw accError;
-
-    let account = accountData;
-
-    if (!account) {
-      const { data: newAcc, error: insertError } = await supabaseAdmin
-        .from('accounts')
-        .insert({
-          user_id: userId,
-          platform,
-          handle,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-      account = newAcc;
-    }
-
-    if (!force && account.last_synced_at) {
-      const timeSinceLastSync = Date.now() - new Date(account.last_synced_at).getTime();
-      if (timeSinceLastSync < SYNC_CACHE_WINDOW_MS) {
-        return {
-          status: 'skipped',
-          reason: `Rate limited. Last synced ${Math.round(timeSinceLastSync / 1000)}s ago (cache window is 60s). Use ?force=true to override.`,
-          platform,
-          handle,
-        };
-      }
-    }
-
-    const [profile, contests, submissions] = await Promise.all([
-      fetcher.fetchProfile(handle),
-      fetcher.fetchContests(handle),
-      fetcher.fetchRecentSubmissions(handle, 100),
-    ]);
-
-    const { error: snapshotError } = await supabaseAdmin.from('snapshots').insert({
-      account_id: account.id,
-      taken_at: new Date().toISOString(),
-      solved_total: profile.solvedTotal,
-      easy: profile.easy,
-      medium: profile.medium,
-      hard: profile.hard,
-      rating: profile.rating,
-      max_rating: profile.maxRating,
-      raw_json: profile.rawJson,
-    });
-    if (snapshotError) throw snapshotError;
-
-    if (submissions.length > 0) {
-      const submissionRows = submissions.map((sub) => ({
-        account_id: account.id,
-        platform_submission_id: sub.platformSubmissionId,
-        problem_id: sub.problemId,
-        title: sub.title,
-        verdict: sub.verdict,
-        tags: sub.tags,
-        difficulty: sub.difficulty,
-        submitted_at: sub.submittedAt,
-      }));
-
-      const { error: subError } = await supabaseAdmin
-        .from('submissions')
-        .upsert(submissionRows, {
-          onConflict: 'account_id,platform_submission_id',
-          ignoreDuplicates: false,
-        });
-
-      if (subError) throw subError;
-    }
-
-    if (contests.length > 0) {
-      await supabaseAdmin.from('contests').delete().eq('account_id', account.id);
-      const contestRows = contests.map((contest) => ({
-        account_id: account.id,
-        contest_name: contest.contestName,
-        date: contest.date,
-        rank: contest.rank,
-        rating_before: contest.ratingBefore,
-        rating_after: contest.ratingAfter,
-      }));
-      const { error: contestError } = await supabaseAdmin.from('contests').insert(contestRows);
-      if (contestError) throw contestError;
-    }
-
-    await supabaseAdmin
-      .from('accounts')
-      .update({ last_synced_at: new Date().toISOString() })
-      .eq('id', account.id);
-
-    return {
-      status: 'success',
-      platform,
-      handle,
-      solvedTotal: profile.solvedTotal,
-      rating: profile.rating,
-      contestsSynced: contests.length,
-      submissionsProcessed: submissions.length,
-    };
-  } catch (error: unknown) {
-    console.error(`[Sync] Error syncing ${platform} for ${handle}:`, error);
-    return {
-      status: 'error',
-      platform,
-      handle,
-      error: getErrorMessage(error),
-    };
+    revalidatePath('/leaderboard');
+    revalidatePath('/dashboard');
+  } catch {
+    // Ignore outside ISR runtime
   }
 }

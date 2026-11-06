@@ -1,3 +1,4 @@
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -5,15 +6,12 @@ import {
   Terminal, 
   CheckCircle2, 
   ArrowRight, 
-  Zap, 
   Trophy, 
   ShieldCheck, 
   Layers, 
   Bot, 
   Clock, 
   BookOpen, 
-  Users, 
-  Code2, 
   Sparkles 
 } from 'lucide-react';
 
@@ -21,7 +19,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HomePage() {
-  let authUser: any = null;
+  let authUser: User | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
@@ -123,7 +121,7 @@ export default async function HomePage() {
         {/* Feature Pills */}
         <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs font-mono text-[#64748B]">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-[#00EA64]" /> Auto 5-Min Sync
+            <CheckCircle2 className="h-4 w-4 text-[#00EA64]" /> Hourly Auto-Sync
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-[#00EA64]" /> Blind 75 Auto-Check
@@ -187,7 +185,7 @@ export default async function HomePage() {
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#FDB52A]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Practice under real 45-minute timed exam constraints with scratchpads, progressive hints, built-in code editor, and final performance scorecards.
+              Practice under real 45-minute timed conditions with progressive hints, a code editor that actually runs your Python, TypeScript, C++ or Java against test cases, and a final scorecard.
             </p>
           </Link>
 
@@ -204,7 +202,7 @@ export default async function HomePage() {
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#CB3CFF]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Instant Big-O time and space complexity detection, code smell warnings, interview follow-up simulator, and concealed optimal solutions.
+              Gemini-powered review of your solution: Big-O time and space analysis, bugs and bottlenecks, an improved solution, and realistic interviewer follow-up questions.
             </p>
           </Link>
 
@@ -221,7 +219,7 @@ export default async function HomePage() {
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#FF5A65]" />
             </h3>
             <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Form study circles with your friends, compete on weekly problem targets, and challenge any competitive programmer head-to-head.
+              Create a private clan, invite friends with a link, chase a shared weekly goal tracked from everyone&apos;s synced stats, and compare head-to-head.
             </p>
           </Link>
 

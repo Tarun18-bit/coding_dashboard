@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/db';
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getDashboardStats } from '@/lib/aggregate';
 import { StatCard } from '@/components/StatCard';
@@ -10,16 +11,16 @@ import { SkillSummary } from '@/components/SkillSummary';
 import { CompanyReadiness } from '@/components/CompanyReadiness';
 import { calculateCompanyReadiness } from '@/lib/company-readiness';
 import { ContestCalendar } from '@/components/ContestCalendar';
-import { fetchUpcomingContests } from '@/lib/contests-calendar';
 import { getDailyWorkout } from '@/lib/potd';
 import { DailyWorkoutCard } from '@/components/DailyWorkout';
 import { computeRpgProfile } from '@/lib/gamification';
 import { RpgProfileCard } from '@/components/RpgProfileCard';
 import { ExportResumeModal } from '@/components/ExportResumeModal';
 import { ProfileHero } from '@/components/ProfileHero';
+import { getProfile } from '@/lib/profile';
 import { ShareButton } from '@/components/ShareButton';
 import { BadgeModal } from '@/components/BadgeModal';
-import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ArrowLeft, ExternalLink, Activity, Swords, BookOpen, Bot, Clock, Users } from 'lucide-react';
+import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ArrowLeft, ExternalLink, Activity, Swords } from 'lucide-react';
 import Link from 'next/link';
 
 export const revalidate = 60;
@@ -34,7 +35,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
   const { username } = await params;
   const decodedUsername = decodeURIComponent(username).trim();
 
-  let authUser: any = null;
+  let authUser: User | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
@@ -91,9 +92,11 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
   }
 
   const stats = await getDashboardStats(user.id);
-  const [upcomingContests, dailyWorkout] = await Promise.all([
-    fetchUpcomingContests().catch(() => []),
+  // Contests load in the browser (ContestCalendar fetches them), so three slow external
+  // APIs never delay this page's first render
+  const [dailyWorkout, profile] = await Promise.all([
     getDailyWorkout(user.id, stats.weaknesses).catch(() => null),
+    getProfile(user.id).catch(() => null),
   ]);
   const companyReadiness = calculateCompanyReadiness(
     stats.allTopicCounts || stats.topicBreakdown,
@@ -122,27 +125,25 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
 
   return (
     <div className="min-h-screen bg-[#081028] text-white selection:bg-[#0E43FB] selection:text-white pb-14">
-      {/* Top DashDark Header */}
+      {/* Top header: identity on the left, portfolio actions on the right */}
       <header className="sticky top-0 z-20 border-b border-[rgba(126,137,172,0.18)] bg-[#0B1739]/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_18px_rgba(14,67,251,0.5)] transition hover:scale-105"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_18px_rgba(14,67,251,0.5)] transition hover:scale-105"
               title="Home"
             >
               <Terminal className="h-5 w-5" />
             </Link>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold tracking-tight text-white">
-                  {displayName}&apos;s Portfolio
-                </h1>
-                <span className="rounded-md border border-[rgba(0,194,255,0.3)] bg-[#00C2FF]/10 px-1.5 py-0.2 text-[10px] font-mono font-semibold text-[#00C2FF]">
+                <h1 className="truncate text-sm font-bold tracking-tight text-white">{displayName}&apos;s Portfolio</h1>
+                <span className="shrink-0 rounded-md border border-[rgba(0,194,255,0.3)] bg-[#00C2FF]/10 px-1.5 text-[10px] font-mono font-semibold text-[#00C2FF]">
                   PUBLIC
                 </span>
               </div>
-              <p className="text-[11px] text-[#7E89AC] font-mono">
+              <p className="hidden md:block truncate text-[11px] text-[#7E89AC] font-mono">
                 {stats.accounts.length > 0
                   ? stats.accounts.map((a) => `${a.platform}: @${a.handle}`).join(' • ')
                   : 'Competitive Programming Portfolio'}
@@ -150,50 +151,24 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
-              href="/clans"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(203,60,255,0.3)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#CB3CFF] transition hover:border-[#CB3CFF] hover:bg-[#CB3CFF]/10 hover:text-white"
+              href={`/compare?u1=${encodeURIComponent(displayName)}`}
+              title="Compare head-to-head"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#CB3CFF] hover:text-white"
             >
-              <Users className="h-3.5 w-3.5 text-[#CB3CFF]" />
-              <span className="hidden sm:inline">Clans</span>
-            </Link>
-            <Link
-              href="/mock-interview"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#FDB52A]/40 bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#FDB52A] transition hover:border-[#FDB52A] hover:bg-[#FDB52A]/10 hover:text-white"
-            >
-              <Clock className="h-3.5 w-3.5 text-[#FDB52A]" />
-              <span className="hidden sm:inline">Mock Arena</span>
-            </Link>
-            <Link
-              href="/reviewer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(203,60,255,0.3)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#CB3CFF] transition hover:border-[#CB3CFF] hover:bg-[#CB3CFF]/10 hover:text-white"
-            >
-              <Bot className="h-3.5 w-3.5 text-[#CB3CFF]" />
-              <span className="hidden sm:inline">AI Reviewer</span>
-            </Link>
-            <Link
-              href="/sheets"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(0,194,255,0.25)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#00C2FF] transition hover:border-[#00C2FF] hover:bg-[#00C2FF]/10 hover:text-white"
-            >
-              <BookOpen className="h-3.5 w-3.5 text-[#00C2FF]" />
-              <span className="hidden sm:inline">Roadmaps</span>
+              <Swords className="h-3.5 w-3.5 text-[#CB3CFF]" />
+              <span className="hidden xl:inline">Compare</span>
             </Link>
             <Link
               href="/leaderboard"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#FDB52A] hover:text-white"
+              title="Global leaderboard"
+              className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#FDB52A] hover:text-white"
             >
               <Trophy className="h-3.5 w-3.5 text-[#FDB52A]" />
-              <span className="hidden sm:inline">Leaderboard</span>
+              <span className="hidden xl:inline">Leaderboard</span>
             </Link>
-            <Link
-              href={`/compare?u1=${encodeURIComponent(displayName)}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#CB3CFF] hover:text-white"
-            >
-              <Swords className="h-3.5 w-3.5 text-[#CB3CFF]" />
-              <span className="hidden sm:inline">Compare</span>
-            </Link>
-            <BadgeModal username={displayName} />
+            <BadgeModal username={displayName} buttonVariant="icon" />
             <ExportResumeModal
               username={displayName}
               totalSolved={stats.totalSolved}
@@ -204,13 +179,14 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
               strengths={stats.strengths}
               rpgTitle={rpgProfile.title}
               rpgLevel={rpgProfile.level}
+              buttonVariant="icon"
             />
             <ShareButton username={displayName} />
             <Link
               href={authUser ? '/dashboard' : '/login?mode=signup'}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-4 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#0B34C7]"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-3 py-1.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#0B34C7]"
             >
-              <span>{authUser ? 'My Dashboard' : 'Build Yours'}</span>
+              <span>{authUser ? 'Dashboard' : 'Build Yours'}</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>
@@ -226,6 +202,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             rpgTitle={rpgProfile.title}
             rpgLevel={rpgProfile.level}
             isEditable={Boolean(authUser && authUser.id === user.id)}
+            initialProfile={profile}
           />
         </section>
 
@@ -306,7 +283,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
 
         {/* Live Upcoming Contest Radar */}
         <section>
-          <ContestCalendar initialContests={upcomingContests} />
+          <ContestCalendar />
         </section>
 
         {/* Platforms Grid & Charts */}

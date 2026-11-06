@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, ExternalLink, CalendarPlus, Trophy, Sparkles } from 'lucide-react';
-import { UpcomingContest } from '@/lib/contests-calendar';
+import { Calendar, Clock, ExternalLink, CalendarPlus } from 'lucide-react';
+import type { UpcomingContest } from '@/lib/contests-calendar';
 
 interface ContestCalendarProps {
   initialContests?: UpcomingContest[];
@@ -12,20 +12,33 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
   const [contests, setContests] = useState<UpcomingContest[]>(initialContests);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(initialContests.length === 0);
-
+  // Ticking clock so countdowns stay live (and render stays pure)
+  const [now, setNow] = useState<number>(() => Date.now());
   useEffect(() => {
-    if (initialContests.length === 0) {
-      setLoading(true);
-      fetch('/api/contests/upcoming')
-        .then((res) => res.json())
-        .then((data) => {
-          const list = Array.isArray(data) ? data : data?.contests || [];
-          if (Array.isArray(list) && list.length > 0) setContests(list);
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    }
-  }, [initialContests]);
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch once on mount when the server didn't provide contests. Depends on a boolean, not the
+  // array itself: a defaulted `[]` is a new array every render and would refetch in a loop.
+  const hasInitial = initialContests.length > 0;
+  useEffect(() => {
+    if (hasInitial) return;
+    let cancelled = false;
+    fetch('/api/contests/upcoming')
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.contests || [];
+        if (!cancelled && Array.isArray(list) && list.length > 0) setContests(list);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasInitial]);
 
   const filtered = contests.filter((c) => {
     if (filter === 'all') return true;
@@ -62,7 +75,7 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
   };
 
   const getCountdownString = (isoString: string) => {
-    const diff = new Date(isoString).getTime() - Date.now();
+    const diff = new Date(isoString).getTime() - now;
     if (diff <= 0) return 'Live Now!';
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);

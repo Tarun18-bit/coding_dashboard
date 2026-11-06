@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Code, Check, X, Sparkles, Copy, ExternalLink } from 'lucide-react';
+import { Code, Check, X, Sparkles, Copy } from 'lucide-react';
 
 interface BadgeModalProps {
   username?: string;
-  buttonVariant?: 'hero' | 'nav';
+  buttonVariant?: 'hero' | 'nav' | 'icon';
 }
 
 export const BadgeModal: React.FC<BadgeModalProps> = ({
@@ -35,7 +35,16 @@ export const BadgeModal: React.FC<BadgeModalProps> = ({
 
   return (
     <>
-      {buttonVariant === 'hero' ? (
+      {buttonVariant === 'icon' ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          title="Get an auto-updating GitHub README badge"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#CB3CFF] hover:text-white cursor-pointer"
+        >
+          <Code className="h-3.5 w-3.5 text-[#CB3CFF]" />
+          <span className="hidden xl:inline">README Badge</span>
+        </button>
+      ) : buttonVariant === 'hero' ? (
         <button
           onClick={() => setIsOpen(true)}
           className="inline-flex items-center gap-2 rounded-xl border border-[rgba(203,60,255,0.3)] bg-[#CB3CFF]/15 px-3.5 py-2 text-xs font-bold text-[#CB3CFF] shadow-sm transition hover:bg-[#CB3CFF]/25 hover:border-[#CB3CFF] cursor-pointer"

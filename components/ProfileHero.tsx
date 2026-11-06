@@ -1,69 +1,96 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Briefcase,
-  Globe,
   Edit3,
   Check,
   Share2,
-  Sparkles,
-  ExternalLink,
-  Code2,
+  X,
+  Loader2,
 } from 'lucide-react';
+import type { PublicProfile } from '@/lib/profile';
 
 interface ProfileHeroProps {
   username: string;
   rpgTitle: string;
   rpgLevel: number;
   isEditable?: boolean;
+  /** Saved profile from the database (null when the user hasn't filled it in yet) */
+  initialProfile?: PublicProfile | null;
 }
+
+const DEFAULT_BIO = 'Competitive programmer & problem solver passionate about algorithms and systems.';
+const DEFAULT_STATUS = 'Open to Opportunities';
 
 export const ProfileHero: React.FC<ProfileHeroProps> = ({
   username,
   rpgTitle,
   rpgLevel,
   isEditable = false,
+  initialProfile = null,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [bio, setBio] = useState('Competitive programmer & problem solver passionate about algorithms and systems.');
-  const [status, setStatus] = useState('Open to Opportunities');
-  const [githubUser, setGithubUser] = useState(username);
-  const [linkedinUser, setLinkedinUser] = useState('');
+  const [saved, setSaved] = useState<PublicProfile>({
+    bio: initialProfile?.bio || DEFAULT_BIO,
+    status: initialProfile?.status || DEFAULT_STATUS,
+    github: initialProfile?.github || '',
+    linkedin: initialProfile?.linkedin || '',
+  });
+  const [bio, setBio] = useState(saved.bio);
+  const [status, setStatus] = useState(saved.status);
+  const [githubUser, setGithubUser] = useState(saved.github);
+  const [linkedinUser, setLinkedinUser] = useState(saved.linkedin);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  // Load from localStorage if previously edited
-  useEffect(() => {
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError('');
     try {
-      const savedBio = localStorage.getItem(`profile_bio_${username}`);
-      const savedStatus = localStorage.getItem(`profile_status_${username}`);
-      const savedGh = localStorage.getItem(`profile_gh_${username}`);
-      const savedLi = localStorage.getItem(`profile_li_${username}`);
-
-      if (savedBio) setBio(savedBio);
-      if (savedStatus) setStatus(savedStatus);
-      if (savedGh) setGithubUser(savedGh);
-      if (savedLi) setLinkedinUser(savedLi);
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio, status, github: githubUser, linkedin: linkedinUser }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setSaveError(data.error || 'Could not save your profile.');
+        return;
+      }
+      const next: PublicProfile = {
+        bio: data.profile.bio || DEFAULT_BIO,
+        status: data.profile.status || DEFAULT_STATUS,
+        github: data.profile.github,
+        linkedin: data.profile.linkedin,
+      };
+      setSaved(next);
+      setBio(next.bio);
+      setStatus(next.status);
+      setGithubUser(next.github);
+      setLinkedinUser(next.linkedin);
+      setIsEditing(false);
     } catch {
-      // Ignore if localStorage unavailable
+      setSaveError('Could not reach the server.');
+    } finally {
+      setSaving(false);
     }
-  }, [username]);
+  };
 
-  const handleSave = () => {
-    try {
-      localStorage.setItem(`profile_bio_${username}`, bio);
-      localStorage.setItem(`profile_status_${username}`, status);
-      localStorage.setItem(`profile_gh_${username}`, githubUser);
-      localStorage.setItem(`profile_li_${username}`, linkedinUser);
-    } catch {
-      // Ignore
-    }
+  const handleCancel = () => {
+    setBio(saved.bio);
+    setStatus(saved.status);
+    setGithubUser(saved.github);
+    setLinkedinUser(saved.linkedin);
+    setSaveError('');
     setIsEditing(false);
   };
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
+      // Always share the public profile, even when viewing from the private dashboard
+      navigator.clipboard.writeText(`${window.location.origin}/u/${encodeURIComponent(username)}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -94,7 +121,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               {/* Status Badge */}
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#14CA74]/40 bg-[#14CA74]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#14CA74]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#14CA74] animate-pulse" />
-                <span>{status}</span>
+                <span>{saved.status}</span>
               </span>
             </div>
 
@@ -106,16 +133,17 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             {/* Bio */}
             {!isEditing ? (
               <p className="text-xs sm:text-sm text-[#AEB9E1] max-w-xl leading-relaxed">
-                {bio}
+                {saved.bio}
               </p>
             ) : (
               <div className="space-y-2 pt-1 max-w-lg">
-                <input
-                  type="text"
+                <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
+                  maxLength={280}
+                  rows={2}
                   placeholder="Your technical bio..."
-                  className="w-full rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -132,7 +160,15 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
                     placeholder="GitHub username"
                     className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                   />
+                  <input
+                    type="text"
+                    value={linkedinUser}
+                    onChange={(e) => setLinkedinUser(e.target.value)}
+                    placeholder="LinkedIn profile URL or slug"
+                    className="col-span-2 rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                  />
                 </div>
+                {saveError && <p className="text-[11px] text-[#FF5A65]">{saveError}</p>}
               </div>
             )}
           </div>
@@ -140,9 +176,21 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
 
         {/* Right: Social Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {githubUser && (
+          {saved.linkedin && (
             <a
-              href={`https://github.com/${githubUser}`}
+              href={`https://www.linkedin.com/in/${saved.linkedin}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
+              title="LinkedIn Profile"
+            >
+              <Briefcase className="h-4 w-4" />
+            </a>
+          )}
+
+          {saved.github && (
+            <a
+              href={`https://github.com/${saved.github}`}
               target="_blank"
               rel="noreferrer"
               className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
@@ -162,8 +210,20 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             {copied ? <Check className="h-4 w-4 text-[#14CA74]" /> : <Share2 className="h-4 w-4" />}
           </button>
 
+          {isEditable && isEditing && (
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:text-white"
+              title="Cancel"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+
           {isEditable && (
             <button
+              disabled={saving}
               onClick={() => {
                 if (isEditing) handleSave();
                 else setIsEditing(true);
@@ -176,13 +236,13 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             >
               {isEditing ? (
                 <>
-                  <Check className="h-3.5 w-3.5" />
-                  <span>Save Profile</span>
+                  {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  <span>{saving ? 'Saving...' : 'Save Profile'}</span>
                 </>
               ) : (
                 <>
                   <Edit3 className="h-3.5 w-3.5" />
-                  <span>Edit Bio</span>
+                  <span>Edit Profile</span>
                 </>
               )}
             </button>

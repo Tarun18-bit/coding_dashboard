@@ -10,7 +10,7 @@ Track your stats, contest ratings, submissions, daily streaks, and topic profici
 
 - 📊 **Combined Multi-Platform Metrics**: Total solved problems, Easy/Medium/Hard breakdown across **Codeforces**, **LeetCode**, and **CodeChef**.
 - ⏱️ **45-Minute Timed Mock Interview Simulator**: Timed assessments for **Google**, **Amazon**, **Meta**, and **Microsoft** with a countdown timer, progressive hint ladder, a **real test runner** (Python & TypeScript run in your browser via Pyodide/Sucrase; C++ & Java run on Judge0), and a post-interview scorecard.
-- 👥 **Study Circles & Private Clans**: Form study cohorts with college batchmates or friends, track collective weekly problem quests (e.g. *120 Solves this week*), private sprint leaderboards, and team activity streams.
+- 👥 **Study Circles & Private Clans**: Create a private clan, share an invite link or code, and chase a weekly problem goal together. Weekly progress is counted from everyone's synced stats (new problems since Monday 00:00 UTC), with a live member leaderboard and a feed of recent solves.
 - 📄 **1-Click ATS Developer Resume & Technical Sheet**: One-click recruiter-ready PDF/print export featuring verified multi-platform stats, contest ratings, topic strengths, and live verification URL.
 - 🤖 **AI Solution Reviewer & FAANG Follow-Ups**: Google Gemini reviews your code for Big-O time & space complexity, bugs and bottlenecks, suggests an improved solution, and generates 5 interviewer follow-up questions. Falls back to a clearly labeled offline estimate when the AI is unavailable.
 - 🎮 **Gamified RPG Level & Mastery Skill Tree**: Dynamic player levels (e.g. *Data Structure Knight*), XP progression, unlockable rarity badges, and an interactive 4-branch Skill Tree modal.
@@ -23,10 +23,13 @@ Track your stats, contest ratings, submissions, daily streaks, and topic profici
 - 🔥 **UTC-Safe Streak Tracker**: Current and longest streaks computed with UTC timestamps.
 - 📅 **365-Day Activity Heatmap**: Interactive calendar-style activity squares with tooltips.
 - 📈 **Contest Rating Progression**: Responsive timeline chart for Codeforces and LeetCode ratings with platform filtering.
+- 📉 **Solved-Over-Time Chart**: Daily total-solved history (from daily snapshots) with last-7-days / last-30-days gains.
+- 🔁 **Revision Queue**: Spaced-repetition picks of problems you solved 1 week to 4 months ago, weighted toward hard problems and weak topics.
+- 🪪 **Public Profiles**: Shareable `/u/<username>` portfolio with a bio, status and GitHub/LinkedIn links saved to your account.
 - 🎨 **DashDark Studio Aesthetics**: Built following modern dark theme designs with midnight blues, glowing electric accents, and crisp typography.
 - 🔄 **Real-Time & Scheduled Sync**:
   - Top header **"Sync Now"** button with real-time feedback and automatic cache cooldown.
-  - Automated 5-minute background sync powered by **GitHub Actions cron**.
+  - Hourly background sync of **every user** (stalest first) powered by a **GitHub Actions cron**.
 - 🛡️ **Fault-Isolated Platform Architecture**: One platform failing or throttling will never break syncing for the others.
 
 ---
@@ -55,6 +58,7 @@ npm install
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open the **SQL Editor** tab in your Supabase dashboard.
 3. Paste and run the entire contents of [`supabase/schema.sql`](supabase/schema.sql).
+4. Then run [`supabase/migrations/002_clans_profiles.sql`](supabase/migrations/002_clans_profiles.sql) the same way (clans, profile fields, snapshot cleanup and indexes). It is safe to run more than once.
 
 ### 3. Configure Environment Variables
 Copy `.env.example` to `.env.local`:
@@ -104,7 +108,7 @@ export interface PlatformFetcher {
 
 ---
 
-## ⚡ Automated 5-Minute Sync with GitHub Actions
+## ⚡ Automated Hourly Sync with GitHub Actions
 
 The repository includes a ready-to-use GitHub Actions workflow in [`.github/workflows/sync.yml`](.github/workflows/sync.yml).
 
@@ -114,7 +118,7 @@ The repository includes a ready-to-use GitHub Actions workflow in [`.github/work
    - `APP_URL`: Your deployed URL (e.g. `https://your-dashboard.vercel.app`)
    - `SYNC_SECRET_TOKEN`: The same token set in your `SYNC_SECRET_TOKEN` environment variable.
 
-GitHub will automatically trigger `/api/sync` every 5 minutes to keep your dashboard up to date.
+GitHub triggers `/api/sync` every hour. The endpoint answers immediately and then refreshes every user's accounts in the background (most out-of-date users first, within Vercel's 60-second limit), so all dashboards, clans and the leaderboard stay current.
 
 ---
 

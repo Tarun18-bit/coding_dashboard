@@ -14,7 +14,6 @@ import {
   Bot, 
   Sparkles, 
   ArrowRight, 
-  Compass, 
   Zap, 
   Target,
   Code2,
@@ -35,8 +34,29 @@ import { ProfileHero } from '@/components/ProfileHero';
 import { ExportResumeModal } from '@/components/ExportResumeModal';
 import { BadgeModal } from '@/components/BadgeModal';
 import { AccountModal } from '@/components/AccountModal';
+import type { PublicProfile } from '@/lib/profile';
+import type { DashboardStats } from '@/lib/aggregate';
+import type { SheetProgress } from '@/lib/sheets';
+import type { DailyWorkout } from '@/lib/potd';
+import type { CompanyReadinessResult } from '@/lib/company-readiness';
+import type { RpgProfile } from '@/lib/gamification';
+import type { UpcomingContest } from '@/lib/contests-calendar';
+
+import { RevisionQueue } from '@/components/RevisionQueue';
 
 // Code-split heavy Recharts library so initial dashboard render is ultra-fast
+const ProgressChart = dynamic(
+  () => import('@/components/ProgressChart').then((mod) => mod.ProgressChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[260px] w-full flex items-center justify-center bg-[#0D1527] rounded-xl border border-white/5 animate-pulse">
+        <span className="text-xs text-[#64748B]">Loading progress chart...</span>
+      </div>
+    ),
+  }
+);
+
 const RatingChart = dynamic(
   () => import('@/components/RatingChart').then((mod) => mod.RatingChart),
   {
@@ -50,13 +70,14 @@ const RatingChart = dynamic(
 );
 
 interface DashboardTabsProps {
-  stats: any;
-  upcomingContests: any[];
-  sheetProgress: any;
-  dailyWorkout: any;
-  companyReadiness: any[];
-  rpgProfile: any;
+  stats: DashboardStats;
+  upcomingContests: UpcomingContest[];
+  sheetProgress: SheetProgress | null;
+  dailyWorkout: DailyWorkout | null;
+  companyReadiness: CompanyReadinessResult[];
+  rpgProfile: RpgProfile;
   activeUsername: string;
+  profile?: PublicProfile | null;
 }
 
 export function DashboardTabs({
@@ -67,6 +88,7 @@ export function DashboardTabs({
   companyReadiness,
   rpgProfile,
   activeUsername,
+  profile = null,
 }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'practice' | 'interview' | 'rpg'>('overview');
 
@@ -114,8 +136,8 @@ export function DashboardTabs({
               totalSolved={stats.totalSolved}
               difficulty={stats.difficultyBreakdown}
               streaks={stats.streaks}
-              accounts={stats.accounts?.map((a: any) => ({ platform: a.platform, handle: a.handle, rating: a.latestSnapshot?.rating })) || []}
-              companyReadiness={companyReadiness?.map((c: any) => ({ company: c.company?.name || c.company, score: c.overallScore || c.score })) || []}
+              accounts={stats.accounts.map((a) => ({ platform: a.platform, handle: a.handle, rating: a.latestSnapshot?.rating ?? null }))}
+              companyReadiness={companyReadiness.map((c) => ({ company: c.company.name, score: c.overallScore }))}
               strengths={stats.strengths || []}
               rpgTitle={rpgProfile?.title}
               rpgLevel={rpgProfile?.level}
@@ -242,7 +264,7 @@ export function DashboardTabs({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {stats.accounts.map((acc: any) => (
+                {stats.accounts.map((acc) => (
                   <PlatformCard
                     key={acc.id}
                     platform={acc.platform}
@@ -279,6 +301,13 @@ export function DashboardTabs({
               totalActiveDays={stats.streaks.totalActiveDays}
             />
           </div>
+
+          {/* Solved-over-time progress (from daily snapshots) */}
+          {stats.accounts.length > 0 && (
+            <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 sm:p-6 shadow-lg">
+              <ProgressChart data={stats.progressHistory || []} heatmap={stats.heatmapData} />
+            </div>
+          )}
 
           {/* Upcoming Contest Radar (Full Width 3-Card Grid with Spacious Breathing Room) */}
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 sm:p-6 shadow-lg">
@@ -326,7 +355,7 @@ export function DashboardTabs({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgba(148,163,184,0.08)]">
-                    {stats.recentSubmissions.slice(0, 6).map((sub: any) => (
+                    {stats.recentSubmissions.slice(0, 6).map((sub) => (
                       <tr key={sub.id} className="hover:bg-[#131E35]/50 transition-colors">
                         <td className="py-3 px-4">
                           <span className="font-mono text-[10px] font-bold text-[#94A3B8] uppercase">
@@ -334,7 +363,13 @@ export function DashboardTabs({
                           </span>
                         </td>
                         <td className="py-3 px-4 font-semibold text-white">
-                          {sub.title}
+                          {sub.url ? (
+                            <a href={sub.url} target="_blank" rel="noopener noreferrer" className="hover:text-[#00EA64] transition-colors">
+                              {sub.title}
+                            </a>
+                          ) : (
+                            sub.title
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <span
@@ -396,6 +431,9 @@ export function DashboardTabs({
               <DailyWorkoutCard initialWorkout={dailyWorkout} />
             </div>
           )}
+
+          {/* Spaced-repetition revision picks */}
+          {stats.accounts.length > 0 && <RevisionQueue items={stats.revisionQueue || []} />}
 
           {/* Curated Roadmaps Kit Banner */}
           <div className="relative overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.15)] bg-gradient-to-r from-[#0E1628] via-[#101B33] to-[#0E1628] p-6 shadow-xl">
@@ -507,6 +545,7 @@ export function DashboardTabs({
             rpgTitle={rpgProfile.title}
             rpgLevel={rpgProfile.level}
             isEditable={true}
+            initialProfile={profile}
           />
           <RpgProfileCard rpg={rpgProfile} />
         </div>

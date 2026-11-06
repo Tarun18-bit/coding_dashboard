@@ -75,7 +75,9 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
   // Parse Codeforces
   if (cfRes.status === 'fulfilled' && cfRes.value?.status === 'OK') {
     const rawList = cfRes.value.result || [];
-    const upcoming = rawList.filter((c: any) => c.phase === 'BEFORE');
+    const upcoming = (rawList as { id: number; name: string; phase: string; startTimeSeconds: number; durationSeconds: number }[]).filter(
+      (c) => c.phase === 'BEFORE'
+    );
     for (const c of upcoming) {
       const startMs = c.startTimeSeconds * 1000;
       const durationMin = Math.round(c.durationSeconds / 60);
@@ -146,10 +148,10 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
   // Sort chronologically (earliest contest first)
   contests.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
-  cachedContests = {
-    timestamp: Date.now(),
-    data: contests,
-  };
+  // Don't cache an empty result (all platforms failed or timed out): retry on the next request
+  if (contests.length > 0) {
+    cachedContests = { timestamp: Date.now(), data: contests };
+  }
 
   return contests;
 }

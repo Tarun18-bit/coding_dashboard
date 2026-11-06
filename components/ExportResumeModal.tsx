@@ -7,9 +7,6 @@ import {
   X,
   Copy,
   Check,
-  Award,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 
 export interface ExportResumeModalProps {
@@ -22,7 +19,7 @@ export interface ExportResumeModalProps {
   strengths?: { tag: string; count: number }[];
   rpgTitle?: string;
   rpgLevel?: number;
-  buttonVariant?: 'hero' | 'nav';
+  buttonVariant?: 'hero' | 'nav' | 'icon';
 }
 
 export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
@@ -82,7 +79,16 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
 
   return (
     <>
-      {buttonVariant === 'hero' ? (
+      {buttonVariant === 'icon' ? (
+        <button
+          onClick={() => setIsOpen(true)}
+          title="Export an ATS-friendly resume sheet"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#14CA74] hover:text-white cursor-pointer"
+        >
+          <FileText className="h-3.5 w-3.5 text-[#14CA74]" />
+          <span className="hidden xl:inline">Resume</span>
+        </button>
+      ) : buttonVariant === 'hero' ? (
         <button
           onClick={() => setIsOpen(true)}
           className="inline-flex items-center gap-2 rounded-xl border border-[rgba(20,202,116,0.3)] bg-[#14CA74]/15 px-3.5 py-2 text-xs font-bold text-[#14CA74] shadow-sm transition hover:bg-[#14CA74]/25 hover:border-[#14CA74] cursor-pointer"

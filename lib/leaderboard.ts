@@ -34,6 +34,12 @@ export async function updateUserLeaderboardCache(userId: string): Promise<void> 
 
   try {
     const stats = await getDashboardStats(userId);
+    if (stats.accounts.length === 0) {
+      // No linked platforms left: drop the user from the leaderboard
+      await supabaseAdmin.from('leaderboard_cache').delete().eq('user_id', userId);
+      clearLeaderboardCache();
+      return;
+    }
 
     let highestRating: number | null = null;
     let bestPlatform = 'Unrated';
@@ -179,7 +185,7 @@ export async function getGlobalLeaderboard(forceRefresh = false): Promise<Leader
       : { data: [] };
 
     // Group snapshots by account_id (keep newest snapshot per account)
-    const latestSnapshotByAccount = new Map<string, any>();
+    const latestSnapshotByAccount = new Map<string, NonNullable<typeof allSnapshots>[number]>();
     for (const snap of allSnapshots || []) {
       if (!latestSnapshotByAccount.has(snap.account_id)) {
         latestSnapshotByAccount.set(snap.account_id, snap);
@@ -187,7 +193,7 @@ export async function getGlobalLeaderboard(forceRefresh = false): Promise<Leader
     }
 
     // Group accounts by user_id
-    const accountsByUser = new Map<string, any[]>();
+    const accountsByUser = new Map<string, NonNullable<typeof allAccounts>[number][]>();
     for (const acc of allAccounts || []) {
       const list = accountsByUser.get(acc.user_id) || [];
       list.push(acc);

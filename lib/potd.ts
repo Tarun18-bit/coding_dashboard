@@ -60,13 +60,22 @@ export async function getDailyWorkout(
   const solvedTodayIds = new Set<string>();
 
   if (accountIds.length > 0) {
-    const { data: subs } = await supabaseAdmin
-      .from('submissions')
-      .select('problem_id, title, submitted_at, verdict')
-      .in('account_id', accountIds)
-      .eq('verdict', 'AC');
+    // Page through results: a single Supabase request is capped at 1000 rows
+    const subs: { problem_id: string | null; submitted_at: string }[] = [];
+    for (let page = 0; page < 10; page++) {
+      const { data, error } = await supabaseAdmin
+        .from('submissions')
+        .select('problem_id, submitted_at')
+        .in('account_id', accountIds)
+        .eq('verdict', 'AC')
+        .order('submitted_at', { ascending: false })
+        .range(page * 1000, page * 1000 + 999);
+      if (error || !data) break;
+      subs.push(...data);
+      if (data.length < 1000) break;
+    }
 
-    if (subs) {
+    if (subs.length > 0) {
       for (const s of subs) {
         if (s.problem_id) {
           const normId = s.problem_id.toLowerCase().trim();

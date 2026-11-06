@@ -1,18 +1,20 @@
 import { getDashboardStats } from '@/lib/aggregate';
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { calculateCompanyReadiness } from '@/lib/company-readiness';
-import { fetchUpcomingContests } from '@/lib/contests-calendar';
 import { getUserSheetProgress } from '@/lib/sheets';
 import { getDailyWorkout } from '@/lib/potd';
 import { computeRpgProfile } from '@/lib/gamification';
+import { getProfile } from '@/lib/profile';
 import { Navbar } from '@/components/Navbar';
 import { DashboardTabs } from '@/components/DashboardTabs';
 import { redirect } from 'next/navigation';
 
-export const revalidate = 30;
+// Personal data behind a login: always render per request
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  let authUser: any = null;
+  let authUser: User | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
@@ -27,10 +29,11 @@ export default async function DashboardPage() {
   }
 
   const activeUserId = authUser.id;
-  const [stats, sheetProgress, dailyWorkout] = await Promise.all([
+  const [stats, sheetProgress, dailyWorkout, profile] = await Promise.all([
     getDashboardStats(activeUserId),
     getUserSheetProgress(activeUserId, 'blind75').catch(() => null),
     getDailyWorkout(activeUserId).catch(() => null),
+    getProfile(activeUserId).catch(() => null),
   ]);
 
   const companyReadiness = calculateCompanyReadiness(
@@ -57,7 +60,10 @@ export default async function DashboardPage() {
       }
     : null;
 
-  const activeUsername = currentUser?.username || stats.accounts[0]?.handle || 'txrun_18';
+  // The public username in the database (may differ from the email prefix if that name was taken),
+  // so profile, badge and share links point at the right /u/ page
+  const dbUsername = stats.user.username && stats.user.username !== 'default_user' ? stats.user.username : null;
+  const activeUsername = dbUsername || currentUser?.username || stats.accounts[0]?.handle || 'coder';
   const readinessSummary = companyReadiness.map((c) => ({
     company: c.company.name,
     score: c.overallScore,
@@ -89,6 +95,7 @@ export default async function DashboardPage() {
           companyReadiness={companyReadiness}
           rpgProfile={rpgProfile}
           activeUsername={activeUsername}
+          profile={profile}
         />
       </main>
     </div>

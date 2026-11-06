@@ -6,7 +6,10 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const type = searchParams.get('type');
-  const next = searchParams.get('next') ?? (type === 'recovery' ? '/reset-password' : '/dashboard');
+  // Only allow same-site relative paths ("/x"), never "//host" or "@host" style open redirects
+  const requestedNext = searchParams.get('next');
+  const safeNext = requestedNext && /^\/(?!\/)[^\\@]*$/.test(requestedNext) ? requestedNext : null;
+  const next = safeNext ?? (type === 'recovery' ? '/reset-password' : '/dashboard');
 
   if (code) {
     const supabase = await createClient();

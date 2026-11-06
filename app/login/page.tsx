@@ -23,6 +23,13 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // Where to go after signing in (e.g. back to a clan invite); same-site paths only
+  const getSafeNext = () => {
+    if (typeof window === 'undefined') return '/dashboard';
+    const next = new URLSearchParams(window.location.search).get('next');
+    return next && /^\/(?!\/)[^\\@]*$/.test(next) ? next : '/dashboard';
+  };
+
   React.useEffect(() => {
     // Auto-detect password recovery tokens or redirect parameters
     if (typeof window !== 'undefined') {
@@ -88,7 +95,7 @@ export default function LoginPage() {
         if (error) throw error;
 
         if (data.session) {
-          router.push('/dashboard');
+          router.push(getSafeNext());
           router.refresh();
         } else {
           setSuccessMsg('Account registered! If confirmation is required, check your email, then return here to sign in.');
@@ -101,7 +108,7 @@ export default function LoginPage() {
 
         if (error) throw error;
 
-        router.push('/dashboard');
+        router.push(getSafeNext());
         router.refresh();
       }
     } catch (error: unknown) {
