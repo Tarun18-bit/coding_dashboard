@@ -765,7 +765,7 @@ export const MockInterviewRoom: React.FC = () => {
 
               {(language === 'cpp' || language === 'java') && !isRunningTests && (
                 <p className="text-[10px] font-mono text-[#7E89AC]">
-                  C++/Java run on a server (login required, shared free limit of 50 runs/day). Python &amp; TypeScript run instantly in your browser.
+                  C++/Java compile and run on a shared server (login required; may be slower or busy at peak times). Python &amp; TypeScript run instantly in your browser.
                 </p>
               )}
 

@@ -4,10 +4,11 @@ import { MOCK_QUESTIONS } from '@/lib/mock-interview';
 import { buildCppProgram, buildJavaProgram, gradeOutput, RunnableTest } from '@/lib/code-runner/harness';
 
 /**
- * Runs C++ / Java mock-interview solutions on Judge0 CE (RapidAPI free plan: 50 runs/day).
+ * Runs C++ / Java mock-interview solutions on Judge0 CE.
  * Python and TypeScript run in the browser instead and never reach this route.
  *
- * Env: JUDGE0_API_KEY (required), JUDGE0_API_HOST (default judge0-ce.p.rapidapi.com)
+ * - With JUDGE0_API_KEY: uses the RapidAPI-hosted Judge0 (JUDGE0_API_HOST, default judge0-ce.p.rapidapi.com)
+ * - Without it: uses Judge0's free public instance (JUDGE0_URL, default https://ce.judge0.com), no key or card needed
  */
 
 const LANGUAGE_IDS: Record<'cpp' | 'java', number> = {
@@ -40,12 +41,6 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.JUDGE0_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { success: false, error: 'C++/Java runner is not configured (JUDGE0_API_KEY missing). Use Python or TypeScript.' },
-      { status: 503 }
-    );
-  }
 
   const now = Date.now();
   if (now - (lastRunByUser.get(user.id) ?? 0) < PER_USER_COOLDOWN_MS) {
@@ -78,16 +73,17 @@ export async function POST(req: NextRequest) {
       ? buildCppProgram(code, question.runner, tests)
       : buildJavaProgram(code, question.runner, tests);
 
-  const host = process.env.JUDGE0_API_HOST || 'judge0-ce.p.rapidapi.com';
-  const headers = {
-    'Content-Type': 'application/json',
-    'X-RapidAPI-Key': apiKey,
-    'X-RapidAPI-Host': host,
-  };
+  const rapidHost = process.env.JUDGE0_API_HOST || 'judge0-ce.p.rapidapi.com';
+  const baseUrl = apiKey
+    ? `https://${rapidHost}`
+    : (process.env.JUDGE0_URL || 'https://ce.judge0.com').replace(/\/$/, '');
+  const headers: Record<string, string> = apiKey
+    ? { 'Content-Type': 'application/json', 'X-RapidAPI-Key': apiKey, 'X-RapidAPI-Host': rapidHost }
+    : { 'Content-Type': 'application/json' };
   const fields = 'token,stdout,stderr,compile_output,message,status';
 
   try {
-    const submitRes = await fetch(`https://${host}/submissions?base64_encoded=true&wait=true&fields=${fields}`, {
+    const submitRes = await fetch(`${baseUrl}/submissions?base64_encoded=true&wait=true&fields=${fields}`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -101,7 +97,12 @@ export async function POST(req: NextRequest) {
 
     if (submitRes.status === 429) {
       return NextResponse.json(
-        { success: false, error: "Today's free C++/Java run limit is used up. Python and TypeScript still work (they run in your browser)." },
+        {
+          success: false,
+          error: apiKey
+            ? "Today's free C++/Java run limit is used up. Python and TypeScript still work (they run in your browser)."
+            : 'The free C++/Java runner is busy. Try again in a minute; Python and TypeScript still work.',
+        },
         { status: 429 }
       );
     }
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
     // If Judge0 returned before finishing (status In Queue / Processing), poll by token
     for (let i = 0; i < 12 && result.token && (!result.status || result.status.id <= 2); i++) {
       await new Promise((r) => setTimeout(r, 1000));
-      const pollRes = await fetch(`https://${host}/submissions/${result.token}?base64_encoded=true&fields=${fields}`, {
+      const pollRes = await fetch(`${baseUrl}/submissions/${result.token}?base64_encoded=true&fields=${fields}`, {
         headers,
       });
       if (!pollRes.ok) break;
