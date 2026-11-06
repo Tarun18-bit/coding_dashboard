@@ -142,7 +142,9 @@ export async function POST(req: NextRequest) {
 
   const userPrompt = `${problem ? `Problem: ${problem}\n` : ''}Language: ${language}\n\nCandidate solution:\n\`\`\`${language}\n${code}\n\`\`\``;
 
+  let lastStatus = 0;
   for (const model of MODEL_CANDIDATES) {
+    for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
@@ -159,7 +161,14 @@ export async function POST(req: NextRequest) {
         signal: AbortSignal.timeout(50_000),
       });
 
-      if (res.status === 404) continue; // model retired/renamed: try the next one
+      if (res.status === 404) break; // model retired/renamed: try the next one
+      if (res.status >= 500) {
+        // Overloaded/unavailable (common on the free tier): retry once, then try the next model
+        lastStatus = res.status;
+        console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(next model)');
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
       if (res.status === 429) {
         return NextResponse.json(
           { success: false, error: "Today's free AI review quota is used up. Try again later." },
@@ -186,9 +195,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, model, result: coerceReview(parsed) });
     } catch (error) {
       console.error('[Review] Request failed', model, error);
-      return NextResponse.json({ success: false, error: 'Could not reach the AI service.' }, { status: 502 });
+      lastStatus = 502;
+      break; // network error/timeout: try the next model
+    }
     }
   }
 
-  return NextResponse.json({ success: false, error: 'No available Gemini model found. Set GEMINI_MODEL.' }, { status: 502 });
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        lastStatus >= 500
+          ? 'Gemini is overloaded right now (free tier). Please try again in a minute.'
+          : 'No available Gemini model found. Set GEMINI_MODEL.',
+    },
+    { status: 503 }
+  );
 }
