@@ -142,9 +142,13 @@ export async function POST(req: NextRequest) {
 
   const userPrompt = `${problem ? `Problem: ${problem}\n` : ''}Language: ${language}\n\nCandidate solution:\n\`\`\`${language}\n${code}\n\`\`\``;
 
+  // Vercel stops the function at 60s, so all attempts share one time budget
+  const deadline = Date.now() + 50_000;
   let lastStatus = 0;
   for (const model of MODEL_CANDIDATES) {
     for (let attempt = 0; attempt < 2; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 5_000) break;
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
@@ -158,15 +162,15 @@ export async function POST(req: NextRequest) {
             responseSchema: RESPONSE_SCHEMA,
           },
         }),
-        signal: AbortSignal.timeout(50_000),
+        signal: AbortSignal.timeout(Math.min(35_000, remaining)),
       });
 
       if (res.status === 404) break; // model retired/renamed: try the next one
-      if (res.status >= 500) {
+      if (res.status >= 500 || res.status === 503) {
         // Overloaded/unavailable (common on the free tier): retry once, then try the next model
         lastStatus = res.status;
         console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(next model)');
-        if (attempt === 0) await new Promise((r) => setTimeout(r, 1500));
+        if (attempt === 0 && deadline - Date.now() > 10_000) await new Promise((r) => setTimeout(r, 1500));
         continue;
       }
       if (res.status === 429) {
@@ -194,8 +198,8 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ success: true, model, result: coerceReview(parsed) });
     } catch (error) {
-      console.error('[Review] Request failed', model, error);
-      lastStatus = 502;
+      console.error('[Review] Request failed or timed out', model, error);
+      lastStatus = 504;
       break; // network error/timeout: try the next model
     }
     }

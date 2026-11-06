@@ -187,7 +187,9 @@ export const AiReviewer: React.FC = () => {
           problem: customProblemBanner?.title || (code === selectedPreset.code ? selectedPreset.title : ''),
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await res
+        .json()
+        .catch(() => ({ error: `AI service returned HTTP ${res.status}${res.status === 504 ? ' (timed out)' : ''}.` }));
       if (res.ok && data.success && data.result) {
         setResult(data.result as ReviewResult);
         setResultSource('ai');
