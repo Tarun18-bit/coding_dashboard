@@ -4,7 +4,7 @@ const BASE = (process.env.NEXT_PUBLIC_APP_URL || 'https://coding-dashboard-two.v
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/dashboard', '/reset-password', '/auth/'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/dashboard', '/reset-password', '/auth/', '/sentry-test'] }],
     sitemap: `${BASE}/sitemap.xml`,
   };
 }

@@ -29,6 +29,7 @@ export default function PrivacyPage() {
       <h2>Services that process your data</h2>
       <ul>
         <li><strong>Supabase</strong> (database and login) and <strong>Vercel</strong> (hosting).</li>
+        <li><strong>Sentry</strong>: when something breaks, a technical error report (error message, page, browser type) is sent to Sentry so it can be fixed. We configure it not to include IP addresses or cookies.</li>
         <li><strong>Google Gemini</strong>: code you submit to the AI Reviewer is sent to Google for analysis. On Google&apos;s free tier, submitted content may be used by Google to improve its products, so don&apos;t paste anything confidential.</li>
         <li><strong>Judge0</strong>: C++ and Java code you run in mock interviews is compiled and executed on Judge0&apos;s servers. Python and TypeScript run only in your own browser.</li>
         <li><strong>Codeforces, LeetCode, CodeChef</strong>: we request your public profile data from them when your stats sync.</li>

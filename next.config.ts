@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const securityHeaders = [
   // Never allow the site to be embedded in another site's frame (clickjacking)
@@ -21,4 +22,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "na-jjz",
+  project: "javascript-nextjs",
+  silent: !process.env.CI,
+  // Optional: set SENTRY_AUTH_TOKEN in Vercel so stack traces point at your real source lines
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  // Send browser events through your own domain so ad blockers don't drop them
+  tunnelRoute: "/sentry-tunnel",
+});

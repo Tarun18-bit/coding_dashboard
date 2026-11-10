@@ -1,12 +1,13 @@
 'use client'; // Error boundaries must be Client Components
 
+import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
-    console.error('[DashCode] Page error:', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
