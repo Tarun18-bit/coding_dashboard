@@ -31,6 +31,7 @@ Track your stats, contest ratings, submissions, daily streaks, and topic profici
   - Top header **"Sync Now"** button with real-time feedback and automatic cache cooldown.
   - Hourly background sync of **every user** (stalest first) powered by a **GitHub Actions cron**.
 - 🛡️ **Fault-Isolated Platform Architecture**: One platform failing or throttling will never break syncing for the others.
+- 🔐 **Privacy & Account Control**: Privacy Policy and Terms pages, self-service account deletion, and daily per-user limits on shared free services.
 
 ---
 
@@ -59,6 +60,7 @@ npm install
 2. Open the **SQL Editor** tab in your Supabase dashboard.
 3. Paste and run the entire contents of [`supabase/schema.sql`](supabase/schema.sql).
 4. Then run [`supabase/migrations/002_clans_profiles.sql`](supabase/migrations/002_clans_profiles.sql) the same way (clans, profile fields, snapshot cleanup and indexes). It is safe to run more than once.
+5. Then run [`supabase/migrations/003_usage_limits.sql`](supabase/migrations/003_usage_limits.sql) (fair daily per-user limits: 25 AI reviews, 40 C++/Java runs, 20 account links).
 
 ### 3. Configure Environment Variables
 Copy `.env.example` to `.env.local`:

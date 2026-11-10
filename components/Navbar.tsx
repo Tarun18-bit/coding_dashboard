@@ -76,7 +76,7 @@ export function Navbar({
     activeUsername ||
     effectiveUser?.username ||
     effectiveUser?.email?.split('@')[0] ||
-    'oggy';
+    '';
 
   // Close dropdowns on click outside or Escape
   useEffect(() => {
@@ -223,7 +223,8 @@ export function Navbar({
             </>
           )}
 
-          {/* Clean Tools Dropdown (Consolidates Resume, GitHub Badge, Share) */}
+          {/* Clean Tools Dropdown (Consolidates Resume, GitHub Badge, Share): needs a profile, so logged-in only */}
+          {effectiveUser && (
           <div className="relative" ref={toolsRef}>
             <button
               onClick={() => setToolsOpen(!toolsOpen)}
@@ -261,6 +262,7 @@ export function Navbar({
               </div>
             )}
           </div>
+          )}
 
           <div className="h-4 w-px bg-[rgba(148,163,184,0.18)] mx-0.5" />
 

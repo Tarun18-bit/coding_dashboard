@@ -58,7 +58,7 @@ export default async function HomePage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/u/txrun_18"
+              href="/u/oggy"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#94A3B8] hover:text-white transition"
             >
               <span>Explore Demo Profile</span>
@@ -111,7 +111,7 @@ export default async function HomePage() {
           </Link>
 
           <Link
-            href="/u/txrun_18"
+            href="/u/oggy"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[rgba(148,163,184,0.2)] bg-[#0E1628] px-6 py-3.5 text-sm font-semibold text-[#94A3B8] hover:text-white hover:border-[#00EA64] transition"
           >
             <span>View Demo Portfolio</span>
@@ -251,6 +251,8 @@ export default async function HomePage() {
               <Link href="/login" className="hover:text-white transition">Sign In</Link>
               <Link href="/login?mode=signup" className="hover:text-white transition">Register</Link>
               <Link href="/u/oggy" className="hover:text-white transition">Demo Portfolio</Link>
+              <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
+              <Link href="/terms" className="hover:text-white transition">Terms</Link>
             </div>
           </div>
           <p className="text-[11px] text-[#475569] text-left sm:text-center">

@@ -9,6 +9,7 @@ import { ensurePublicUser } from '@/lib/users';
 import { clearStatsCache } from '@/lib/aggregate';
 import { updateUserLeaderboardCache } from '@/lib/leaderboard';
 import { saveSnapshot } from '@/lib/snapshots';
+import { consumeDailyQuota, quotaMessage } from '@/lib/usage';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -57,6 +58,15 @@ export async function POST(req: NextRequest) {
         { success: false, error: `Unsupported platform: ${cleanPlatform}` },
         { status: 400 }
       );
+    }
+    if (cleanHandle.length < 2 || cleanHandle.length > 40 || !/^[A-Za-z0-9_.\-]+$/.test(cleanHandle)) {
+      return NextResponse.json({ success: false, error: 'That handle looks invalid.' }, { status: 400 });
+    }
+
+    // Each link fetches from external platforms, so cap it per user per day
+    const quota = await consumeDailyQuota(userId, 'account_link');
+    if (!quota.allowed) {
+      return NextResponse.json({ success: false, error: quotaMessage('account_link') }, { status: 429 });
     }
 
     // Run platform API fetches and DB user/account preparation in parallel for maximum speed

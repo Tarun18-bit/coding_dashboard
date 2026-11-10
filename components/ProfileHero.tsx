@@ -10,6 +10,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { PublicProfile } from '@/lib/profile';
+import { createClient } from '@/lib/supabase/client';
 
 interface ProfileHeroProps {
   username: string;
@@ -73,6 +74,31 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
       setIsEditing(false);
     } catch {
       setSaveError('Could not reach the server.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const typed = window.prompt(
+      `This permanently deletes your account, linked platforms, stats history and clan memberships.\n\nType your username (${username}) to confirm:`
+    );
+    if (typed === null) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      const res = await fetch('/api/account', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: typed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setSaveError(data.error || 'Could not delete the account.');
+        return;
+      }
+      await createClient().auth.signOut().catch(() => {});
+      window.location.href = '/';
     } finally {
       setSaving(false);
     }
@@ -169,6 +195,14 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
                   />
                 </div>
                 {saveError && <p className="text-[11px] text-[#FF5A65]">{saveError}</p>}
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={saving}
+                  className="text-[11px] font-semibold text-[#FF5A65]/80 hover:text-[#FF5A65] underline underline-offset-2 disabled:opacity-50"
+                >
+                  Delete my account
+                </button>
               </div>
             )}
           </div>

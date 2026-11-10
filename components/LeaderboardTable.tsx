@@ -10,6 +10,8 @@ interface LeaderboardTableProps {
   currentUsername?: string;
 }
 
+const PLATFORM_ABBR: Record<string, string> = { codeforces: 'CF', leetcode: 'LC', codechef: 'CC', gfg: 'GFG' };
+
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   initialEntries,
   currentUsername,
@@ -136,7 +138,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </div>
                   </div>
                   <Link
-                    href={`/compare?u1=${encodeURIComponent(currentUsername || 'oggy')}&u2=${encodeURIComponent(entry.username)}`}
+                    href={currentUsername ? `/compare?u1=${encodeURIComponent(currentUsername)}&u2=${encodeURIComponent(entry.username)}` : `/compare?u1=${encodeURIComponent(entry.username)}`}
                     className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#AEB9E1] hover:border-[#0E43FB] hover:text-white transition"
                     title={`Compare with @${entry.username}`}
                   >
@@ -217,7 +219,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                             key={p}
                             className="rounded-md border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-1.5 py-0.5 text-[10px] font-mono font-semibold uppercase text-[#AEB9E1]"
                           >
-                            {p.slice(0, 2)}
+                            {PLATFORM_ABBR[p.toLowerCase()] || p.slice(0, 2)}
                           </span>
                         ))}
                       </div>
@@ -245,7 +247,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         <>
                           <span>{user.highestRating}</span>
                           <span className="text-[10px] font-normal text-[#7E89AC] ml-1 uppercase">
-                            ({user.bestPlatform.slice(0, 2)})
+                            ({PLATFORM_ABBR[user.bestPlatform.toLowerCase()] || user.bestPlatform.slice(0, 2)})
                           </span>
                         </>
                       ) : (
@@ -254,7 +256,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </td>
                     <td className="py-3.5 px-3.5 text-right">
                       <Link
-                        href={`/compare?u1=${encodeURIComponent(currentUsername || 'oggy')}&u2=${encodeURIComponent(user.username)}`}
+                        href={currentUsername ? `/compare?u1=${encodeURIComponent(currentUsername)}&u2=${encodeURIComponent(user.username)}` : `/compare?u1=${encodeURIComponent(user.username)}`}
                         className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#0E43FB] hover:text-white"
                         title="1v1 Compare"
                       >

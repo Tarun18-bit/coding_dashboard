@@ -18,6 +18,7 @@ import { RpgProfileCard } from '@/components/RpgProfileCard';
 import { ExportResumeModal } from '@/components/ExportResumeModal';
 import { ProfileHero } from '@/components/ProfileHero';
 import { getProfile } from '@/lib/profile';
+import { LocalTime } from '@/components/LocalTime';
 import { ShareButton } from '@/components/ShareButton';
 import { BadgeModal } from '@/components/BadgeModal';
 import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ArrowLeft, ExternalLink, Activity, Swords } from 'lucide-react';
@@ -29,6 +30,15 @@ interface PublicProfileProps {
   params: Promise<{
     username: string;
   }>;
+}
+
+export async function generateMetadata({ params }: PublicProfileProps) {
+  const { username } = await params;
+  const name = decodeURIComponent(username).trim().slice(0, 40);
+  return {
+    title: `${name}'s coding profile`,
+    description: `${name}'s solved problems, streaks, ratings and topic strengths across Codeforces, LeetCode and CodeChef.`,
+  };
 }
 
 export default async function PublicProfilePage({ params }: PublicProfileProps) {
@@ -409,7 +419,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
                               ))}
                             </td>
                             <td className="py-3 px-3.5 text-right font-mono text-[11px] text-[#7E89AC]">
-                              {new Date(sub.submittedAt).toLocaleDateString()}
+                              <LocalTime iso={sub.submittedAt} />
                             </td>
                           </tr>
                         );

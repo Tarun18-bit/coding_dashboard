@@ -2,6 +2,8 @@ import { ClanRoom } from '@/components/ClanRoom';
 import { Navbar } from '@/components/Navbar';
 import { getSessionUser } from '@/lib/auth';
 
+export const metadata = { title: 'Clans', description: 'Private study clans with a shared weekly goal and live leaderboard.' };
+
 export const dynamic = 'force-dynamic';
 
 export default async function ClansPage({ searchParams }: { searchParams: Promise<{ join?: string }> }) {

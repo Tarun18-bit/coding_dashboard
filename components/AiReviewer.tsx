@@ -35,6 +35,26 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
+const VERDICT_TEXT: Record<string, string> = {
+  Optimal: 'Matches the best known complexity for this problem.',
+  Suboptimal: 'Close to optimal, with room to improve.',
+  'Needs Optimization': 'A clearly faster approach exists for this problem.',
+  'Brute Force': 'Exhaustive approach: likely too slow for large inputs (TLE risk).',
+};
+
+/** Human-readable growth class for a Big-O string such as "O(N log N)" or "O(n^2)". */
+function complexityClass(bigO: string, isSpace = false): string {
+  const c = bigO.toLowerCase().replace(/\s+/g, '');
+  if (/\(1\)/.test(c)) return isSpace ? 'Constant / In-Place' : 'Constant';
+  if (/!|2\^|\^n|exp/.test(c)) return 'Exponential';
+  if (/\^3|³/.test(c)) return 'Cubic';
+  if (/\^2|²|n\*n|n\*m|m\*n|nm\b|mn\b/.test(c)) return 'Quadratic';
+  if (/nlog|n\*log|n·log/.test(c)) return 'Linearithmic';
+  if (/^o\(log/.test(c)) return 'Logarithmic';
+  if (/[nmkvel]/.test(c)) return 'Linear';
+  return isSpace ? 'Memory' : 'Growth';
+}
+
 export const AiReviewer: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<PresetSample>(PRESET_SAMPLES[0]);
   const [code, setCode] = useState(PRESET_SAMPLES[0].code);
@@ -47,6 +67,7 @@ export const AiReviewer: React.FC = () => {
   // Where the current result came from: a real Gemini review, or the offline keyword estimate
   const [resultSource, setResultSource] = useState<'ai' | 'estimate'>('estimate');
   const [reviewNotice, setReviewNotice] = useState<string>('');
+  const [reviewSeconds, setReviewSeconds] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'optimal' | 'questions'>('overview');
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(0);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -176,6 +197,7 @@ export const AiReviewer: React.FC = () => {
     setIsAnalyzing(true);
     setReviewNotice('');
     setAnalysisStep('Gemini is reviewing your solution (usually 5-20s)...');
+    const startedAt = performance.now();
 
     try {
       const res = await fetch('/api/review', {
@@ -193,6 +215,7 @@ export const AiReviewer: React.FC = () => {
       if (res.ok && data.success && data.result) {
         setResult(data.result as ReviewResult);
         setResultSource('ai');
+        setReviewSeconds((performance.now() - startedAt) / 1000);
         setIsOptimalRevealed(false);
       } else {
         showEstimate(
@@ -288,7 +311,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#14CA74]/30 bg-[#14CA74]/10 px-2.5 py-0.5 text-[11px] font-mono text-[#14CA74]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#14CA74] animate-pulse" />
-                AST Engine Ready
+                Powered by Gemini
               </span>
               {customProblemBanner && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#CB3CFF]/40 bg-[#CB3CFF]/15 px-3 py-0.5 text-[11px] font-mono font-bold text-[#CB3CFF]">
@@ -537,9 +560,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                       </span>
                     </div>
                     <p className="text-xs text-[#AEB9E1]">
-                      {result.verdict === 'Optimal'
-                        ? 'Production-ready efficiency. Scalable and within optimal latency limits.'
-                        : 'Functional but risks Time Limit Exceeded (TLE) or excessive auxiliary memory.'}
+                      {VERDICT_TEXT[result.verdict] || VERDICT_TEXT.Suboptimal}
                     </p>
                   </div>
 
@@ -566,7 +587,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                         <span>Time Complexity</span>
                       </div>
                       <span className="rounded bg-[#00C2FF]/15 px-1.5 py-0.5 text-[10px] font-mono">
-                        {result.timeComplexity.includes('N²') ? 'Quadratic' : 'Linear / Sublinear'}
+                        {complexityClass(result.timeComplexity)}
                       </span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-black font-mono text-white tracking-wide">
@@ -586,7 +607,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                         <span>Space Complexity</span>
                       </div>
                       <span className="rounded bg-[#CB3CFF]/15 px-1.5 py-0.5 text-[10px] font-mono">
-                        {result.spaceComplexity === 'O(1)' ? 'In-Place' : 'Allocates Buffer'}
+                        {complexityClass(result.spaceComplexity, true)}
                       </span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-black font-mono text-white tracking-wide">
@@ -600,7 +621,11 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
 
                 {/* Quick Share / Export Report */}
                 <div className="mt-4 pt-3.5 border-t border-[rgba(126,137,172,0.12)] flex items-center justify-between">
-                  <span className="text-[11px] text-[#7E89AC]">Analysis generated in 18ms</span>
+                  <span className="text-[11px] text-[#7E89AC]">
+                    {resultSource === 'ai'
+                      ? `Gemini review${reviewSeconds !== null ? ` · ${reviewSeconds.toFixed(1)}s` : ''}`
+                      : 'Offline pattern-based estimate'}
+                  </span>
                   <button
                     onClick={handleCopyReport}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00C2FF] hover:text-white transition"

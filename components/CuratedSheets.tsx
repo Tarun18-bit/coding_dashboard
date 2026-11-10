@@ -19,11 +19,12 @@ import Link from 'next/link';
 
 interface CuratedSheetsProps {
   initialProgress: Record<SheetType, SheetProgress>;
+  isLoggedIn?: boolean;
 }
 
 const MANUAL_SOLVES_KEY = 'dashcode_manual_sheet_solves_v1';
 
-export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress }) => {
+export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, isLoggedIn = true }) => {
   const [activeSheet, setActiveSheet] = useState<SheetType>('blind75');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
@@ -174,6 +175,12 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress })
             <p className="text-xs md:text-sm text-[#AEB9E1] mt-1">
               Automatically checks off problems from your synced LeetCode, Codeforces, and CodeChef submissions — or click any circle to toggle completion manually.
             </p>
+            {!isLoggedIn && (
+              <p className="mt-2 text-xs text-[#FDB52A]">
+                You&apos;re browsing as a guest: ticks are saved only in this browser.{' '}
+                <a href="/login?next=/sheets" className="font-bold underline hover:text-white">Log in</a> to auto-track from your synced accounts.
+              </p>
+            )}
           </div>
 
           {/* Sheet Selector Tabs */}

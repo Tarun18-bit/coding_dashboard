@@ -10,6 +10,8 @@ import { Navbar } from '@/components/Navbar';
 import { DashboardTabs } from '@/components/DashboardTabs';
 import { redirect } from 'next/navigation';
 
+export const metadata = { title: 'Dashboard', description: 'Your unified coding progress dashboard.' };
+
 // Personal data behind a login: always render per request
 export const dynamic = 'force-dynamic';
 

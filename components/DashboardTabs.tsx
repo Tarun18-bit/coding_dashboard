@@ -43,6 +43,7 @@ import type { RpgProfile } from '@/lib/gamification';
 import type { UpcomingContest } from '@/lib/contests-calendar';
 
 import { RevisionQueue } from '@/components/RevisionQueue';
+import { LocalTime } from '@/components/LocalTime';
 
 // Code-split heavy Recharts library so initial dashboard render is ultra-fast
 const ProgressChart = dynamic(
@@ -390,7 +391,7 @@ export function DashboardTabs({
                           ))}
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-[11px] text-[#64748B]">
-                          {new Date(sub.submittedAt).toLocaleDateString()}
+                          <LocalTime iso={sub.submittedAt} />
                         </td>
                         <td className="py-3 px-4 text-right">
                           <Link

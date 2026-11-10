@@ -8,6 +8,16 @@ interface ContestCalendarProps {
   initialContests?: UpcomingContest[];
 }
 
+function formatDuration(mins: number): string {
+  if (mins >= 2880) return `${Math.round(mins / 1440)} days`;
+  if (mins >= 60) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${mins} mins`;
+}
+
 export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContests = [] }) => {
   const [contests, setContests] = useState<UpcomingContest[]>(initialContests);
   const [filter, setFilter] = useState<string>('all');
@@ -177,7 +187,7 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
-                      <span>Duration: <strong className="text-white font-mono">{c.durationMinutes} mins</strong></span>
+                      <span>Duration: <strong className="text-white font-mono">{formatDuration(c.durationMinutes)}</strong></span>
                     </div>
                   </div>
                 </div>

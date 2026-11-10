@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/db';
 import { ensurePublicUser } from '@/lib/users';
 
 export interface SessionUser {
@@ -14,10 +15,19 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
     if (!user) return null;
+    // The public username lives in the database (it can differ from the email prefix when that
+    // name was already taken), so profile links and "you" markers must use it.
+    let dbUsername: string | null = null;
+    try {
+      const { data: row } = await supabaseAdmin.from('users').select('username').eq('id', user.id).maybeSingle();
+      dbUsername = row?.username ?? null;
+    } catch {
+      // fall back to the session values below
+    }
     return {
       id: user.id,
       email: user.email ?? null,
-      username: user.user_metadata?.user_name || user.email?.split('@')[0] || 'coder',
+      username: dbUsername || user.user_metadata?.user_name || user.email?.split('@')[0] || 'coder',
     };
   } catch {
     return null;

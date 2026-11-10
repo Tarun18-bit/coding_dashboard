@@ -1,8 +1,10 @@
 import { getCompareProfile } from '@/lib/compare';
 import { CompareView } from '@/components/CompareView';
-import { createClient } from '@/lib/supabase/server';
+import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { Swords } from 'lucide-react';
+
+export const metadata = { title: 'Compare 1v1', description: 'Compare two competitive programmers head-to-head.' };
 
 export const revalidate = 30;
 
@@ -16,33 +18,17 @@ interface ComparePageProps {
 export default async function ComparePage({ searchParams }: ComparePageProps) {
   const params = await searchParams;
 
-  let authUser: any = null;
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    authUser = data?.user ?? null;
-  } catch {
-    // Offline or DB paused fallback
-  }
+  const currentUser = await getSessionUser();
 
-  const defaultUser =
-    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'oggy';
+  const defaultUser = currentUser?.username || '';
 
   const u1Name = params.u1 ? decodeURIComponent(params.u1) : defaultUser;
   const u2Name = params.u2 ? decodeURIComponent(params.u2) : '';
 
   const [user1, user2] = await Promise.all([
-    getCompareProfile(u1Name),
+    u1Name ? getCompareProfile(u1Name) : Promise.resolve(null),
     u2Name ? getCompareProfile(u2Name) : Promise.resolve(null),
   ]);
-
-  const currentUser = authUser
-    ? {
-        id: authUser.id,
-        email: authUser.email,
-        username: defaultUser,
-      }
-    : null;
 
   return (
     <div className="min-h-screen bg-[#090D1A] text-white selection:bg-[#00EA64] selection:text-[#090D1A] pb-16">

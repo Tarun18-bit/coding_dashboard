@@ -1,3 +1,4 @@
+import { LocalTime } from '@/components/LocalTime';
 import { supabaseAdmin } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
@@ -90,7 +91,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
   if (!account) {
     return (
       <div className="min-h-screen bg-[#090D1A] text-white flex flex-col">
-        <Navbar currentUser={currentUser} activeUsername={currentUser?.username || 'oggy'} />
+        <Navbar currentUser={currentUser} activeUsername={currentUser?.username || ''} />
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <h1 className="text-xl font-bold capitalize">Platform &quot;{platformName}&quot; Not Linked Yet</h1>
           <p className="text-[#94A3B8] mt-1.5 text-xs max-w-md">
@@ -140,7 +141,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
 
   return (
     <div className="min-h-screen bg-[#090D1A] text-white selection:bg-[#00EA64] selection:text-[#090D1A] pb-14">
-      <Navbar currentUser={currentUser} activeUsername={currentUser?.username || 'oggy'} />
+      <Navbar currentUser={currentUser} activeUsername={currentUser?.username || ''} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-7">
         {/* Top Breadcrumb & Platform Header */}
@@ -168,7 +169,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                 Handle: <span className="text-white font-semibold">@{account.handle}</span>
                 {account.last_synced_at && (
                   <span className="text-[#64748B] ml-2">
-                    • Synced {new Date(account.last_synced_at).toLocaleString()}
+                    • Synced <LocalTime iso={account.last_synced_at} mode="datetime" />
                   </span>
                 )}
               </p>
@@ -279,7 +280,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                           </Link>
                         </td>
                         <td className="py-3 px-3.5 text-right font-mono text-[11px] text-[#64748B]">
-                          {new Date(s.submitted_at).toLocaleDateString()}
+                          <LocalTime iso={s.submitted_at} />
                         </td>
                       </tr>
                     );

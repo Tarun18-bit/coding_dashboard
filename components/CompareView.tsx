@@ -32,7 +32,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
   u2Query,
 }) => {
   const router = useRouter();
-  const [input1, setInput1] = useState(u1Query || 'oggy');
+  const [input1, setInput1] = useState(u1Query || '');
   const [input2, setInput2] = useState(u2Query || '');
   const [isComparing, setIsComparing] = useState(false);
 

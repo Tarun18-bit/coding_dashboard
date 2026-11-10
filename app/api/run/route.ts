@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { MOCK_QUESTIONS } from '@/lib/mock-interview';
 import { buildCppProgram, buildJavaProgram, gradeOutput, RunnableTest } from '@/lib/code-runner/harness';
+import { consumeDailyQuota, quotaMessage } from '@/lib/usage';
 
 /**
  * Runs C++ / Java mock-interview solutions on Judge0 CE.
@@ -60,6 +61,11 @@ export async function POST(req: NextRequest) {
   const code = typeof body.code === 'string' ? body.code : '';
   if (!question || !language || !code.trim() || code.length > MAX_SOURCE_CHARS) {
     return NextResponse.json({ success: false, error: 'Invalid question, language or code' }, { status: 400 });
+  }
+
+  const quota = await consumeDailyQuota(user.id, 'code_run');
+  if (!quota.allowed) {
+    return NextResponse.json({ success: false, error: quotaMessage('code_run') }, { status: 429 });
   }
 
   const tests: RunnableTest[] = question.testCases.map((t) => ({

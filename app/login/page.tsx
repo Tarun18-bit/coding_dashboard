@@ -317,6 +317,13 @@ export default function LoginPage() {
               </span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
+            {mode === 'signup' && (
+              <p className="text-center text-[10px] text-[#64748B]">
+                By creating an account you agree to the{' '}
+                <Link href="/terms" className="text-[#94A3B8] underline hover:text-white">Terms of Use</Link> and{' '}
+                <Link href="/privacy" className="text-[#94A3B8] underline hover:text-white">Privacy Policy</Link>.
+              </p>
+            )}
           </form>
 
           {/* Security Note */}

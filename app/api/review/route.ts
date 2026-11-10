@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { ReviewResult, FollowUpQuestion } from '@/lib/ai-reviewer';
+import { consumeDailyQuota, quotaMessage } from '@/lib/usage';
 
 /**
  * AI code review powered by the Gemini API free tier.
@@ -139,6 +140,11 @@ export async function POST(req: NextRequest) {
   }
   const language = typeof body.language === 'string' ? body.language.slice(0, 30) : 'unknown';
   const problem = typeof body.problem === 'string' ? body.problem.slice(0, 200) : '';
+
+  const quota = await consumeDailyQuota(user.id, 'ai_review');
+  if (!quota.allowed) {
+    return NextResponse.json({ success: false, error: quotaMessage('ai_review') }, { status: 429 });
+  }
 
   const userPrompt = `${problem ? `Problem: ${problem}\n` : ''}Language: ${language}\n\nCandidate solution:\n\`\`\`${language}\n${code}\n\`\`\``;
 

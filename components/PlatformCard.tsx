@@ -1,5 +1,6 @@
 'use client';
 
+import { LocalTime } from '@/components/LocalTime';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -181,7 +182,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({
       {lastSyncedAt && (
         <p className="mt-3.5 text-[10px] text-[#7E89AC] font-mono flex items-center justify-between">
           <span>Synced</span>
-          <span>{new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span><LocalTime iso={lastSyncedAt} mode="datetime" /></span>
         </p>
       )}
     </div>

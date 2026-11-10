@@ -1,31 +1,17 @@
 import { getCachedGlobalLeaderboard } from '@/lib/leaderboard';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
-import { createClient } from '@/lib/supabase/server';
+import { getSessionUser } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { Trophy } from 'lucide-react';
+
+export const metadata = { title: 'Leaderboard', description: 'Global rankings across Codeforces, LeetCode and CodeChef.' };
 
 export const revalidate = 30;
 
 export default async function LeaderboardPage() {
-  let authUser: any = null;
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    authUser = data?.user ?? null;
-  } catch {
-    // Offline or DB paused fallback
-  }
+  const currentUser = await getSessionUser();
 
-  const currentUsername =
-    authUser?.user_metadata?.user_name || authUser?.email?.split('@')[0] || 'oggy';
-
-  const currentUser = authUser
-    ? {
-        id: authUser.id,
-        email: authUser.email,
-        username: currentUsername,
-      }
-    : null;
+  const currentUsername = currentUser?.username || '';
 
   const entries = await getCachedGlobalLeaderboard();
 
