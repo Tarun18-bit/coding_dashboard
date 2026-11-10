@@ -321,7 +321,7 @@ export const MockInterviewRoom: React.FC = () => {
               FAANG Timed Mock Interview Simulator
             </h1>
             <p className="text-xs md:text-sm text-[#AEB9E1] leading-relaxed">
-              Experience the pressure of real 45-minute technical interviews. Includes verified interview questions from Google, Amazon, Meta, and Microsoft, test cases, and a progressive hint ladder.
+              Experience the pressure of real 45-minute technical interviews. Includes publicly reported interview and OA questions from Google, Amazon, Meta, and Microsoft, real test cases, and a progressive hint ladder.
             </p>
           </div>
         </div>
@@ -350,7 +350,7 @@ export const MockInterviewRoom: React.FC = () => {
                   >
                     <div>
                       <p className="text-sm font-bold text-white">{comp}</p>
-                      <p className="text-[11px] text-[#7E89AC]">Verified Interview Questions</p>
+                      <p className="text-[11px] text-[#7E89AC]">{MOCK_QUESTIONS.filter((mq) => mq.company === comp).length} reported questions</p>
                     </div>
                     {isSelected && <CheckCircle2 className="h-5 w-5 text-[#00C2FF]" />}
                   </button>
@@ -432,14 +432,14 @@ export const MockInterviewRoom: React.FC = () => {
             <div>
               <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
                 <Target className="h-4 w-4 text-[#00C2FF]" />
-                <span>Verified {selectedCompany} Questions in this Track</span>
+                <span>{selectedCompany} Questions in this Track ({availableQuestions.length})</span>
               </h3>
               <p className="text-xs text-[#7E89AC] mt-0.5">
-                Each problem is cross-verified from candidate hiring reports, CodinzHub, and LeetCode discussions.
+                Every problem links to the public interview report or OA write-up it comes from.
               </p>
             </div>
             <span className="rounded-md bg-[#14CA74]/15 border border-[#14CA74]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#14CA74]">
-              ✓ ALL ROUNDS VERIFIED
+              ✓ EVERY QUESTION SOURCED
             </span>
           </div>
 
@@ -478,10 +478,16 @@ export const MockInterviewRoom: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-[rgba(126,137,172,0.1)]">
-                    <span className="text-[10px] text-[#AEB9E1] flex items-center gap-1">
-                      <ShieldCheck className="h-3.5 w-3.5 text-[#14CA74]" />
-                      <span>{q.sourceName}</span>
-                    </span>
+                    <a
+                      href={q.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open the source report"
+                      className="text-[10px] text-[#AEB9E1] hover:text-white flex items-center gap-1 min-w-0"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#14CA74]" />
+                      <span className="truncate underline decoration-dotted">{q.sourceName}</span>
+                    </a>
 
                     <button
                       onClick={() => startInterview(q)}
@@ -565,10 +571,10 @@ export const MockInterviewRoom: React.FC = () => {
                 <div className="rounded-xl border border-[#00C2FF]/30 bg-[#00C2FF]/10 p-2.5 space-y-1 text-xs">
                   <div className="flex items-center gap-1.5 font-bold text-[#00C2FF]">
                     <Target className="h-3.5 w-3.5 shrink-0" />
-                    <span>Verified: {currentQuestion.verifiedRound}</span>
+                    <span>Reported round: {currentQuestion.verifiedRound}</span>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#AEB9E1]">
-                    <span>Source: <a href={currentQuestion.sourceUrl || 'https://www.codinzhub.com/'} target="_blank" rel="noopener noreferrer" className="text-[#00EA64] font-semibold underline">{currentQuestion.sourceName}</a></span>
+                    <span>Source: <a href={currentQuestion.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[#00EA64] font-semibold underline">{currentQuestion.sourceName}</a></span>
                     {currentQuestion.notes && <span className="text-[#7E89AC] italic text-[10px]">{currentQuestion.notes}</span>}
                   </div>
                 </div>

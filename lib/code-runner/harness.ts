@@ -12,8 +12,8 @@
  * This module is pure (no DOM / Node APIs) so both client and server can use it.
  */
 
-export type ParamType = 'int' | 'int[]' | 'int[][]' | 'char[][]' | 'string[]';
-export type ValueType = ParamType | 'void';
+export type ParamType = 'int' | 'int[]' | 'int[][]' | 'char[][]' | 'string' | 'string[]';
+export type ValueType = ParamType | 'bool' | 'void';
 
 export type RunnerSpec =
   | {
@@ -135,6 +135,8 @@ function cppLiteral(type: ParamType, value: unknown): string {
       return `std::vector<std::vector<char>>{${(value as string[][])
         .map((r) => `{${r.map((c) => charLiteral(c)).join(',')}}`)
         .join(',')}}`;
+    case 'string':
+      return `std::string(${JSON.stringify(String(value))})`;
     case 'string[]':
       return `std::vector<std::string>{${(value as string[]).map((s) => JSON.stringify(s)).join(',')}}`;
   }
@@ -217,6 +219,8 @@ function javaLiteral(type: ParamType, value: unknown): string {
       return `new int[][]{${(value as number[][]).map((r) => `{${r.join(',')}}`).join(',')}}`;
     case 'char[][]':
       return `new char[][]{${(value as string[][]).map((r) => `{${r.map((c) => charLiteral(c)).join(',')}}`).join(',')}}`;
+    case 'string':
+      return JSON.stringify(String(value));
     case 'string[]':
       return `new String[]{${(value as string[]).map((s) => JSON.stringify(s)).join(',')}}`;
   }
