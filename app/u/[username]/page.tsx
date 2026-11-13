@@ -23,6 +23,8 @@ import { ShareButton } from '@/components/ShareButton';
 import { BadgeModal } from '@/components/BadgeModal';
 import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ExternalLink, Activity, Swords } from 'lucide-react';
 import Link from 'next/link';
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
@@ -33,9 +35,41 @@ interface PublicProfileProps {
   }>;
 }
 
-export async function generateMetadata({ params }: PublicProfileProps) {
+/** Username, or a linked platform handle, to its DashCode user. Cached per request (metadata + page). */
+const findProfileUser = cache(async (decodedUsername: string): Promise<{ id: string; username: string } | null> => {
+  // 1. Try to find user by username in users table
+  const { data: byName } = await supabaseAdmin
+    .from('users')
+    .select('id, username')
+    .ilike('username', escapeLike(decodedUsername))
+    .maybeSingle();
+  if (byName) return byName;
+
+  // 2. Fallback: a platform handle linked to an account
+  const { data: account } = await supabaseAdmin
+    .from('accounts')
+    .select('user_id, users(id, username)')
+    .ilike('handle', escapeLike(decodedUsername))
+    .limit(1)
+    .maybeSingle();
+  if (account?.users) {
+    const u = account.users as unknown as { id: string; username: string };
+    return { id: u.id, username: u.username };
+  }
+
+  // 3. Demo profile aliases
+  if (['default', 'demo', 'txrun_18', 'oggy_18'].includes(decodedUsername)) {
+    return { id: '00000000-0000-0000-0000-000000000001', username: 'txrun_18' };
+  }
+  return null;
+});
+
+export async function generateMetadata({ params }: PublicProfileProps): Promise<Metadata> {
   const { username } = await params;
-  const name = decodeURIComponent(username).trim().slice(0, 40);
+  const decoded = decodeURIComponent(username).trim();
+  const user = await findProfileUser(decoded).catch(() => null);
+  if (!user) return { title: 'Profile not found', robots: { index: false } };
+  const name = (user.username === 'default_user' ? decoded : user.username).slice(0, 40);
   return {
     title: `${name}'s coding profile`,
     description: `${name}'s solved problems, streaks, ratings and topic strengths across Codeforces, LeetCode and CodeChef.`,
@@ -55,32 +89,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
     // ignore
   }
 
-  // 1. Try to find user by username in users table
-  let { data: user } = await supabaseAdmin
-    .from('users')
-    .select('id, username')
-    .ilike('username', escapeLike(decodedUsername))
-    .maybeSingle();
-
-  // 2. Fallback: if username not matched directly, check if handle exists in accounts table
-  if (!user) {
-    const { data: account } = await supabaseAdmin
-      .from('accounts')
-      .select('user_id, users(id, username)')
-      .ilike('handle', escapeLike(decodedUsername))
-      .limit(1)
-      .maybeSingle();
-
-    if (account?.users) {
-      const u = account.users as unknown as { id: string; username: string };
-      user = { id: u.id, username: u.username };
-    }
-  }
-
-  // 3. Fallback for default demo / default user
-  if (!user && (decodedUsername === 'default' || decodedUsername === 'demo' || decodedUsername === 'txrun_18' || decodedUsername === 'oggy_18')) {
-    user = { id: '00000000-0000-0000-0000-000000000001', username: 'txrun_18' };
-  }
+  const user = await findProfileUser(decodedUsername);
 
   // Unknown username or handle: a real 404 (status code + the site's not-found page)
   if (!user) notFound();
@@ -115,6 +124,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
     platform: a.platform,
     handle: a.handle,
     rating: a.latestSnapshot?.rating || null,
+    solved: a.latestSnapshot?.solvedTotal || 0,
   }));
 
   return (
@@ -130,7 +140,8 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             >
               <Terminal className="h-5 w-5" />
             </Link>
-            <div className="min-w-0">
+            {/* Too tight next to the actions on phones; the profile card below shows the name there */}
+            <div className="min-w-0 sr-only sm:not-sr-only">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-sm font-bold tracking-tight text-white">{displayName}&apos;s Portfolio</h1>
                 <span className="shrink-0 rounded-md border border-[rgba(0,194,255,0.3)] bg-[#00C2FF]/10 px-1.5 text-[10px] font-mono font-semibold text-[#00C2FF]">

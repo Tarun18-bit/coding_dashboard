@@ -11,15 +11,17 @@ import { consumeDailyQuota, quotaMessage } from '@/lib/usage';
 export const maxDuration = 60;
 
 // Tried in order; a model that no longer exists (404) falls through to the next
-// Fast models first: the free tier's flagship is often overloaded, and a review has ~50s in total.
+// Primary model (env override or the current Flash), then the much faster Flash-Lite, then fallbacks.
 // Duplicates are removed so an env override doesn't get tried twice.
 const MODEL_CANDIDATES = Array.from(
   new Set(
-    [process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash'].filter(
+    [process.env.GEMINI_MODEL || 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash'].filter(
       (m): m is string => !!m
     )
   )
 );
+/** If the primary model hasn't answered by then, also ask the next (faster) one: first good answer wins. */
+const HEDGE_AFTER_MS = 8_000;
 
 /** Keep thinking short: reviews need structure more than deep reasoning, and speed matters. */
 function thinkingConfigFor(model: string): Record<string, unknown> {
@@ -120,6 +122,98 @@ function coerceReview(raw: Record<string, unknown>): ReviewResult {
   };
 }
 
+type Attempt =
+  | { kind: 'ok'; model: string; result: ReviewResult }
+  | { kind: 'quota' }
+  | { kind: 'fail'; status: number; timedOut: boolean; message?: string };
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** One model, at most two calls (a retry on 5xx, or once without thinking settings on 400). Never throws. */
+async function tryModel(
+  model: string,
+  apiKey: string,
+  userPrompt: string,
+  deadline: number,
+  cancel: AbortSignal,
+  maxCallMs: number
+): Promise<Attempt> {
+  let useThinkingConfig = true;
+  let last: Attempt = { kind: 'fail', status: 0, timedOut: false };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 4_000 || cancel.aborted) return last;
+    try {
+      const generationConfig: Record<string, unknown> = {
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+        responseSchema: RESPONSE_SCHEMA,
+      };
+      if (useThinkingConfig) generationConfig.thinkingConfig = thinkingConfigFor(model);
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          generationConfig,
+        }),
+        signal: AbortSignal.any([cancel, AbortSignal.timeout(Math.min(maxCallMs, remaining))]),
+      });
+
+      if (res.status === 404) return { kind: 'fail', status: 404, timedOut: false }; // retired/renamed model
+      if (res.status === 400 && useThinkingConfig) {
+        useThinkingConfig = false; // this model rejects our thinking settings: retry with defaults
+        continue;
+      }
+      if (res.status === 429) return { kind: 'quota' };
+      if (res.status >= 500) {
+        console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(giving up)');
+        last = { kind: 'fail', status: res.status, timedOut: false };
+        if (attempt === 0) await sleep(800);
+        continue;
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('[Review] Gemini error', model, res.status, text.slice(0, 300));
+        return { kind: 'fail', status: res.status, timedOut: false, message: `AI service error (HTTP ${res.status})` };
+      }
+
+      const data = await res.json();
+      const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
+        .map((p: { text?: string; thought?: boolean }) => (p.thought ? '' : p.text ?? ''))
+        .join('');
+      try {
+        return { kind: 'ok', model, result: coerceReview(JSON.parse(text)) };
+      } catch {
+        console.error('[Review] Unparseable Gemini output', model, text.slice(0, 300));
+        return { kind: 'fail', status: 502, timedOut: false };
+      }
+    } catch (error) {
+      if (cancel.aborted) return last; // another model already answered
+      const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+      console.error('[Review] Request', timedOut ? 'timed out' : 'failed', model, error);
+      return { kind: 'fail', status: 504, timedOut };
+    }
+  }
+  return last;
+}
+
+/** Resolves with the first successful attempt, or null once every attempt has finished without one. */
+function firstSuccess(attempts: Promise<Attempt | null>[]): Promise<Attempt | null> {
+  return new Promise((resolve) => {
+    let pending = attempts.length;
+    if (pending === 0) resolve(null);
+    for (const p of attempts) {
+      p.then((a) => {
+        if (a?.kind === 'ok') resolve(a);
+        else if (--pending === 0) resolve(null);
+      });
+    }
+  });
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const {
@@ -160,100 +254,58 @@ export async function POST(req: NextRequest) {
 
   const userPrompt = `${problem ? `Problem: ${problem}\n` : ''}Language: ${language}\n\nCandidate solution:\n\`\`\`${language}\n${code}\n\`\`\``;
 
-  // Vercel stops the function at 60s, so all attempts share one time budget
+  // Vercel stops the function at 60s, so every attempt shares one time budget
   const deadline = Date.now() + 50_000;
-  let lastStatus = 0;
-  let timedOut = false;
-  let callIndex = 0;
-  for (const model of MODEL_CANDIDATES) {
-    let useThinkingConfig = true;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const remaining = deadline - Date.now();
-      if (remaining < 6_000) break;
-      // The first call gets the most time; later ones are capped so a fallback still fits
-      const callTimeout = Math.min(callIndex === 0 ? 28_000 : 20_000, remaining);
-      callIndex++;
-      try {
-        const generationConfig: Record<string, unknown> = {
-          temperature: 0.2,
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-        };
-        if (useThinkingConfig) generationConfig.thinkingConfig = thinkingConfigFor(model);
+  const cancel = new AbortController();
+  const [primary, hedge, ...fallbacks] = MODEL_CANDIDATES;
+  const settled: Attempt[] = [];
+  const track = (p: Promise<Attempt>) =>
+    p.then((a) => {
+      settled.push(a);
+      return a;
+    });
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-            generationConfig,
-          }),
-          signal: AbortSignal.timeout(callTimeout),
-        });
+  const primaryAttempt = track(tryModel(primary, apiKey, userPrompt, deadline, cancel.signal, 30_000));
+  // Hedge: if the primary is slow (or already failed), also ask the faster model
+  const hedgeAttempt: Promise<Attempt | null> = hedge
+    ? Promise.race([primaryAttempt, sleep(HEDGE_AFTER_MS).then(() => null)]).then((early) =>
+        early?.kind === 'ok' ? null : track(tryModel(hedge, apiKey, userPrompt, deadline, cancel.signal, 25_000))
+      )
+    : Promise.resolve(null);
 
-        if (res.status === 404) break; // model retired/renamed: try the next one
-        if (res.status === 400 && useThinkingConfig) {
-          // This model rejects our thinking settings: retry it once with the defaults
-          useThinkingConfig = false;
-          continue;
-        }
-        if (res.status >= 500) {
-          // Overloaded/unavailable (common on the free tier): retry once, then try the next model
-          lastStatus = res.status;
-          console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(next model)');
-          if (attempt === 0 && deadline - Date.now() > 12_000) await new Promise((r) => setTimeout(r, 1000));
-          continue;
-        }
-        if (res.status === 429) {
-          return NextResponse.json(
-            { success: false, error: "Today's free AI review quota is used up. Try again later." },
-            { status: 429 }
-          );
-        }
-        if (!res.ok) {
-          const text = await res.text();
-          console.error('[Review] Gemini error', model, res.status, text.slice(0, 300));
-          return NextResponse.json({ success: false, error: `AI service error (HTTP ${res.status})` }, { status: 502 });
-        }
+  let winner = await firstSuccess([primaryAttempt, hedgeAttempt]);
+  // Neither answered: try the remaining models one by one while time is left
+  for (const model of fallbacks) {
+    if (winner || deadline - Date.now() < 6_000) break;
+    const a = await track(tryModel(model, apiKey, userPrompt, deadline, cancel.signal, 20_000));
+    if (a.kind === 'ok') winner = a;
+  }
+  cancel.abort(); // stop whichever request is still running
 
-        const data = await res.json();
-        const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
-          .map((p: { text?: string; thought?: boolean }) => (p.thought ? '' : p.text ?? ''))
-          .join('');
-        let parsed: Record<string, unknown>;
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          console.error('[Review] Unparseable Gemini output', model, text.slice(0, 300));
-          lastStatus = 502;
-          break; // try the next model rather than failing the whole review
-        }
-        return NextResponse.json({ success: true, model, result: coerceReview(parsed) });
-      } catch (error) {
-        const isTimeout = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
-        console.error('[Review] Request', isTimeout ? 'timed out' : 'failed', model, error);
-        if (isTimeout) timedOut = true;
-        lastStatus = 504;
-        break; // network error/timeout: try the next model
-      }
-    }
+  if (winner?.kind === 'ok') {
+    return NextResponse.json({ success: true, model: winner.model, result: winner.result });
   }
 
-  if (timedOut && lastStatus === 504) {
+  const failures = settled.filter((a): a is Extract<Attempt, { kind: 'fail' }> => a.kind === 'fail');
+  if (settled.some((a) => a.kind === 'quota') && failures.every((f) => f.status === 404 || f.status === 0)) {
+    return NextResponse.json({ success: false, error: "Today's free AI review quota is used up. Try again later." }, { status: 429 });
+  }
+  const explicit = failures.find((f) => f.message);
+  if (explicit?.message) {
+    return NextResponse.json({ success: false, error: explicit.message }, { status: 502 });
+  }
+  if (failures.some((f) => f.timedOut)) {
     return NextResponse.json(
       { success: false, error: 'Gemini took too long to answer (free tier is busy). Please try again in a minute.' },
       { status: 504 }
     );
   }
-
   return NextResponse.json(
     {
       success: false,
-      error:
-        lastStatus >= 500
-          ? 'Gemini is overloaded right now (free tier). Please try again in a minute.'
-          : 'No available Gemini model found. Set GEMINI_MODEL.',
+      error: failures.some((f) => f.status >= 500)
+        ? 'Gemini is overloaded right now (free tier). Please try again in a minute.'
+        : 'No available Gemini model found. Set GEMINI_MODEL.',
     },
     { status: 503 }
   );

@@ -60,6 +60,7 @@ export default async function DashboardPage() {
     platform: a.platform,
     handle: a.handle,
     rating: a.latestSnapshot?.rating || null,
+    solved: a.latestSnapshot?.solvedTotal || 0,
   }));
 
   return (

@@ -26,11 +26,11 @@ export default async function LeaderboardPage() {
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-[#FDB52A]" />
             <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              Competitive Global Standings
+              Global Leaderboard
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[#94A3B8]">
-            Unified ranking computed across Codeforces, LeetCode, and CodeChef ratings with streak weighting.
+            Everyone on DashCode, ranked by problems solved, current streak or best contest rating across Codeforces, LeetCode and CodeChef. Updated hourly.
           </p>
         </div>
 

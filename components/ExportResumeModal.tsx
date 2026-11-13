@@ -14,7 +14,7 @@ export interface ExportResumeModalProps {
   totalSolved?: number;
   difficulty?: { easy: number; medium: number; hard: number };
   streaks?: { currentStreak: number; longestStreak: number };
-  accounts?: { platform: string; handle: string; rating?: number | null }[];
+  accounts?: { platform: string; handle: string; rating?: number | null; solved?: number }[];
   companyReadiness?: { company: string; score: number }[];
   strengths?: { tag: string; count: number }[];
   rpgTitle?: string;
@@ -48,8 +48,10 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
 
   const generateMarkdownSummary = () => {
     const accList = accounts.length > 0
-      ? accounts.map((a) => `${a.platform.toUpperCase()} (@${a.handle}${a.rating ? ` - Rating: ${a.rating}` : ''})`).join(', ')
-      : 'Multi-platform verified';
+      ? accounts
+          .map((a) => `${a.platform.toUpperCase()} (@${a.handle}${a.rating ? ` - Rating: ${a.rating}` : a.solved ? ` - ${a.solved} solved` : ''})`)
+          .join(', ')
+      : 'None linked yet';
 
     const compList = companyReadiness.length > 0
       ? companyReadiness.slice(0, 4).map((c) => `${c.company}: ${c.score}%`).join(' | ')
@@ -59,13 +61,13 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
       ? strengths.slice(0, 5).map((s) => `${s.tag} (${s.count} solved)`).join(', ')
       : 'General problem solving';
 
-    return `## Verified Technical Assessment Profile - @${username}
+    return `## Coding Profile - @${username}
 - **Total Problems Solved**: ${totalSolved} (Easy: ${difficulty.easy}, Medium: ${difficulty.medium}, Hard: ${difficulty.hard})
 - **Daily Streak**: ${streaks.currentStreak} Days (Peak: ${streaks.longestStreak} Days)
-- **Verified Platforms**: ${accList}
-- **Tier-1 Company Readiness**: ${compList}
-- **Top Algorithmic Proficiencies**: ${topSkills}
-- **Verified Portfolio Link**: ${profileUrl}
+- **Platforms (synced)**: ${accList}
+- **Company Readiness (DashCode estimate)**: ${compList}
+- **Top Topics**: ${topSkills}
+- **Live Profile**: ${profileUrl}
 *(Generated via DashCode Developer Dashboard)*`;
   };
 
@@ -152,6 +154,8 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
                 </button>
 
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={() => setIsOpen(false)}
                   className="rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] p-2 text-[#AEB9E1] hover:text-white"
                 >
@@ -186,7 +190,7 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
 
                 <div className="rounded-2xl border border-[rgba(126,137,172,0.2)] bg-[#0B1739] p-3 text-center min-w-[150px] print:border-gray-300 print:bg-gray-50">
                   <span className="text-[10px] font-bold uppercase text-[#7E89AC] print:text-gray-600">
-                    Verified Solves
+                    Problems Solved
                   </span>
                   <p className="text-3xl font-black font-mono text-[#00C2FF] print:text-blue-600">
                     {totalSolved}
@@ -216,7 +220,7 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
                           @{acc.handle}
                         </p>
                         <p className="text-sm font-black font-mono text-[#00C2FF] mt-1 print:text-blue-600">
-                          {acc.rating ? `Rating: ${acc.rating}` : 'Active Contender'}
+                          {acc.rating ? `Rating: ${acc.rating}` : acc.solved ? `${acc.solved} solved` : 'Unrated'}
                         </p>
                       </div>
                     ))
@@ -253,7 +257,7 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
               {companyReadiness.length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#AEB9E1] print:text-gray-800">
-                    Tier-1 Company Interview Readiness
+                    Company Interview Readiness (DashCode estimate)
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                     {companyReadiness.slice(0, 5).map((comp) => (
@@ -275,7 +279,7 @@ export const ExportResumeModal: React.FC<ExportResumeModalProps> = ({
               {strengths.length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-xs uppercase font-extrabold tracking-wider text-[#AEB9E1] print:text-gray-800">
-                    Verified Core Algorithmic Proficiencies
+                    Top Topics by Problems Solved
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {strengths.map((str) => (

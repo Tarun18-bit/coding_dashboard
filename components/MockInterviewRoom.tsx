@@ -40,6 +40,27 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+/** Renders the light markdown used in question text: `code` and **bold**. */
+function renderInline(text: string): React.ReactNode {
+  return text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g).map((part, i) => {
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+      return (
+        <code key={i} className="rounded bg-[#081028] border border-[rgba(126,137,172,0.2)] px-1 py-0.5 font-mono text-[0.92em] text-[#00C2FF]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={i} className="font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 export const MockInterviewRoom: React.FC = () => {
   // Screen state: 'lobby' | 'active' | 'scorecard'
   const [screen, setScreen] = useState<'lobby' | 'active' | 'scorecard'>('lobby');
@@ -583,7 +604,7 @@ export const MockInterviewRoom: React.FC = () => {
 
             {/* Description */}
             <div className="text-xs md:text-sm text-[#D1DBF9] leading-relaxed whitespace-pre-line space-y-3">
-              <p>{currentQuestion.description}</p>
+              <p>{renderInline(currentQuestion.description)}</p>
             </div>
 
             {/* Examples */}
@@ -602,7 +623,7 @@ export const MockInterviewRoom: React.FC = () => {
                   </p>
                   {ex.explanation && (
                     <p className="text-[#7E89AC] text-[11px] font-sans">
-                      <strong>Explanation:</strong> {ex.explanation}
+                      <strong>Explanation:</strong> {renderInline(ex.explanation)}
                     </p>
                   )}
                 </div>
@@ -616,7 +637,7 @@ export const MockInterviewRoom: React.FC = () => {
                 {currentQuestion.constraints.map((c, idx) => (
                   <li key={idx} className="flex items-center gap-1.5">
                     <span className="text-[#00C2FF]">•</span>
-                    <span>{c}</span>
+                    <span>{renderInline(c)}</span>
                   </li>
                 ))}
               </ul>
@@ -666,7 +687,7 @@ export const MockInterviewRoom: React.FC = () => {
 
                       {isUnlocked && (
                         <p className="mt-2 text-[#D1DBF9] text-xs leading-relaxed border-t border-[rgba(126,137,172,0.1)] pt-2">
-                          {hint.content}
+                          {renderInline(hint.content)}
                         </p>
                       )}
                     </div>

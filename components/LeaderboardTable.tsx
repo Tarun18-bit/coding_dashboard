@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { LeaderboardEntry } from '@/lib/leaderboard';
-import { Trophy, Flame, ArrowUpRight, Award, Swords, Star } from 'lucide-react';
+import { Flame, ArrowUpRight, Award, Swords, Star } from 'lucide-react';
 import Link from 'next/link';
 
 interface LeaderboardTableProps {
@@ -65,16 +65,6 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     <div className="space-y-8">
       {/* Top Controls & Sorting Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(126,137,172,0.14)] pb-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <Trophy className="h-5 w-5 text-[#FDB52A]" />
-            <span>Global Coding Leaderboard</span>
-          </h2>
-          <p className="text-xs text-[#7E89AC] mt-1">
-            Real-time multi-platform rankings across Codeforces, LeetCode, and CodeChef
-          </p>
-        </div>
-
         {/* Sort Tabs */}
         <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-1 text-xs">
           <button

@@ -46,7 +46,8 @@ function getExternalProfileUrl(platform: string, handle: string) {
 export async function generateMetadata({ params, searchParams }: PlatformPageProps): Promise<Metadata> {
   const { name } = await params;
   const handle = (searchParams ? (await searchParams)?.handle : undefined)?.trim().slice(0, 40);
-  const label = PLATFORM_LABEL[decodeURIComponent(name).toLowerCase()] || 'Platform';
+  const label = PLATFORM_LABEL[decodeURIComponent(name).toLowerCase()];
+  if (!label) return { title: 'Page not found', robots: { index: false } };
   return { title: handle ? `@${handle} on ${label}` : `${label} analytics` };
 }
 

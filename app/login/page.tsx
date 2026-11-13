@@ -3,15 +3,20 @@ import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { AuthForm, type AuthMode } from '@/components/AuthForm';
 
-export const metadata: Metadata = {
-  title: 'Sign in',
-  description: 'Sign in or create your free DashCode account.',
-};
 
 export const dynamic = 'force-dynamic';
 
 interface LoginPageProps {
   searchParams: Promise<{ mode?: string; next?: string; error?: string; type?: string }>;
+}
+
+export async function generateMetadata({ searchParams }: LoginPageProps): Promise<Metadata> {
+  const { mode } = await searchParams;
+  const signup = mode === 'signup' || mode === 'register';
+  return {
+    title: signup ? 'Create your free account' : mode === 'forgot' ? 'Reset your password' : 'Sign in',
+    description: 'Sign in or create your free DashCode account.',
+  };
 }
 
 /** Only same-site paths ("/x"), never "//host" or "@host" style open redirects. */
