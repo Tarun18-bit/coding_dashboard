@@ -128,14 +128,14 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
   }));
 
   return (
-    <div className="min-h-screen bg-[#0B1222] text-white selection:bg-[#2563EB] selection:text-white pb-14">
+    <div className="min-h-screen bg-[#0B1222] text-white selection:bg-[#00EA64] selection:text-[#090D1A] pb-14">
       {/* Top header: identity on the left, portfolio actions on the right */}
       <header className="sticky top-0 z-20 border-b border-[rgba(126,137,172,0.18)] bg-[#0E1628]/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-white transition hover:scale-105"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] transition hover:bg-[#00C853]"
               title="Home"
             >
               <Terminal className="h-5 w-5" />
@@ -186,7 +186,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
             <ShareButton username={displayName} />
             <Link
               href={authUser ? '/dashboard' : '/login?mode=signup'}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(37,99,235,0.5)] bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#1D4ED8]"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-[#00EA64] px-3 py-1.5 text-xs font-bold text-[#090D1A] transition hover:bg-[#00C853]"
             >
               <span>{authUser ? 'Dashboard' : 'Build Yours'}</span>
               <ExternalLink className="h-3 w-3" />

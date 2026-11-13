@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Terminal, CheckCircle2, ArrowRight, Trophy, ShieldCheck, Target, Bot, Clock, BookOpen } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -66,7 +67,7 @@ export default async function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-16 pb-20 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto space-y-7">
+      <section className="relative z-10 pt-16 pb-12 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto space-y-7">
         <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
           Unify your coding stats.<br />
           <span className="text-[#94A3B8]">Find your weak spots.</span>
@@ -108,6 +109,23 @@ export default async function HomePage() {
             <CheckCircle2 className="h-4 w-4 text-[#14CA74]" /> Free, no API keys needed
           </span>
         </div>
+      </section>
+
+      {/* Real product screenshot */}
+      <section className="relative z-10 mx-auto max-w-[832px] px-4 pb-20 sm:px-6">
+        <div className="overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.16)] bg-[#0E1628] shadow-2xl shadow-black/40">
+          <Image
+            src="/dashboard-preview.webp"
+            alt="The DashCode dashboard: today's streak, the AI coach's focus topic, today's problems and solve counts by difficulty"
+            width={784}
+            height={440}
+            priority
+            className="h-auto w-full"
+          />
+        </div>
+        <p className="mt-3 text-center text-xs text-[#64748B]">
+          A real dashboard, synced from LeetCode, Codeforces and CodeChef.
+        </p>
       </section>
 
       {/* Feature Showcase Grid */}

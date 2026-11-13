@@ -101,6 +101,9 @@ export function DashboardTabs({
     }
   }, []);
 
+  const shareOf = (n: number) =>
+    stats.totalSolved > 0 ? `${Math.round((n / stats.totalSolved) * 100)}% of your solves` : 'No solves yet';
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'practice', label: 'Practice & Roadmaps', icon: BookOpen },
@@ -176,7 +179,7 @@ export function DashboardTabs({
       {/* ========================================================= */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Key Metrics Row with HackerRank Star Tiers */}
+          {/* Key metrics */}
           <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
             <StatCard
               title="Total Solved"
@@ -186,34 +189,33 @@ export function DashboardTabs({
               icon={<CheckCircle2 className="h-4 w-4 text-[#00EA64]" />}
             />
             <StatCard
-              title="Easy ★"
+              title="Easy"
               value={stats.difficultyBreakdown.easy}
-              subtitle="Fundamentals mastered"
+              subtitle={shareOf(stats.difficultyBreakdown.easy)}
               variant="cyan"
               icon={<TrendingUp className="h-4 w-4 text-[#00C2FF]" />}
             />
             <StatCard
-              title="Medium ★★"
+              title="Medium"
               value={stats.difficultyBreakdown.medium}
-              subtitle="Interview standard"
+              subtitle={shareOf(stats.difficultyBreakdown.medium)}
               variant="amber"
               icon={<Activity className="h-4 w-4 text-[#FDB52A]" />}
             />
             <StatCard
-              title="Hard ★★★"
+              title="Hard"
               value={stats.difficultyBreakdown.hard}
-              subtitle="Competitive apex"
+              subtitle={shareOf(stats.difficultyBreakdown.hard)}
               variant="rose"
               icon={<Trophy className="h-4 w-4 text-[#FF5A65]" />}
             />
             <div className="col-span-2 sm:col-span-1">
               <StatCard
-                title="Active Streak"
+                title="Current Streak"
                 value={`${stats.streaks.currentStreak}d`}
                 subtitle={`Best: ${stats.streaks.longestStreak} days`}
                 variant="blue"
                 icon={<Flame className="h-4 w-4 text-[#FFB016]" />}
-                badge={stats.streaks.currentStreak > 0 ? 'ACTIVE' : undefined}
               />
             </div>
           </div>

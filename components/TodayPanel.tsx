@@ -104,7 +104,7 @@ export function TodayPanel({ userId, currentStreak, workout, onOpenPractice, onO
       <div className={card}>
         <p className={label}>
           <ListChecks className="h-4 w-4 text-[#00EA64]" />
-          {workout?.todayTargetTopic ? `Today's problems · ${workout.todayTargetTopic}` : "Today's problems"}
+          Today&apos;s problems
         </p>
         {problems.length > 0 ? (
           <ul className="mt-2 space-y-1.5">

@@ -69,6 +69,14 @@ body {
   background: #334155;
 }
 
+/* Horizontally scrolling rows (tabs, mobile nav) scroll without a visible bar */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* HackerRank + DashDark style card utilities */
 .dash-card {
   background-color: #0E1628;

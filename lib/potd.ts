@@ -144,7 +144,9 @@ export async function getDailyWorkout(
 
   const solvedTodayCount = workoutProblems.filter((p) => p.solvedToday || p.isSolved).length;
   const isCompletedToday = solvedTodayCount === workoutProblems.length;
-  const streakProtected = solvedTodayCount > 0;
+  // Any accepted solve today keeps the streak (not just these three problems, and not
+  // workout problems that were solved on an earlier day)
+  const streakProtected = solvedTodayIds.size > 0;
 
   const result: DailyWorkout = {
     dateStr: today,
