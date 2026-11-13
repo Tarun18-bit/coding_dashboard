@@ -64,19 +64,19 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
         return {
           name: 'Codeforces',
           badge: 'bg-[#21C3FC]/15 text-[#21C3FC] border-[#21C3FC]/30',
-          dot: 'bg-[#21C3FC] shadow-[0_0_8px_#21C3FC]',
+          dot: 'bg-[#21C3FC]',
         };
       case 'leetcode':
         return {
           name: 'LeetCode',
           badge: 'bg-[#FDB52A]/15 text-[#FDB52A] border-[#FDB52A]/30',
-          dot: 'bg-[#FDB52A] shadow-[0_0_8px_#FDB52A]',
+          dot: 'bg-[#FDB52A]',
         };
       case 'codechef':
         return {
           name: 'CodeChef',
-          badge: 'bg-[#CB3CFF]/15 text-[#CB3CFF] border-[#CB3CFF]/30',
-          dot: 'bg-[#CB3CFF] shadow-[0_0_8px_#CB3CFF]',
+          badge: 'bg-[#8B5CF6]/15 text-[#8B5CF6] border-[#8B5CF6]/30',
+          dot: 'bg-[#8B5CF6]',
         };
       default:
         return {
@@ -111,9 +111,6 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
             <h2 className="text-base font-bold tracking-tight text-white">
               Upcoming Contest Radar
             </h2>
-            <span className="rounded-md bg-[#00EA64]/10 border border-[#00EA64]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00EA64]">
-              {filtered.length} SCHEDULED
-            </span>
           </div>
           <p className="text-xs text-[#94A3B8] mt-1">
             Real-time contest radar across Codeforces, LeetCode &amp; CodeChef with 1-click Google Calendar sync.
@@ -128,7 +125,7 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
               onClick={() => setFilter(cat)}
               className={`rounded-lg px-3 py-1 font-semibold capitalize transition-all cursor-pointer ${
                 filter === cat
-                  ? 'bg-[#00EA64] text-[#090D1A] font-bold shadow-[0_0_12px_rgba(0,234,100,0.3)]'
+                  ? 'bg-[#00EA64] text-[#090D1A] font-bold'
                   : 'text-[#94A3B8] hover:text-white'
               }`}
             >
@@ -170,10 +167,10 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
                 <div className="space-y-3">
                   {/* Top Bar: Platform & Countdown Pill */}
                   <div className="flex items-center justify-between">
-                    <span className={`rounded-lg border px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${meta.badge}`}>
+                    <span className={`rounded-lg border px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase tracking-wider ${meta.badge}`}>
                       {meta.name}
                     </span>
-                    <span className="rounded-full bg-[#00EA64]/10 border border-[#00EA64]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#00EA64]">
+                    <span className="rounded-full bg-[#00EA64]/10 border border-[#00EA64]/30 px-2.5 py-0.5 text-[11px] font-mono font-bold text-[#00EA64]">
                       {countdown}
                     </span>
                   </div>

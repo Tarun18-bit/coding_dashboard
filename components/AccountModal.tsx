@@ -66,7 +66,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Add a coding platform"
-        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:border-[#0E43FB] hover:bg-[#0B1739] active:scale-98"
+        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:border-[#2563EB] hover:bg-[#0E1628] active:scale-98"
       >
         <Plus className="h-3.5 w-3.5 text-[#00C2FF]" />
         <span className={alwaysShowLabel ? '' : 'hidden sm:inline'}>Add Platform</span>
@@ -74,27 +74,27 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081028]/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1222]/80 backdrop-blur-md animate-fade-in"
           onKeyDown={(e) => {
             if (e.key === 'Escape') setIsOpen(false);
           }}
         >
-          <div role="dialog" aria-modal="true" aria-label="Link platform account" className="relative w-full max-w-md rounded-2xl border border-[rgba(126,137,172,0.22)] bg-[#0B1739] p-6 shadow-2xl shadow-[rgba(1,5,17,0.8)] space-y-5">
+          <div role="dialog" aria-modal="true" aria-label="Link platform account" className="relative w-full max-w-md rounded-2xl border border-[rgba(126,137,172,0.22)] bg-[#0E1628] p-6 shadow-2xl shadow-[rgba(1,5,17,0.8)] space-y-5">
             <div className="flex items-center justify-between border-b border-[rgba(126,137,172,0.14)] pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0E43FB]/15 border border-[#0E43FB]/30 text-[#00C2FF]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#2563EB]/15 border border-[#2563EB]/30 text-[#00C2FF]">
                   <Link2 className="h-4 w-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Link Platform Account</h3>
-                  <p className="text-[11px] text-[#7E89AC]">Connect your Codeforces, LeetCode, or CodeChef profiles</p>
+                  <p className="text-xs text-[#7E89AC]">Connect your Codeforces, LeetCode, or CodeChef profiles</p>
                 </div>
               </div>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl p-1.5 text-[#AEB9E1] hover:bg-[#0A1330] hover:text-white transition"
+                className="rounded-xl p-1.5 text-[#AEB9E1] hover:bg-[#0B1222] hover:text-white transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -115,14 +115,14 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
 
             <form onSubmit={handleLink} className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="link-platform" className="text-[11px] font-bold uppercase tracking-wider text-[#AEB9E1]">
+                <label htmlFor="link-platform" className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">
                   Select Platform
                 </label>
                 <select
                   id="link-platform"
                   value={platform}
                   onChange={(e) => setPlatform(e.target.value)}
-                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3.5 py-2.5 text-xs text-white focus:border-[#0E43FB] focus:outline-hidden"
+                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-3.5 py-2.5 text-xs text-white focus:border-[#2563EB] focus:outline-hidden"
                 >
                   <option value="codeforces">Codeforces</option>
                   <option value="leetcode">LeetCode</option>
@@ -131,7 +131,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="link-handle" className="text-[11px] font-bold uppercase tracking-wider text-[#AEB9E1]">
+                <label htmlFor="link-handle" className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">
                   Handle / Username
                 </label>
                 <input
@@ -144,7 +144,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
                   placeholder="e.g. your_handle"
                   value={handle}
                   onChange={(e) => setHandle(e.target.value)}
-                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3.5 py-2.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#0E43FB] focus:outline-hidden font-mono"
+                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-3.5 py-2.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#2563EB] focus:outline-hidden font-mono"
                 />
               </div>
 
@@ -152,14 +152,14 @@ export const AccountModal: React.FC<AccountModalProps> = ({ alwaysShowLabel = fa
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-4 py-2 text-xs font-semibold text-[#AEB9E1] hover:text-white"
+                  className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-4 py-2 text-xs font-semibold text-[#AEB9E1] hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-5 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#0B34C7]"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(37,99,235,0.5)] bg-[#2563EB] px-5 py-2 text-xs font-bold text-white transition hover:bg-[#1D4ED8]"
                 >
                   {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{loading ? 'Linking & Syncing...' : 'Link Account'}</span>

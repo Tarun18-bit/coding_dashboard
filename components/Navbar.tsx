@@ -17,7 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { BadgeModal } from '@/components/BadgeModal';
-import { ExportResumeModal, type ExportResumeModalProps } from '@/components/ExportResumeModal';
+import type { ExportResumeModalProps } from '@/components/ExportResumeModal';
 import type { DashboardStats } from '@/lib/aggregate';
 import type { RpgProfile } from '@/lib/gamification';
 import { ShareButton } from '@/components/ShareButton';
@@ -35,7 +35,7 @@ interface NavbarProps {
   /** The signed-in user from the server, or null for visitors */
   currentUser?: NavbarUser | null;
   activeUsername?: string;
-  /** Dashboard only: powers the streak pill, auto-sync and the export tools */
+  /** Dashboard only: powers the streak pill and auto-sync */
   stats?: Pick<DashboardStats, 'streaks' | 'accounts' | 'totalSolved' | 'difficultyBreakdown' | 'strengths'>;
   rpgProfile?: Pick<RpgProfile, 'title' | 'level'>;
   resumeData?: {
@@ -48,8 +48,6 @@ export function Navbar({
   currentUser,
   activeUsername,
   stats,
-  rpgProfile,
-  resumeData,
 }: NavbarProps) {
   const pathname = usePathname();
   const [competeOpen, setCompeteOpen] = useState(false);
@@ -100,7 +98,7 @@ export function Navbar({
 
   const competeLinks = [
     { href: '/leaderboard', label: 'Leaderboard', desc: 'Global competitive standings', icon: Trophy, color: 'text-[#FDB52A]' },
-    { href: '/clans', label: 'Clans', desc: 'Study circles & weekly targets', icon: Users, color: 'text-[#CB3CFF]' },
+    { href: '/clans', label: 'Clans', desc: 'Study circles & weekly targets', icon: Users, color: 'text-[#8B5CF6]' },
     { href: '/compare', label: '1v1 Arena', desc: 'Head-to-head coder comparison', icon: Swords, color: 'text-[#00C2FF]' },
   ];
 
@@ -116,15 +114,12 @@ export function Navbar({
             aria-label="DashCode home"
             className="flex items-center gap-2.5 group transition-transform hover:scale-105 shrink-0"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] font-black shadow-[0_0_18px_rgba(0,234,100,0.4)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] font-black">
               <Terminal className="h-5 w-5" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className={`${effectiveUser ? 'hidden min-[420px]:inline' : ''} text-base font-black tracking-tight text-white group-hover:text-[#00EA64] transition-colors`}>
                 DashCode
-              </span>
-              <span className="hidden sm:inline rounded bg-[#00EA64]/10 border border-[#00EA64]/30 px-1 py-0.2 text-[9px] font-mono font-bold text-[#00EA64]">
-                PREP
               </span>
             </div>
           </Link>
@@ -184,7 +179,7 @@ export function Navbar({
                         </div>
                         <div>
                           <p className="text-xs font-bold text-white">{sub.label}</p>
-                          <p className="text-[11px] text-[#64748B] leading-tight">{sub.desc}</p>
+                          <p className="text-xs text-[#64748B] leading-tight">{sub.desc}</p>
                         </div>
                       </Link>
                     );
@@ -200,7 +195,7 @@ export function Navbar({
           {/* Daily Streak Pill */}
           {stats?.streaks && (
             <div title="Daily streak" className="hidden sm:flex items-center gap-1.5 rounded-xl border border-[rgba(255,176,22,0.25)] bg-[#1A1810] px-2.5 py-1 text-xs font-mono font-bold text-[#FFB016]">
-              <Flame className="h-3.5 w-3.5 text-[#FFB016] animate-pulse" />
+              <Flame className="h-3.5 w-3.5 text-[#FFB016]" />
               <span>{stats.streaks.currentStreak}d</span>
             </div>
           )}
@@ -232,19 +227,6 @@ export function Navbar({
 
             {toolsOpen && (
               <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#0E1628] p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-100 space-y-1">
-                <div className="[&>button]:w-full [&>button]:justify-start [&>button]:bg-transparent [&>button]:border-transparent [&>button]:px-2.5 [&>button]:py-2 [&>button]:rounded-lg [&>button]:text-xs [&>button]:text-[#94A3B8] hover:[&>button]:text-white hover:[&>button]:bg-[#131E35]">
-                  <ExportResumeModal
-                    username={effectiveUsername}
-                    totalSolved={stats?.totalSolved || 0}
-                    difficulty={stats?.difficultyBreakdown || { easy: 0, medium: 0, hard: 0 }}
-                    streaks={stats?.streaks || { currentStreak: 0, longestStreak: 0 }}
-                    accounts={resumeData?.accountsSummary || []}
-                    companyReadiness={resumeData?.readinessSummary || []}
-                    strengths={stats?.strengths || []}
-                    rpgTitle={rpgProfile?.title || 'Problem Solver'}
-                    rpgLevel={rpgProfile?.level || 1}
-                  />
-                </div>
 
                 <div className="[&>button]:w-full [&>button]:justify-start [&>button]:bg-transparent [&>button]:border-transparent [&>button]:px-2.5 [&>button]:py-2 [&>button]:rounded-lg [&>button]:text-xs [&>button]:text-[#94A3B8] hover:[&>button]:text-white hover:[&>button]:bg-[#131E35]">
                   <BadgeModal username={effectiveUsername} />
@@ -274,7 +256,7 @@ export function Navbar({
             <Link
               key={link.href}
               href={link.href}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${
                 isActive ? 'bg-[#00EA64]/10 text-[#00EA64]' : 'text-[#94A3B8] hover:text-white'
               }`}
             >
@@ -290,7 +272,7 @@ export function Navbar({
             <Link
               key={link.href}
               href={link.href}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${
                 isActive ? 'bg-[#00EA64]/10 text-[#00EA64]' : 'text-[#94A3B8] hover:text-white'
               }`}
             >

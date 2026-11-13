@@ -25,7 +25,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ username }) => {
   return (
     <button
       onClick={handleShare}
-      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] shadow-sm transition hover:border-[#0E43FB] hover:bg-[#0B1739] hover:text-white active:scale-98"
+      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-2.5 py-1.5 text-xs font-semibold text-[#AEB9E1] shadow-sm transition hover:border-[#2563EB] hover:bg-[#0E1628] hover:text-white active:scale-98"
       title="Copy public profile link"
     >
       {copied ? (

@@ -95,7 +95,7 @@ export function NavigationProgressBar() {
       }}
     >
       <div
-        className="h-full bg-gradient-to-r from-[#0E43FB] via-[#00EA64] to-[#00C2FF] shadow-[0_0_12px_rgba(0,234,100,0.8)] transition-all ease-out"
+        className="h-full bg-[#2563EB] transition-all ease-out"
         style={{
           width: `${progress}%`,
           transitionDuration: progress === 100 ? '150ms' : '200ms',

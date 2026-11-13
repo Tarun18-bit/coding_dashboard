@@ -19,7 +19,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
       <p className="mt-2 max-w-sm text-sm text-[#94A3B8]">
         This page hit an unexpected error. Your data is safe. Try again, and if it keeps happening, come back in a few minutes.
       </p>
-      {error.digest && <p className="mt-2 font-mono text-[10px] text-[#64748B]">Reference: {error.digest}</p>}
+      {error.digest && <p className="mt-2 font-mono text-[11px] text-[#64748B]">Reference: {error.digest}</p>}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button
           onClick={() => retry()}

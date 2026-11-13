@@ -39,11 +39,11 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, totalActiveDays }) => {
 
   const getColorClass = (count: number) => {
     if (count === -1) return 'bg-transparent';
-    if (count === 0) return 'bg-[#0A1330] border border-[rgba(126,137,172,0.14)] hover:border-[#7E89AC]';
-    if (count === 1) return 'bg-[#082366] border border-[#0E43FB]/40 hover:border-[#0E43FB]';
-    if (count <= 3) return 'bg-[#0E43FB] border border-[#00C2FF]/40 hover:border-[#00C2FF] shadow-[0_0_8px_rgba(14,67,251,0.4)]';
-    if (count <= 6) return 'bg-[#00C2FF] border border-white/50 hover:border-white shadow-[0_0_10px_rgba(0,194,255,0.6)]';
-    return 'bg-[#38E1FF] border border-white hover:border-white shadow-[0_0_14px_rgba(56,225,255,0.8)]';
+    if (count === 0) return 'bg-[#0B1222] border border-[rgba(126,137,172,0.14)] hover:border-[#7E89AC]';
+    if (count === 1) return 'bg-[#082366] border border-[#2563EB]/40 hover:border-[#2563EB]';
+    if (count <= 3) return 'bg-[#2563EB] border border-[#00C2FF]/40 hover:border-[#00C2FF]';
+    if (count <= 6) return 'bg-[#00C2FF] border border-white/50 hover:border-white';
+    return 'bg-[#38E1FF] border border-white hover:border-white';
   };
 
   const totalSubmissionsInYear = useMemo(() => {
@@ -56,7 +56,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, totalActiveDays }) => {
         <div>
           <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
             <span>Activity Heatmap</span>
-            <span className="rounded-full bg-[#0E43FB]/20 border border-[#0E43FB]/30 px-2.5 py-0.5 text-[11px] font-semibold text-[#D1DBF9]">
+            <span className="rounded-full bg-[#2563EB]/20 border border-[#2563EB]/30 px-2.5 py-0.5 text-xs font-semibold text-[#D1DBF9]">
               365 Days
             </span>
           </h3>
@@ -65,11 +65,11 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, totalActiveDays }) => {
             <span className="text-[#14CA74] font-mono font-bold">{totalActiveDays}</span> active days this year
           </p>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-[#7E89AC]">
+        <div className="flex items-center gap-1.5 text-xs text-[#7E89AC]">
           <span>Less</span>
-          <div className="h-3 w-3 rounded-[3px] bg-[#0A1330] border border-[rgba(126,137,172,0.18)]" />
-          <div className="h-3 w-3 rounded-[3px] bg-[#082366] border border-[#0E43FB]/40" />
-          <div className="h-3 w-3 rounded-[3px] bg-[#0E43FB]" />
+          <div className="h-3 w-3 rounded-[3px] bg-[#0B1222] border border-[rgba(126,137,172,0.18)]" />
+          <div className="h-3 w-3 rounded-[3px] bg-[#082366] border border-[#2563EB]/40" />
+          <div className="h-3 w-3 rounded-[3px] bg-[#2563EB]" />
           <div className="h-3 w-3 rounded-[3px] bg-[#00C2FF]" />
           <div className="h-3 w-3 rounded-[3px] bg-[#38E1FF]" />
           <span>More</span>

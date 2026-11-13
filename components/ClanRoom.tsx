@@ -63,9 +63,9 @@ async function api<T>(url: string, init?: RequestInit): Promise<T & { success: b
   return data;
 }
 
-const card = 'rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] shadow-xl';
+const card = 'rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] shadow-xl';
 const input =
-  'w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-3.5 py-2 text-white focus:border-[#00C2FF] focus:outline-none';
+  'w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-3.5 py-2 text-white focus:border-[#00C2FF] focus:outline-none';
 const btnGhost =
   'inline-flex items-center gap-1.5 rounded-2xl border px-3.5 py-2.5 text-xs font-bold transition cursor-pointer disabled:opacity-50';
 
@@ -299,7 +299,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                 setActionError('');
                 setIsCreateOpen(true);
               }}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#0E43FB] to-[#CB3CFF] px-5 py-2.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(203,60,255,0.4)] transition hover:scale-105 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-2.5 text-xs font-bold text-white transition hover:scale-105 active:scale-95"
             >
               <Plus className="h-4 w-4" />
               <span>Create Clan</span>
@@ -316,7 +316,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
         </div>
       ) : clans.length === 0 && !listError ? (
         <div className={`${card} p-12 text-center space-y-4`}>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0A1330] border border-[rgba(126,137,172,0.2)] text-[#00EA64]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0B1222] border border-[rgba(126,137,172,0.2)] text-[#00EA64]">
             <Users className="h-8 w-8" />
           </div>
           <h3 className="text-xl font-bold text-white">You&apos;re not in a clan yet</h3>
@@ -334,13 +334,13 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                 onClick={() => setActiveId(c.id)}
                 className={`flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-xs font-bold transition ${
                   c.id === activeId
-                    ? 'border-[#00C2FF] bg-[#0E43FB]/20 text-white shadow-[0_0_15px_rgba(0,194,255,0.3)]'
-                    : 'border-[rgba(126,137,172,0.18)] bg-[#0B1739] text-[#AEB9E1] hover:text-white'
+                    ? 'border-[#00C2FF] bg-[#2563EB]/20 text-white'
+                    : 'border-[rgba(126,137,172,0.18)] bg-[#0E1628] text-[#AEB9E1] hover:text-white'
                 }`}
               >
                 <span className="text-base">{c.avatar}</span>
                 <span>{c.name}</span>
-                <span className="rounded-md bg-[#081028] px-1.5 py-0.5 text-[10px] font-mono text-[#7E89AC]">
+                <span className="rounded-md bg-[#0B1222] px-1.5 py-0.5 text-[11px] font-mono text-[#7E89AC]">
                   {c.memberCount} {c.memberCount === 1 ? 'member' : 'members'}
                 </span>
               </button>
@@ -360,18 +360,18 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
               <div className={`relative overflow-hidden ${card} p-6`}>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <div className="flex items-start sm:items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#0A1330] border border-[rgba(126,137,172,0.25)] text-3xl shadow-inner flex-shrink-0">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#0B1222] border border-[rgba(126,137,172,0.25)] text-3xl shadow-inner flex-shrink-0">
                       {activeClan.avatar}
                     </div>
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2.5">
                         <h2 className="text-xl sm:text-2xl font-black text-white">{activeClan.name}</h2>
-                        <span className="rounded-md border border-[#00C2FF]/40 bg-[#00C2FF]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00C2FF] uppercase">
+                        <span className="rounded-md border border-[#00C2FF]/40 bg-[#00C2FF]/10 px-2 py-0.5 text-[11px] font-mono font-bold text-[#00C2FF] uppercase">
                           {activeClan.category}
                         </span>
                       </div>
                       {activeClan.tagline && <p className="text-xs sm:text-sm text-[#AEB9E1] max-w-xl">{activeClan.tagline}</p>}
-                      <p className="text-[11px] font-mono text-[#7E89AC]">
+                      <p className="text-xs font-mono text-[#7E89AC]">
                         Invite code: <span className="text-white font-bold tracking-widest">{activeClan.inviteCode}</span>
                       </p>
                     </div>
@@ -392,7 +392,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                       <button
                         onClick={openSettings}
                         title="Clan settings"
-                        className="rounded-2xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] p-3 text-[#AEB9E1] hover:text-white transition cursor-pointer"
+                        className="rounded-2xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] p-3 text-[#AEB9E1] hover:text-white transition cursor-pointer"
                       >
                         <Settings className="h-4 w-4" />
                       </button>
@@ -401,7 +401,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                       onClick={() => leaveOrDelete('leave')}
                       disabled={busy}
                       title="Leave clan"
-                      className="rounded-2xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] p-3 text-[#AEB9E1] hover:text-white transition cursor-pointer disabled:opacity-50"
+                      className="rounded-2xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] p-3 text-[#AEB9E1] hover:text-white transition cursor-pointer disabled:opacity-50"
                     >
                       <LogOut className="h-4 w-4" />
                     </button>
@@ -419,7 +419,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                 </div>
 
                 {/* Weekly quest */}
-                <div className="mt-6 rounded-2xl border border-[rgba(126,137,172,0.14)] bg-[#081028]/70 p-5 space-y-2.5">
+                <div className="mt-6 rounded-2xl border border-[rgba(126,137,172,0.14)] bg-[#0B1222]/70 p-5 space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
                     <span className="font-bold text-white flex items-center gap-2">
                       <Target className="h-4 w-4 text-[#00C2FF]" />
@@ -429,13 +429,13 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                       {activeClan.weekSolves} / {activeClan.weeklyTarget} ({progressPercent}%)
                     </span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-[#0A1330] p-0.5 border border-[rgba(126,137,172,0.15)]">
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
                     <div
                       style={{ width: `${progressPercent}%` }}
-                      className="h-full rounded-full bg-gradient-to-r from-[#0E43FB] via-[#CB3CFF] to-[#00C2FF] shadow-[0_0_12px_rgba(0,194,255,0.6)] transition-all duration-700"
+                      className="h-full rounded-full bg-[#2563EB] transition-all duration-700"
                     />
                   </div>
-                  <p className="text-[11px] text-[#7E89AC] text-right font-mono">
+                  <p className="text-xs text-[#7E89AC] text-right font-mono">
                     {progressPercent >= 100 ? 'Quest complete! ' : ''}
                     {daysLeftInWeek(activeClan.weekStart)} day(s) left · resets Monday 00:00 UTC · counted from synced stats
                   </p>
@@ -454,7 +454,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="border-b border-[rgba(126,137,172,0.16)] bg-[#0A1330] text-[11px] uppercase text-[#AEB9E1]">
+                      <thead className="border-b border-[rgba(126,137,172,0.16)] bg-[#0B1222] text-xs uppercase text-[#AEB9E1]">
                         <tr>
                           <th className="py-3 px-3.5 rounded-l-xl w-14">Rank</th>
                           <th className="py-3 px-3.5">Member</th>
@@ -466,13 +466,13 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                       </thead>
                       <tbody className="divide-y divide-[rgba(126,137,172,0.1)] font-mono">
                         {activeClan.members.map((m, i) => (
-                          <tr key={m.userId} className={`transition ${m.userId === currentUserId ? 'bg-[#0E43FB]/10' : 'hover:bg-[#0A1330]/60'}`}>
+                          <tr key={m.userId} className={`transition ${m.userId === currentUserId ? 'bg-[#2563EB]/10' : 'hover:bg-[#0B1222]/60'}`}>
                             <td className="py-3.5 px-3.5 font-bold">
                               <span
                                 className={`flex h-7 w-7 items-center justify-center rounded-xl border text-xs font-bold ${
                                   i === 0 && m.solvedThisWeek > 0
                                     ? 'bg-[#FDB52A]/20 text-[#FDB52A] border-[#FDB52A]/40'
-                                    : 'bg-[#0A1330] text-[#7E89AC] border-[rgba(126,137,172,0.18)]'
+                                    : 'bg-[#0B1222] text-[#7E89AC] border-[rgba(126,137,172,0.18)]'
                                 }`}
                               >
                                 {i === 0 && m.solvedThisWeek > 0 ? '🥇' : `#${i + 1}`}
@@ -482,7 +482,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                               <Link href={`/u/${m.username}`} className="font-bold text-white hover:text-[#00C2FF] transition inline-flex items-center gap-1.5">
                                 @{m.username}
                                 {m.role === 'leader' && <Crown className="h-3.5 w-3.5 text-[#FDB52A] fill-[#FDB52A]" aria-label="Leader" />}
-                                {m.userId === currentUserId && <span className="text-[10px] font-mono text-[#00C2FF]">(you)</span>}
+                                {m.userId === currentUserId && <span className="text-[11px] font-mono text-[#00C2FF]">(you)</span>}
                               </Link>
                             </td>
                             <td className="py-3.5 px-3.5 text-center font-bold text-[#14CA74]">+{m.solvedThisWeek}</td>
@@ -493,9 +493,9 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                                 {m.userId !== currentUserId && (
                                   <Link
                                     href={`/compare?u1=${encodeURIComponent(currentUsername)}&u2=${encodeURIComponent(m.username)}`}
-                                    className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2.5 py-1 text-[11px] font-semibold text-[#AEB9E1] transition hover:border-[#0E43FB] hover:text-white"
+                                    className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-2.5 py-1 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#2563EB] hover:text-white"
                                   >
-                                    <Swords className="h-3 w-3 text-[#CB3CFF]" /> Compare
+                                    <Swords className="h-3 w-3 text-[#8B5CF6]" /> Compare
                                   </Link>
                                 )}
                                 {isLeader && m.userId !== currentUserId && (
@@ -533,10 +533,10 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                   ) : (
                     <ul className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
                       {activeClan.activity.map((a, i) => (
-                        <li key={`${a.username}-${a.submittedAt}-${i}`} className="rounded-2xl border border-[rgba(126,137,172,0.12)] bg-[#0A1330] p-3 text-xs space-y-1">
+                        <li key={`${a.username}-${a.submittedAt}-${i}`} className="rounded-2xl border border-[rgba(126,137,172,0.12)] bg-[#0B1222] p-3 text-xs space-y-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-white truncate">@{a.username}</span>
-                            <span className="text-[10px] font-mono text-[#7E89AC] shrink-0">{timeAgo(a.submittedAt)}</span>
+                            <span className="text-[11px] font-mono text-[#7E89AC] shrink-0">{timeAgo(a.submittedAt)}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             {a.url ? (
@@ -546,7 +546,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                             ) : (
                               <span className="text-[#AEB9E1] truncate">{a.title}</span>
                             )}
-                            <span className="text-[10px] font-mono uppercase text-[#7E89AC] shrink-0">{a.platform}</span>
+                            <span className="text-[11px] font-mono uppercase text-[#7E89AC] shrink-0">{a.platform}</span>
                           </div>
                         </li>
                       ))}
@@ -561,7 +561,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
 
       {/* Create modal */}
       {isCreateOpen && (
-        <Modal title="Create a Clan" icon={<Plus className="h-5 w-5 text-[#CB3CFF]" />} onClose={() => setIsCreateOpen(false)}>
+        <Modal title="Create a Clan" icon={<Plus className="h-5 w-5 text-[#8B5CF6]" />} onClose={() => setIsCreateOpen(false)}>
           <form onSubmit={handleCreate} className="space-y-4 text-xs">
             <div>
               <label className="block font-bold uppercase text-[#AEB9E1] mb-1">Clan name</label>
@@ -579,7 +579,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
                     type="button"
                     key={e}
                     onClick={() => setNewEmoji(e)}
-                    className={`h-9 w-9 rounded-xl border text-lg transition ${newEmoji === e ? 'border-[#00C2FF] bg-[#0E43FB]/20' : 'border-[rgba(126,137,172,0.2)] bg-[#0A1330]'}`}
+                    className={`h-9 w-9 rounded-xl border text-lg transition ${newEmoji === e ? 'border-[#00C2FF] bg-[#2563EB]/20' : 'border-[rgba(126,137,172,0.2)] bg-[#0B1222]'}`}
                   >
                     {e}
                   </button>
@@ -644,7 +644,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
               type="button"
               onClick={regenerateInvite}
               disabled={busy}
-              className={`${btnGhost} border-[rgba(126,137,172,0.2)] bg-[#0A1330] text-[#AEB9E1] hover:text-white`}
+              className={`${btnGhost} border-[rgba(126,137,172,0.2)] bg-[#0B1222] text-[#AEB9E1] hover:text-white`}
             >
               <Copy className="h-3.5 w-3.5" /> Generate a new invite code
             </button>
@@ -659,8 +659,7 @@ export const ClanRoom: React.FC<ClanRoomProps> = ({ isLoggedIn, currentUserId, c
 
 function Banner({ actions }: { actions?: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-gradient-to-r from-[#0B1739] via-[#0A1330] to-[#0B1739] p-6 sm:p-8 shadow-2xl">
-      <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-gradient-to-br from-[#CB3CFF]/15 via-[#0E43FB]/15 to-[#00C2FF]/10 blur-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 sm:p-8 shadow-2xl">
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#00EA64]/30 bg-[#00EA64]/10 px-3 py-1 text-xs font-bold text-[#00EA64]">
@@ -680,8 +679,8 @@ function Banner({ actions }: { actions?: React.ReactNode }) {
 
 function Stat({ label, value, accent = 'text-white' }: { label: string; value: number; accent?: string }) {
   return (
-    <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0A1330] px-4 py-2.5 text-center">
-      <p className="text-[10px] uppercase font-bold text-[#7E89AC]">{label}</p>
+    <div className="rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0B1222] px-4 py-2.5 text-center">
+      <p className="text-[11px] uppercase font-bold text-[#7E89AC]">{label}</p>
       <p className={`text-lg font-bold font-mono ${accent}`}>{value}</p>
     </div>
   );
@@ -699,7 +698,7 @@ function ErrorBox({ message }: { message: string }) {
 function Modal({ title, icon, onClose, children }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="relative w-full max-w-md rounded-3xl border border-[rgba(126,137,172,0.25)] bg-[#0B1739] p-6 sm:p-7 shadow-2xl space-y-5">
+      <div className="relative w-full max-w-md rounded-3xl border border-[rgba(126,137,172,0.25)] bg-[#0E1628] p-6 sm:p-7 shadow-2xl space-y-5">
         <div className="flex items-center justify-between border-b border-[rgba(126,137,172,0.14)] pb-3.5">
           <div className="flex items-center gap-2.5">
             {icon}
@@ -718,13 +717,13 @@ function Modal({ title, icon, onClose, children }: { title: string; icon: React.
 function ModalActions({ onCancel, busy, label }: { onCancel: () => void; busy: boolean; label: string }) {
   return (
     <div className="flex justify-end gap-2.5 pt-1">
-      <button type="button" onClick={onCancel} className="rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-4 py-2 font-bold text-[#AEB9E1]">
+      <button type="button" onClick={onCancel} className="rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-4 py-2 font-bold text-[#AEB9E1]">
         Cancel
       </button>
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0E43FB] to-[#CB3CFF] px-5 py-2 font-bold text-white shadow-md hover:scale-105 transition disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-xl bg-[#2563EB] px-5 py-2 font-bold text-white shadow-md hover:scale-105 transition disabled:opacity-60"
       >
         {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {label}

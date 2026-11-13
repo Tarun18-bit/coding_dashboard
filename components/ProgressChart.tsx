@@ -53,7 +53,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({ data, heatmap }) =
         <div className="grid grid-cols-3 gap-2">
           {tiles.map((t) => (
             <div key={t.label} className="rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#090D1A] px-3 py-2 text-center min-w-[92px]">
-              <p className="text-[9px] uppercase font-bold tracking-wider text-[#64748B]">{t.label}</p>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-[#64748B]">{t.label}</p>
               <p className={`text-base font-black font-mono ${t.tone}`}>{t.value}</p>
             </div>
           ))}

@@ -35,27 +35,27 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FDB52A]/20 text-[#FDB52A] border border-[#FDB52A]/40 font-bold font-mono text-xs shadow-[0_0_12px_rgba(253,181,42,0.4)]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FDB52A]/20 text-[#FDB52A] border border-[#FDB52A]/40 font-bold font-mono text-xs">
           🥇
         </span>
       );
     }
     if (rank === 2) {
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#AEB9E1]/20 text-[#D1DBF9] border border-[#AEB9E1]/40 font-bold font-mono text-xs shadow-[0_0_12px_rgba(174,185,225,0.3)]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#AEB9E1]/20 text-[#D1DBF9] border border-[#AEB9E1]/40 font-bold font-mono text-xs">
           🥈
         </span>
       );
     }
     if (rank === 3) {
       return (
-        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FFB016]/20 text-[#FFB016] border border-[#FFB016]/40 font-bold font-mono text-xs shadow-[0_0_12px_rgba(255,176,22,0.3)]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#FFB016]/20 text-[#FFB016] border border-[#FFB016]/40 font-bold font-mono text-xs">
           🥉
         </span>
       );
     }
     return (
-      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0A1330] text-[#7E89AC] border border-[rgba(126,137,172,0.18)] font-bold font-mono text-xs">
+      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0B1222] text-[#7E89AC] border border-[rgba(126,137,172,0.18)] font-bold font-mono text-xs">
         #{rank}
       </span>
     );
@@ -66,12 +66,12 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       {/* Top Controls & Sorting Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(126,137,172,0.14)] pb-4">
         {/* Sort Tabs */}
-        <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-1 text-xs">
+        <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0B1222] p-1 text-xs">
           <button
             onClick={() => setSortKey('solved')}
             className={`rounded-lg px-3.5 py-1.5 font-bold transition-all ${
               sortKey === 'solved'
-                ? 'bg-[#0E43FB] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                ? 'bg-[#2563EB] text-white'
                 : 'text-[#AEB9E1] hover:text-white'
             }`}
           >
@@ -81,7 +81,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             onClick={() => setSortKey('streak')}
             className={`rounded-lg px-3.5 py-1.5 font-bold transition-all ${
               sortKey === 'streak'
-                ? 'bg-[#0E43FB] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                ? 'bg-[#2563EB] text-white'
                 : 'text-[#AEB9E1] hover:text-white'
             }`}
           >
@@ -91,7 +91,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             onClick={() => setSortKey('rating')}
             className={`rounded-lg px-3.5 py-1.5 font-bold transition-all ${
               sortKey === 'rating'
-                ? 'bg-[#0E43FB] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                ? 'bg-[#2563EB] text-white'
                 : 'text-[#AEB9E1] hover:text-white'
             }`}
           >
@@ -110,8 +110,8 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 key={entry.userId}
                 className={`group relative rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 ${
                   isFirst
-                    ? 'border-[#FDB52A]/50 bg-gradient-to-b from-[#0B1739] to-[#0A1330] shadow-[0_0_35px_rgba(253,181,42,0.2)] md:-translate-y-2'
-                    : 'border-[rgba(126,137,172,0.18)] bg-[#0B1739] shadow-lg shadow-[rgba(1,5,17,0.4)]'
+                    ? 'border-[#FDB52A]/50 bg-[#0E1628] md:-translate-y-2'
+                    : 'border-[rgba(126,137,172,0.18)] bg-[#0E1628] shadow-lg shadow-[rgba(1,5,17,0.4)]'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -122,14 +122,14 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         <Link href={`/u/${entry.username}`}>@{entry.username}</Link>
                         {isFirst && <Star className="h-4 w-4 fill-[#FDB52A] text-[#FDB52A]" />}
                       </h3>
-                      <p className="text-[11px] text-[#7E89AC] font-mono">
+                      <p className="text-xs text-[#7E89AC] font-mono">
                         {entry.connectedPlatforms.join(' • ') || 'No platforms'}
                       </p>
                     </div>
                   </div>
                   <Link
                     href={currentUsername ? `/compare?u1=${encodeURIComponent(currentUsername)}&u2=${encodeURIComponent(entry.username)}` : `/compare?u1=${encodeURIComponent(entry.username)}`}
-                    className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-2 text-[#AEB9E1] hover:border-[#0E43FB] hover:text-white transition"
+                    className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] p-2 text-[#AEB9E1] hover:border-[#2563EB] hover:text-white transition"
                     title={`Compare with @${entry.username}`}
                   >
                     <Swords className="h-3.5 w-3.5" />
@@ -138,15 +138,15 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
                 <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[rgba(126,137,172,0.14)] pt-4 text-center">
                   <div>
-                    <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Solved</p>
+                    <p className="text-[11px] text-[#7E89AC] font-bold uppercase">Solved</p>
                     <p className="text-lg font-bold text-white font-mono">{entry.totalSolved}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Streak</p>
+                    <p className="text-[11px] text-[#7E89AC] font-bold uppercase">Streak</p>
                     <p className="text-lg font-bold text-[#FFB016] font-mono">{entry.currentStreak}d</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#7E89AC] font-bold uppercase">Rating</p>
+                    <p className="text-[11px] text-[#7E89AC] font-bold uppercase">Rating</p>
                     <p className="text-lg font-bold text-[#00C2FF] font-mono">
                       {entry.highestRating || '—'}
                     </p>
@@ -159,10 +159,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       )}
 
       {/* Main Leaderboard Table */}
-      <div className="rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-lg shadow-[rgba(1,5,17,0.4)]">
+      <div className="rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 shadow-lg shadow-[rgba(1,5,17,0.4)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-[rgba(126,137,172,0.16)] bg-[#0A1330] text-[11px] uppercase tracking-wider text-[#AEB9E1]">
+            <thead className="border-b border-[rgba(126,137,172,0.16)] bg-[#0B1222] text-xs uppercase tracking-wider text-[#AEB9E1]">
               <tr>
                 <th className="py-3 px-3.5 rounded-l-xl w-14">Rank</th>
                 <th className="py-3 px-3.5">User</th>
@@ -181,7 +181,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <tr
                     key={user.userId}
                     className={`transition-colors ${
-                      isMe ? 'bg-[#0E43FB]/15 border-l-2 border-l-[#0E43FB]' : 'hover:bg-[#0A1330]/70'
+                      isMe ? 'bg-[#2563EB]/15 border-l-2 border-l-[#2563EB]' : 'hover:bg-[#0B1222]/70'
                     }`}
                   >
                     <td className="py-3.5 px-3.5 font-mono font-bold">
@@ -195,7 +195,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         >
                           <span>@{user.username}</span>
                           {isMe && (
-                            <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-1.5 py-0.2 text-[9px] font-mono font-bold text-[#00C2FF]">
+                            <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-1.5 py-0.2 text-[10px] font-mono font-bold text-[#00C2FF]">
                               YOU
                             </span>
                           )}
@@ -207,7 +207,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                         {user.connectedPlatforms.map((p) => (
                           <span
                             key={p}
-                            className="rounded-md border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-1.5 py-0.5 text-[10px] font-mono font-semibold uppercase text-[#AEB9E1]"
+                            className="rounded-md border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-1.5 py-0.5 text-[11px] font-mono font-semibold uppercase text-[#AEB9E1]"
                           >
                             {PLATFORM_ABBR[p.toLowerCase()] || p.slice(0, 2)}
                           </span>
@@ -218,7 +218,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       {user.totalSolved}
                     </td>
                     <td className="py-3.5 px-3.5 text-center">
-                      <div className="inline-flex items-center gap-1.5 font-mono text-[11px]">
+                      <div className="inline-flex items-center gap-1.5 font-mono text-xs">
                         <span className="text-[#14CA74] font-semibold">{user.easy}</span>
                         <span className="text-[#7E89AC]">/</span>
                         <span className="text-[#FDB52A] font-semibold">{user.medium}</span>
@@ -227,7 +227,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       </div>
                     </td>
                     <td className="py-3.5 px-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFB016]/15 border border-[#FFB016]/30 px-2.5 py-0.5 text-[11px] font-mono font-bold text-[#FFB016]">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFB016]/15 border border-[#FFB016]/30 px-2.5 py-0.5 text-xs font-mono font-bold text-[#FFB016]">
                         <Flame className="h-3 w-3" />
                         <span>{user.currentStreak}d</span>
                       </span>
@@ -236,7 +236,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       {user.highestRating ? (
                         <>
                           <span>{user.highestRating}</span>
-                          <span className="text-[10px] font-normal text-[#7E89AC] ml-1 uppercase">
+                          <span className="text-[11px] font-normal text-[#7E89AC] ml-1 uppercase">
                             ({PLATFORM_ABBR[user.bestPlatform.toLowerCase()] || user.bestPlatform.slice(0, 2)})
                           </span>
                         </>
@@ -247,10 +247,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     <td className="py-3.5 px-3.5 text-right">
                       <Link
                         href={currentUsername ? `/compare?u1=${encodeURIComponent(currentUsername)}&u2=${encodeURIComponent(user.username)}` : `/compare?u1=${encodeURIComponent(user.username)}`}
-                        className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#0E43FB] hover:text-white"
+                        className="inline-flex items-center gap-1 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-3 py-1.5 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#2563EB] hover:text-white"
                         title="1v1 Compare"
                       >
-                        <Swords className="h-3 w-3 text-[#CB3CFF]" />
+                        <Swords className="h-3 w-3 text-[#8B5CF6]" />
                         <span>Compare</span>
                       </Link>
                     </td>

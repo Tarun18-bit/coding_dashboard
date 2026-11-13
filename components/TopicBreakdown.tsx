@@ -14,7 +14,7 @@ interface TopicBreakdownProps {
 export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
   if (!topics || topics.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-40 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-4 text-center text-xs text-[#7E89AC]">
+      <div className="flex flex-col items-center justify-center h-40 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] p-4 text-center text-xs text-[#7E89AC]">
         No tags recorded yet.
       </div>
     );
@@ -30,14 +30,14 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
           <div key={item.tag} className="space-y-1.5">
             <div className="flex justify-between text-xs font-mono">
               <span className="text-[#AEB9E1] capitalize font-sans font-medium flex items-center gap-1.5">
-                <span className="text-[10px] text-[#7E89AC]">#{idx + 1}</span>
+                <span className="text-[11px] text-[#7E89AC]">#{idx + 1}</span>
                 <span>{item.tag}</span>
               </span>
               <span className="text-white font-semibold font-mono">{item.count}</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-[#0A1330] p-0.5 border border-[rgba(126,137,172,0.1)] overflow-hidden">
+            <div className="h-1.5 w-full rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.1)] overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] transition-all duration-500 shadow-[0_0_8px_rgba(0,194,255,0.4)]"
+                className="h-full rounded-full bg-[#2563EB] transition-all duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>

@@ -123,19 +123,15 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-gradient-to-r from-[#0B1739] via-[#0A1330] to-[#0B1739] p-6 sm:p-7 shadow-xl">
-      <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-gradient-to-br from-[#0E43FB]/15 via-[#00C2FF]/10 to-[#14CA74]/10 blur-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 sm:p-7 shadow-xl">
 
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Left: Avatar & Info */}
         <div className="flex items-start sm:items-center gap-4">
-          <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-[#0E43FB] via-[#00C2FF] to-[#14CA74] p-0.5 shadow-[0_0_25px_rgba(0,194,255,0.35)] flex-shrink-0">
-            <div className="flex h-full w-full items-center justify-center rounded-3xl bg-[#081028] text-2xl font-black text-white font-mono">
+          <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl bg-[#2563EB] p-0.5 flex-shrink-0">
+            <div className="flex h-full w-full items-center justify-center rounded-3xl bg-[#0B1222] text-2xl font-black text-white font-mono">
               {username.slice(0, 2).toUpperCase()}
             </div>
-            <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-xl bg-[#0E43FB] border-2 border-[#081028] text-[10px] font-black text-white">
-              {rpgLevel}
-            </span>
           </div>
 
           <div className="space-y-1.5">
@@ -145,15 +141,15 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               </h2>
 
               {/* Status Badge */}
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#14CA74]/40 bg-[#14CA74]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#14CA74]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#14CA74] animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#14CA74]/40 bg-[#14CA74]/10 px-2.5 py-0.5 text-xs font-bold text-[#14CA74]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#14CA74]" />
                 <span>{saved.status}</span>
               </span>
             </div>
 
-            {/* Title & RPG Level */}
-            <p className="text-xs font-mono font-bold text-[#00C2FF]">
-              Level {rpgLevel} • {rpgTitle}
+            {/* Title & level (kept low-key: the stats below matter more) */}
+            <p className="text-xs font-medium text-[#7E89AC]">
+              {rpgTitle} · level {rpgLevel}
             </p>
 
             {/* Bio */}
@@ -169,7 +165,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
                   maxLength={280}
                   rows={2}
                   placeholder="Your technical bio..."
-                  className="w-full resize-none rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0B1222] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -177,29 +173,29 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     placeholder="Status (e.g. Open to SDE)"
-                    className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                    className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0B1222] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                   />
                   <input
                     type="text"
                     value={githubUser}
                     onChange={(e) => setGithubUser(e.target.value)}
                     placeholder="GitHub username"
-                    className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                    className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0B1222] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                   />
                   <input
                     type="text"
                     value={linkedinUser}
                     onChange={(e) => setLinkedinUser(e.target.value)}
                     placeholder="LinkedIn profile URL or slug"
-                    className="col-span-2 rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#081028] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
+                    className="col-span-2 rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0B1222] px-3 py-1.5 text-xs text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none"
                   />
                 </div>
-                {saveError && <p className="text-[11px] text-[#FF5A65]">{saveError}</p>}
+                {saveError && <p className="text-xs text-[#FF5A65]">{saveError}</p>}
                 <button
                   type="button"
                   onClick={handleDeleteAccount}
                   disabled={saving}
-                  className="text-[11px] font-semibold text-[#FF5A65]/80 hover:text-[#FF5A65] underline underline-offset-2 disabled:opacity-50"
+                  className="text-xs font-semibold text-[#FF5A65]/80 hover:text-[#FF5A65] underline underline-offset-2 disabled:opacity-50"
                 >
                   Delete my account
                 </button>
@@ -215,7 +211,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               href={`https://www.linkedin.com/in/${saved.linkedin}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
               title="LinkedIn Profile"
             >
               <Briefcase className="h-4 w-4" />
@@ -227,7 +223,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               href={`https://github.com/${saved.github}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
               title="GitHub Profile"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -238,7 +234,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
 
           <button
             onClick={handleShare}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] transition hover:border-[#00C2FF] hover:text-white"
             title="Copy Public Profile URL"
           >
             {copied ? <Check className="h-4 w-4 text-[#14CA74]" /> : <Share2 className="h-4 w-4" />}
@@ -248,7 +244,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             <button
               onClick={handleCancel}
               disabled={saving}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] transition hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] transition hover:text-white"
               title="Cancel"
             >
               <X className="h-4 w-4" />
@@ -265,7 +261,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
                 isEditing
                   ? 'border-[#14CA74] bg-[#14CA74]/15 text-[#14CA74]'
-                  : 'border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[#AEB9E1] hover:border-[#00C2FF] hover:text-white'
+                  : 'border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] hover:border-[#00C2FF] hover:text-white'
               }`}
             >
               {isEditing ? (

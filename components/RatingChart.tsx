@@ -34,7 +34,7 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 text-center">
+      <div className="flex flex-col items-center justify-center h-64 rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 text-center">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#082366]/60 text-[#00C2FF] mb-3">
           📈
         </div>
@@ -55,12 +55,12 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
         </div>
 
         {platforms.length > 1 && (
-          <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-1 text-xs">
+          <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] p-1 text-xs">
             <button
               onClick={() => setSelectedPlatform('all')}
               className={`rounded-lg px-3 py-1 text-xs font-semibold transition-all ${
                 selectedPlatform === 'all'
-                  ? 'bg-[#0E43FB] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                  ? 'bg-[#2563EB] text-white'
                   : 'text-[#AEB9E1] hover:text-white'
               }`}
             >
@@ -72,7 +72,7 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
                 onClick={() => setSelectedPlatform(p)}
                 className={`rounded-lg px-3 py-1 text-xs font-semibold capitalize transition-all ${
                   selectedPlatform === p
-                    ? 'bg-[#0E43FB] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                    ? 'bg-[#2563EB] text-white'
                     : 'text-[#AEB9E1] hover:text-white'
                 }`}
               >
@@ -89,8 +89,8 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
             <defs>
               <linearGradient id="dashRatingGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#00C2FF" stopOpacity={0.35} />
-                <stop offset="50%" stopColor="#0E43FB" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#0E43FB" stopOpacity={0} />
+                <stop offset="50%" stopColor="#2563EB" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(126, 137, 172, 0.12)" vertical={false} />
@@ -115,15 +115,15 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
                 if (active && payload && payload.length) {
                   const item = payload[0].payload as RatingPoint;
                   return (
-                    <div className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0B1739]/95 p-3.5 shadow-2xl backdrop-blur-md text-xs space-y-1.5 min-w-[170px]">
+                    <div className="rounded-xl border border-[rgba(126,137,172,0.25)] bg-[#0E1628]/95 p-3.5 shadow-2xl backdrop-blur-md text-xs space-y-1.5 min-w-[170px]">
                       <p className="font-semibold text-white">{item.contestName}</p>
-                      <div className="flex items-center justify-between gap-4 pt-1 text-[11px] border-t border-[rgba(126,137,172,0.15)]">
+                      <div className="flex items-center justify-between gap-4 pt-1 text-xs border-t border-[rgba(126,137,172,0.15)]">
                         <span className="capitalize text-[#7E89AC]">{item.platform}</span>
                         <span className="font-mono font-bold text-[#00C2FF] text-sm">
                           {item.rating} pts
                         </span>
                       </div>
-                      <p className="text-[#AEB9E1] text-[10px] font-mono">{item.date}</p>
+                      <p className="text-[#AEB9E1] text-[11px] font-mono">{item.date}</p>
                     </div>
                   );
                 }
@@ -136,7 +136,7 @@ export const RatingChart: React.FC<RatingChartProps> = ({ data }) => {
               stroke="#00C2FF"
               strokeWidth={2.5}
               fill="url(#dashRatingGradient)"
-              dot={{ r: 3, fill: '#00C2FF', stroke: '#0E43FB', strokeWidth: 1.5 }}
+              dot={{ r: 3, fill: '#00C2FF', stroke: '#2563EB', strokeWidth: 1.5 }}
               activeDot={{ r: 6, fill: '#00C2FF', stroke: '#ffffff', strokeWidth: 2 }}
             />
           </AreaChart>

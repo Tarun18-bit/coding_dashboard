@@ -27,7 +27,7 @@ export function RevisionQueue({ items }: { items: RevisionItem[] }) {
     <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 sm:p-6 shadow-lg">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(148,163,184,0.1)] pb-3">
         <div className="flex items-center gap-2">
-          <RotateCcw className="h-4 w-4 text-[#CB3CFF]" />
+          <RotateCcw className="h-4 w-4 text-[#8B5CF6]" />
           <h2 className="text-sm font-bold uppercase tracking-wider text-white">Revision Queue</h2>
         </div>
         <span className="text-xs font-mono text-[#94A3B8]">Re-solve without looking: spaced repetition beats re-reading</span>
@@ -59,12 +59,12 @@ export function RevisionQueue({ items }: { items: RevisionItem[] }) {
                   <span className="text-sm font-semibold text-white truncate">{item.title}</span>
                 )}
                 {item.difficulty && (
-                  <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-mono font-bold ${difficultyTone(item.difficulty)}`}>
+                  <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[11px] font-mono font-bold ${difficultyTone(item.difficulty)}`}>
                     {item.difficulty}
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono text-[#94A3B8]">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-[#94A3B8]">
                 <span className="uppercase font-bold">{item.platform}</span>
                 <span>·</span>
                 <span>solved {item.daysAgo} days ago</span>
@@ -76,7 +76,7 @@ export function RevisionQueue({ items }: { items: RevisionItem[] }) {
               </div>
               <Link
                 href={`/reviewer?problem=${encodeURIComponent(item.title)}&platform=${encodeURIComponent(item.platform)}`}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00EA64] hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#00EA64] hover:underline"
               >
                 <Bot className="h-3 w-3" /> Review my approach
               </Link>

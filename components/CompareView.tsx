@@ -63,12 +63,12 @@ export const CompareView: React.FC<CompareViewProps> = ({
   return (
     <div className="space-y-8">
       {/* Search & Compare Selector Box */}
-      <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl">
+      <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 shadow-xl">
         <form onSubmit={handleCompare} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] items-center gap-4">
             {/* User 1 Input */}
             <div className="relative">
-              <label htmlFor="compare-p1" className="block text-[11px] font-bold uppercase text-[#00C2FF] mb-1.5">
+              <label htmlFor="compare-p1" className="block text-xs font-bold uppercase text-[#00C2FF] mb-1.5">
                 Player 1 (Left)
               </label>
               <div className="relative flex items-center">
@@ -79,7 +79,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
                   value={input1}
                   onChange={(e) => setInput1(e.target.value)}
                   placeholder="Your Handle / Username"
-                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-4 py-2.5 text-sm font-mono text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none focus:ring-1 focus:ring-[#00C2FF]"
+                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-4 py-2.5 text-sm font-mono text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none focus:ring-1 focus:ring-[#00C2FF]"
                 />
               </div>
             </div>
@@ -89,7 +89,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
               <button
                 type="submit"
                 disabled={isComparing}
-                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0E43FB] to-[#CB3CFF] text-white shadow-[0_0_20px_rgba(203,60,255,0.4)] transition hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2563EB] text-white transition hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Run Head-to-Head Comparison"
                 aria-label="Run head-to-head comparison"
               >
@@ -99,7 +99,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
             {/* User 2 Input */}
             <div className="relative">
-              <label htmlFor="compare-p2" className="block text-[11px] font-bold uppercase text-[#CB3CFF] mb-1.5">
+              <label htmlFor="compare-p2" className="block text-xs font-bold uppercase text-[#8B5CF6] mb-1.5">
                 Player 2 (Right)
               </label>
               <div className="relative flex items-center">
@@ -110,7 +110,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
                   value={input2}
                   onChange={(e) => setInput2(e.target.value)}
                   placeholder="Enter rival username, CF handle, or LC handle"
-                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] px-4 py-2.5 text-sm font-mono text-white placeholder-[#7E89AC] focus:border-[#CB3CFF] focus:outline-none focus:ring-1 focus:ring-[#CB3CFF]"
+                  className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-4 py-2.5 text-sm font-mono text-white placeholder-[#7E89AC] focus:border-[#8B5CF6] focus:outline-none focus:ring-1 focus:ring-[#8B5CF6]"
                 />
               </div>
             </div>
@@ -124,7 +124,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <button
               type="submit"
               disabled={isComparing}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0E43FB] px-5 py-2 font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] transition hover:bg-[#00C2FF] hover:text-[#081028] disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#2563EB] px-5 py-2 font-bold text-white transition hover:bg-[#00C2FF] hover:text-[#081028] disabled:opacity-50 cursor-pointer"
             >
               {isComparing ? (
                 <>
@@ -147,11 +147,10 @@ export const CompareView: React.FC<CompareViewProps> = ({
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Player 1 Card */}
-            <div className="rounded-3xl border border-[#00C2FF]/30 bg-gradient-to-b from-[#0B1739] to-[#0A1330] p-6 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-[#00C2FF]/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="rounded-3xl border border-[#00C2FF]/30 bg-[#0E1628] p-6 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00C2FF] uppercase">
+                  <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-2 py-0.5 text-[11px] font-mono font-bold text-[#00C2FF] uppercase">
                     Player 1
                   </span>
                   <h3 className="text-2xl font-extrabold text-white mt-1.5">
@@ -164,36 +163,35 @@ export const CompareView: React.FC<CompareViewProps> = ({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Total Solved</p>
+                  <p className="text-xs text-[#7E89AC] uppercase font-bold">Total Solved</p>
                   <p className="text-3xl font-extrabold font-mono text-[#00C2FF]">{user1.totalSolved}</p>
                 </div>
               </div>
 
               {/* Player 1 Quick Stats */}
               <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[rgba(126,137,172,0.15)] pt-4 text-center">
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Streak</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Streak</p>
                   <p className="text-base font-bold font-mono text-[#FFB016]">{user1.currentStreak}d</p>
                 </div>
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
                   <p className="text-base font-bold font-mono text-white">
                     {user1.highestRating || 'Unrated'}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
                   <p className="text-base font-bold font-mono text-[#FF5A65]">{user1.difficulty.hard}</p>
                 </div>
               </div>
             </div>
 
             {/* Player 2 Card */}
-            <div className="rounded-3xl border border-[#CB3CFF]/30 bg-gradient-to-b from-[#0B1739] to-[#0A1330] p-6 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 h-32 w-32 bg-[#CB3CFF]/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="rounded-3xl border border-[#8B5CF6]/30 bg-[#0E1628] p-6 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="rounded-md bg-[#CB3CFF]/15 border border-[#CB3CFF]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#CB3CFF] uppercase">
+                  <span className="rounded-md bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 px-2 py-0.5 text-[11px] font-mono font-bold text-[#8B5CF6] uppercase">
                     Player 2
                   </span>
                   <h3 className="text-2xl font-extrabold text-white mt-1.5">
@@ -206,25 +204,25 @@ export const CompareView: React.FC<CompareViewProps> = ({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Total Solved</p>
-                  <p className="text-3xl font-extrabold font-mono text-[#CB3CFF]">{user2.totalSolved}</p>
+                  <p className="text-xs text-[#7E89AC] uppercase font-bold">Total Solved</p>
+                  <p className="text-3xl font-extrabold font-mono text-[#8B5CF6]">{user2.totalSolved}</p>
                 </div>
               </div>
 
               {/* Player 2 Quick Stats */}
               <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[rgba(126,137,172,0.15)] pt-4 text-center">
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Streak</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Streak</p>
                   <p className="text-base font-bold font-mono text-[#FFB016]">{user2.currentStreak}d</p>
                 </div>
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
                   <p className="text-base font-bold font-mono text-white">
                     {user2.highestRating || 'Unrated'}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                  <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
+                <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                  <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
                   <p className="text-base font-bold font-mono text-[#FF5A65]">{user2.difficulty.hard}</p>
                 </div>
               </div>
@@ -232,7 +230,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
           </div>
 
           {/* Head-to-Head Category Faceoff */}
-          <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-7 shadow-xl space-y-6">
+          <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-7 shadow-xl space-y-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#FDB52A]" />
               <span>Head-to-Head Metric Faceoff</span>
@@ -249,24 +247,24 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-bold text-[#00C2FF] flex items-center gap-1.5">
                         {user1.totalSolved} Solved
-                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                       </span>
-                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-[11px]">
+                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-xs">
                         Total Solved Problems
                       </span>
-                      <span className="font-bold text-[#CB3CFF] flex items-center gap-1.5">
-                        {winner === 2 && <span className="rounded bg-[#CB3CFF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                      <span className="font-bold text-[#8B5CF6] flex items-center gap-1.5">
+                        {winner === 2 && <span className="rounded bg-[#8B5CF6]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                         {user2.totalSolved} Solved
                       </span>
                     </div>
-                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#081028] p-0.5 border border-[rgba(126,137,172,0.15)]">
+                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
                       <div
                         style={{ width: `${p1}%` }}
-                        className="h-full rounded-l-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] transition-all duration-500"
+                        className="h-full rounded-l-full bg-[#2563EB] transition-all duration-500"
                       />
                       <div
                         style={{ width: `${p2}%` }}
-                        className="h-full rounded-r-full bg-gradient-to-l from-[#CB3CFF] to-[#9900EF] transition-all duration-500"
+                        className="h-full rounded-r-full bg-[#7C3AED] transition-all duration-500"
                       />
                     </div>
                   </div>
@@ -284,24 +282,24 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-bold text-[#00C2FF] flex items-center gap-1.5">
                         {r1 ? `${r1} Rating` : 'Unrated'}
-                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                       </span>
-                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-[11px]">
+                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-xs">
                         Peak Contest Rating
                       </span>
-                      <span className="font-bold text-[#CB3CFF] flex items-center gap-1.5">
-                        {winner === 2 && <span className="rounded bg-[#CB3CFF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                      <span className="font-bold text-[#8B5CF6] flex items-center gap-1.5">
+                        {winner === 2 && <span className="rounded bg-[#8B5CF6]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                         {r2 ? `${r2} Rating` : 'Unrated'}
                       </span>
                     </div>
-                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#081028] p-0.5 border border-[rgba(126,137,172,0.15)]">
+                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
                       <div
                         style={{ width: `${p1}%` }}
-                        className="h-full rounded-l-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] transition-all duration-500"
+                        className="h-full rounded-l-full bg-[#2563EB] transition-all duration-500"
                       />
                       <div
                         style={{ width: `${p2}%` }}
-                        className="h-full rounded-r-full bg-gradient-to-l from-[#CB3CFF] to-[#9900EF] transition-all duration-500"
+                        className="h-full rounded-r-full bg-[#7C3AED] transition-all duration-500"
                       />
                     </div>
                   </div>
@@ -319,24 +317,24 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-bold text-[#00C2FF] flex items-center gap-1.5">
                         {h1} Hard Solves
-                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                       </span>
-                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-[11px]">
+                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-xs">
                         Hard Difficulty Solves
                       </span>
-                      <span className="font-bold text-[#CB3CFF] flex items-center gap-1.5">
-                        {winner === 2 && <span className="rounded bg-[#CB3CFF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                      <span className="font-bold text-[#8B5CF6] flex items-center gap-1.5">
+                        {winner === 2 && <span className="rounded bg-[#8B5CF6]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                         {h2} Hard Solves
                       </span>
                     </div>
-                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#081028] p-0.5 border border-[rgba(126,137,172,0.15)]">
+                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
                       <div
                         style={{ width: `${p1}%` }}
-                        className="h-full rounded-l-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] transition-all duration-500"
+                        className="h-full rounded-l-full bg-[#2563EB] transition-all duration-500"
                       />
                       <div
                         style={{ width: `${p2}%` }}
-                        className="h-full rounded-r-full bg-gradient-to-l from-[#CB3CFF] to-[#9900EF] transition-all duration-500"
+                        className="h-full rounded-r-full bg-[#7C3AED] transition-all duration-500"
                       />
                     </div>
                   </div>
@@ -354,24 +352,24 @@ export const CompareView: React.FC<CompareViewProps> = ({
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-bold text-[#00C2FF] flex items-center gap-1.5">
                         {s1} Days Streak
-                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                        {winner === 1 && <span className="rounded bg-[#00C2FF]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                       </span>
-                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-[11px]">
+                      <span className="text-[#AEB9E1] font-sans font-bold uppercase tracking-wider text-xs">
                         Longest Daily Streak
                       </span>
-                      <span className="font-bold text-[#CB3CFF] flex items-center gap-1.5">
-                        {winner === 2 && <span className="rounded bg-[#CB3CFF]/20 px-1 py-0.2 text-[10px]">Ahead</span>}
+                      <span className="font-bold text-[#8B5CF6] flex items-center gap-1.5">
+                        {winner === 2 && <span className="rounded bg-[#8B5CF6]/20 px-1 py-0.2 text-[11px]">Ahead</span>}
                         {s2} Days Streak
                       </span>
                     </div>
-                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#081028] p-0.5 border border-[rgba(126,137,172,0.15)]">
+                    <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
                       <div
                         style={{ width: `${p1}%` }}
-                        className="h-full rounded-l-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] transition-all duration-500"
+                        className="h-full rounded-l-full bg-[#2563EB] transition-all duration-500"
                       />
                       <div
                         style={{ width: `${p2}%` }}
-                        className="h-full rounded-r-full bg-gradient-to-l from-[#CB3CFF] to-[#9900EF] transition-all duration-500"
+                        className="h-full rounded-r-full bg-[#7C3AED] transition-all duration-500"
                       />
                     </div>
                   </div>
@@ -382,7 +380,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
           {/* DSA Topic-by-Topic Breakdown Table */}
           {allTopics.length > 0 && (
-            <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-7 shadow-xl space-y-4">
+            <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-7 shadow-xl space-y-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Zap className="h-5 w-5 text-[#00C2FF]" />
                 <span>Topic-by-Topic Domination</span>
@@ -390,7 +388,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[rgba(126,137,172,0.18)] bg-[#0A1330] text-[11px] uppercase text-[#AEB9E1]">
+                  <thead className="border-b border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-xs uppercase text-[#AEB9E1]">
                     <tr>
                       <th className="py-3 px-4 rounded-l-xl">Topic / Pattern</th>
                       <th className="py-3 px-4 text-center">@{user1.username}</th>
@@ -407,25 +405,25 @@ export const CompareView: React.FC<CompareViewProps> = ({
                       const winner = count1 > count2 ? 1 : count1 < count2 ? 2 : 0;
 
                       return (
-                        <tr key={topic} className="hover:bg-[#0A1330]/50 transition">
+                        <tr key={topic} className="hover:bg-[#0B1222]/50 transition">
                           <td className="py-3 px-4 font-semibold text-white">{topic}</td>
                           <td className="py-3 px-4 text-center font-mono font-bold text-[#00C2FF]">
                             {count1}
                           </td>
                           <td className="py-3 px-4 text-center w-48">
-                            <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#081028]">
+                            <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#0B1222]">
                               <div style={{ width: `${p1}%` }} className="h-full bg-[#00C2FF]" />
-                              <div style={{ width: `${p2}%` }} className="h-full bg-[#CB3CFF]" />
+                              <div style={{ width: `${p2}%` }} className="h-full bg-[#8B5CF6]" />
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-center font-mono font-bold text-[#CB3CFF]">
+                          <td className="py-3 px-4 text-center font-mono font-bold text-[#8B5CF6]">
                             {count2}
                           </td>
                           <td className="py-3 px-4 text-right font-mono font-bold">
                             {winner === 1 ? (
                               <span className="text-[#00C2FF]">@{user1.username} (+{count1 - count2})</span>
                             ) : winner === 2 ? (
-                              <span className="text-[#CB3CFF]">@{user2.username} (+{count2 - count1})</span>
+                              <span className="text-[#8B5CF6]">@{user2.username} (+{count2 - count1})</span>
                             ) : (
                               <span className="text-[#7E89AC]">Tied</span>
                             )}
@@ -443,11 +441,10 @@ export const CompareView: React.FC<CompareViewProps> = ({
         /* Player 1 is loaded, awaiting or failed to find Player 2 */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Player 1 Card */}
-          <div className="rounded-3xl border border-[#00C2FF]/30 bg-gradient-to-b from-[#0B1739] to-[#0A1330] p-6 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 h-32 w-32 bg-[#00C2FF]/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="rounded-3xl border border-[#00C2FF]/30 bg-[#0E1628] p-6 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div>
-                <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00C2FF] uppercase">
+                <span className="rounded-md bg-[#00C2FF]/15 border border-[#00C2FF]/30 px-2 py-0.5 text-[11px] font-mono font-bold text-[#00C2FF] uppercase">
                   Player 1 (Active)
                 </span>
                 <h3 className="text-2xl font-extrabold text-white mt-1.5">
@@ -460,32 +457,32 @@ export const CompareView: React.FC<CompareViewProps> = ({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Total Solved</p>
+                <p className="text-xs text-[#7E89AC] uppercase font-bold">Total Solved</p>
                 <p className="text-3xl font-extrabold font-mono text-[#00C2FF]">{user1.totalSolved}</p>
               </div>
             </div>
 
             {/* Quick Stats */}
             <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[rgba(126,137,172,0.15)] pt-4 text-center">
-              <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Streak</p>
+              <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Streak</p>
                 <p className="text-base font-bold font-mono text-[#FFB016]">{user1.currentStreak}d</p>
               </div>
-              <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
+              <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Peak Rating</p>
                 <p className="text-base font-bold font-mono text-white">
                   {user1.highestRating || 'Unrated'}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#081028]/60 p-2.5">
-                <p className="text-[10px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
+              <div className="rounded-xl bg-[#0B1222]/60 p-2.5">
+                <p className="text-[11px] text-[#7E89AC] uppercase font-bold">Hard Solves</p>
                 <p className="text-base font-bold font-mono text-[#FF5A65]">{user1.difficulty.hard}</p>
               </div>
             </div>
           </div>
 
           {/* Player 2 Slot: Awaiting or Not Found */}
-          <div className="rounded-3xl border border-dashed border-[rgba(126,137,172,0.3)] bg-[#0B1739]/50 p-8 flex flex-col items-center justify-center text-center space-y-3">
+          <div className="rounded-3xl border border-dashed border-[rgba(126,137,172,0.3)] bg-[#0E1628]/50 p-8 flex flex-col items-center justify-center text-center space-y-3">
             {u2Query ? (
               <>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400">
@@ -500,7 +497,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
               </>
             ) : (
               <>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#CB3CFF]/10 border border-[#CB3CFF]/30 text-[#CB3CFF]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8B5CF6]/10 border border-[#8B5CF6]/30 text-[#8B5CF6]">
                   <UserPlus className="h-6 w-6" />
                 </div>
                 <h4 className="text-base font-bold text-white">
@@ -515,8 +512,8 @@ export const CompareView: React.FC<CompareViewProps> = ({
         </div>
       ) : (
         /* Neither found */
-        <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-12 text-center space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A1330] border border-[rgba(126,137,172,0.2)] text-[#FF5A65]">
+        <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-12 text-center space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B1222] border border-[rgba(126,137,172,0.2)] text-[#FF5A65]">
             <Swords className="h-7 w-7" />
           </div>
           {u1Query ? (

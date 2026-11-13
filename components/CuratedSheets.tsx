@@ -138,7 +138,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
   return (
     <div className="space-y-6">
       {/* Top Controls & Sheet Tabs */}
-      <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl">
+      <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#00C2FF]/30 bg-[#00C2FF]/10 px-3 py-1 text-xs font-bold text-[#00C2FF] mb-2">
@@ -160,20 +160,20 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
           </div>
 
           {/* Sheet Selector Tabs */}
-          <div className="inline-flex flex-wrap rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-1.5 gap-1.5 text-xs">
+          <div className="inline-flex flex-wrap rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] p-1.5 gap-1.5 text-xs">
             <button
               type="button"
               aria-pressed={activeSheet === 'blind75'}
               onClick={() => setActiveSheet('blind75')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'blind75'
-                  ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                  ? 'bg-[#2563EB] text-white'
                   : 'text-[#AEB9E1] hover:text-white'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span>Blind 75</span>
-              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
+              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[11px] font-mono">
                 {computedSheets.blind75?.solvedProblems}/{computedSheets.blind75?.totalProblems}
               </span>
             </button>
@@ -184,13 +184,13 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
               onClick={() => setActiveSheet('neetcode150')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'neetcode150'
-                  ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                  ? 'bg-[#2563EB] text-white'
                   : 'text-[#AEB9E1] hover:text-white'
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
               <span>NeetCode 150</span>
-              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
+              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[11px] font-mono">
                 {computedSheets.neetcode150?.solvedProblems}/{computedSheets.neetcode150?.totalProblems}
               </span>
             </button>
@@ -201,13 +201,13 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
               onClick={() => setActiveSheet('striver')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'striver'
-                  ? 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white shadow-[0_0_15px_rgba(14,67,251,0.5)]'
+                  ? 'bg-[#2563EB] text-white'
                   : 'text-[#AEB9E1] hover:text-white'
               }`}
             >
               <Award className="h-3.5 w-3.5" />
               <span title="The LeetCode-hosted problems from Striver's SDE sheet">Striver SDE (LeetCode)</span>
-              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
+              <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[11px] font-mono">
                 {computedSheets.striver?.solvedProblems}/{computedSheets.striver?.totalProblems}
               </span>
             </button>
@@ -215,7 +215,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
         </div>
 
         {/* Sheet Overall Progress Metric Bar */}
-        <div className="mt-6 rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#081028]/70 p-5 backdrop-blur-md">
+        <div className="mt-6 rounded-2xl border border-[rgba(126,137,172,0.15)] bg-[#0B1222]/70 p-5 backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div>
               <p className="text-xs uppercase font-bold text-[#7E89AC] tracking-wider">
@@ -243,10 +243,10 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
             </div>
           </div>
 
-          <div className="h-3 w-full overflow-hidden rounded-full bg-[#0A1330] p-0.5 border border-[rgba(126,137,172,0.15)]">
+          <div className="h-3 w-full overflow-hidden rounded-full bg-[#0B1222] p-0.5 border border-[rgba(126,137,172,0.15)]">
             <div
               style={{ width: `${progress.percent}%` }}
-              className="h-full rounded-full bg-gradient-to-r from-[#0E43FB] via-[#00C2FF] to-[#14CA74] shadow-[0_0_12px_rgba(0,194,255,0.6)] transition-all duration-700"
+              className="h-full rounded-full bg-[#2563EB] transition-all duration-700"
             />
           </div>
         </div>
@@ -261,21 +261,21 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search problem name or category..."
-              className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0A1330] pl-10 pr-4 py-2 text-xs font-mono text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none focus:ring-1 focus:ring-[#00C2FF]"
+              className="w-full rounded-xl border border-[rgba(126,137,172,0.2)] bg-[#0B1222] pl-10 pr-4 py-2 text-xs font-mono text-white placeholder-[#7E89AC] focus:border-[#00C2FF] focus:outline-none focus:ring-1 focus:ring-[#00C2FF]"
             />
           </div>
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {/* Difficulty Filter */}
-            <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-1 text-[11px]">
+            <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0B1222] p-1 text-xs">
               {(['All', 'Easy', 'Medium', 'Hard'] as const).map((diff) => (
                 <button
                   key={diff}
                   onClick={() => setDifficultyFilter(diff)}
                   className={`rounded-lg px-2.5 py-1 font-semibold transition ${
                     difficultyFilter === diff
-                      ? 'bg-[#0E43FB] text-white'
+                      ? 'bg-[#2563EB] text-white'
                       : 'text-[#AEB9E1] hover:text-white'
                   }`}
                 >
@@ -285,14 +285,14 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
             </div>
 
             {/* Status Filter */}
-            <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-1 text-[11px]">
+            <div className="inline-flex rounded-xl border border-[rgba(126,137,172,0.16)] bg-[#0B1222] p-1 text-xs">
               {(['All', 'Solved', 'Unsolved'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
                   className={`rounded-lg px-2.5 py-1 font-semibold transition ${
                     statusFilter === st
-                      ? 'bg-[#0E43FB] text-white'
+                      ? 'bg-[#2563EB] text-white'
                       : 'text-[#AEB9E1] hover:text-white'
                   }`}
                 >
@@ -307,7 +307,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
       {/* Categories Problem List */}
       <div className="space-y-4">
         {filteredCategories.length === 0 ? (
-          <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-10 text-center text-sm text-[#AEB9E1]">
+          <div className="rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-10 text-center text-sm text-[#AEB9E1]">
             No problems match your current search and filters.
           </div>
         ) : (
@@ -318,28 +318,28 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
             return (
               <div
                 key={cat.category}
-                className="overflow-hidden rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] shadow-lg"
+                className="overflow-hidden rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] shadow-lg"
               >
                 {/* Category Header */}
                 <button
                   onClick={() => toggleCategory(cat.category)}
-                  className="w-full flex items-center justify-between px-6 py-4 bg-[#0A1330]/80 hover:bg-[#0A1330] transition border-b border-[rgba(126,137,172,0.12)] text-left"
+                  className="w-full flex items-center justify-between px-6 py-4 bg-[#0B1222]/80 hover:bg-[#0B1222] transition border-b border-[rgba(126,137,172,0.12)] text-left"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-sm md:text-base font-bold text-white">
                       {cat.category}
                     </span>
-                    <span className="rounded-full bg-[#081028] border border-[rgba(126,137,172,0.2)] px-2.5 py-0.5 text-[11px] font-mono text-[#00C2FF] font-semibold">
+                    <span className="rounded-full bg-[#0B1222] border border-[rgba(126,137,172,0.2)] px-2.5 py-0.5 text-xs font-mono text-[#00C2FF] font-semibold">
                       {cat.solved} / {cat.total} Done ({catPercent}%)
                     </span>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="w-24 hidden sm:block">
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#081028]">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#0B1222]">
                         <div
                           style={{ width: `${catPercent}%` }}
-                          className="h-full bg-gradient-to-r from-[#0E43FB] to-[#00C2FF]"
+                          className="h-full bg-[#2563EB]"
                         />
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
                           className={`flex items-center justify-between px-6 py-3.5 transition-colors ${
                             problem.isSolved
                               ? 'bg-[#14CA74]/5 hover:bg-[#14CA74]/10'
-                              : 'hover:bg-[#0A1330]/50'
+                              : 'hover:bg-[#0B1222]/50'
                           }`}
                         >
                           <div className="flex items-center gap-3.5">
@@ -379,7 +379,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
                               className="cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none"
                             >
                               {problem.isSolved ? (
-                                <CheckCircle2 className="h-5 w-5 text-[#14CA74] drop-shadow-[0_0_8px_rgba(20,202,116,0.6)]" />
+                                <CheckCircle2 className="h-5 w-5 text-[#14CA74] drop-" />
                               ) : (
                                 <Circle className="h-5 w-5 text-[#7E89AC]/50 hover:text-[#14CA74]" />
                               )}
@@ -401,13 +401,13 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
 
                           <div className="flex items-center gap-2 sm:gap-3">
                             <span
-                              className={`rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${diffColor}`}
+                              className={`rounded-md border px-2 py-0.5 text-[11px] font-mono font-bold uppercase ${diffColor}`}
                             >
                               {problem.difficulty}
                             </span>
                             <Link
                               href={`/reviewer?problem=${encodeURIComponent(problem.title)}&platform=leetcode`}
-                              className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-[#CB3CFF]/25 bg-[#CB3CFF]/10 px-2.5 py-1 text-[11px] font-semibold text-[#CB3CFF] transition hover:border-[#CB3CFF] hover:text-white"
+                              className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-[#8B5CF6]/25 bg-[#8B5CF6]/10 px-2.5 py-1 text-xs font-semibold text-[#8B5CF6] transition hover:border-[#8B5CF6] hover:text-white"
                               title="Inspect Complexity in AI Reviewer"
                             >
                               <Bot className="h-3 w-3" />
@@ -417,7 +417,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
                               href={problem.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1 text-[11px] font-semibold text-[#AEB9E1] transition hover:border-[#0E43FB] hover:text-white"
+                              className="rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-3 py-1 text-xs font-semibold text-[#AEB9E1] transition hover:border-[#2563EB] hover:text-white"
                             >
                               {problem.isSolved ? 'Review' : 'Solve'}
                             </a>

@@ -41,13 +41,13 @@ export const StatCard: React.FC<StatCardProps> = ({
         };
       case 'purple':
         return {
-          iconBg: 'bg-[#CB3CFF]/15 border-[#CB3CFF]/30 text-[#CB3CFF]',
-          badge: 'bg-[#CB3CFF]/15 text-[#CB3CFF] border-[#CB3CFF]/30',
+          iconBg: 'bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#8B5CF6]',
+          badge: 'bg-[#8B5CF6]/15 text-[#8B5CF6] border-[#8B5CF6]/30',
         };
       default:
         return {
-          iconBg: 'bg-[#0E43FB]/15 border-[#0E43FB]/30 text-[#0E43FB]',
-          badge: 'bg-[#0E43FB]/15 text-[#D1DBF9] border-[#0E43FB]/30',
+          iconBg: 'bg-[#2563EB]/15 border-[#2563EB]/30 text-[#2563EB]',
+          badge: 'bg-[#2563EB]/15 text-[#D1DBF9] border-[#2563EB]/30',
         };
     }
   };
@@ -55,9 +55,9 @@ export const StatCard: React.FC<StatCardProps> = ({
   const v = getVariantStyles();
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-5 shadow-lg shadow-[rgba(1,5,17,0.4)] transition-all duration-200 hover:border-[rgba(14,67,251,0.4)] hover:shadow-[0_8px_30px_-4px_rgba(14,67,251,0.25)] hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-5 shadow-lg shadow-[rgba(1,5,17,0.4)] transition-all duration-200 hover:border-[rgba(37,99,235,0.4)] hover:shadow-[0_8px_30px_-4px_rgba(37,99,235,0.25)] hover:-translate-y-0.5">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#AEB9E1]">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#AEB9E1]">
           {title}
         </span>
         {icon && (
@@ -72,7 +72,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           {value}
         </span>
         {badge && (
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${v.badge}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-wide ${v.badge}`}>
             {badge}
           </span>
         )}

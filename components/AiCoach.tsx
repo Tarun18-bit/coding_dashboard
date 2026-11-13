@@ -67,16 +67,17 @@ function ProblemChip({ problem }: { problem: CoachProblem }) {
       target="_blank"
       rel="noopener noreferrer"
       title={`${problem.category} · ${problem.difficulty} · opens on LeetCode`}
-      className="group inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[rgba(126,137,172,0.2)] bg-[#081028] px-2.5 py-1 text-[11px] font-semibold text-[#D1DBF9] transition hover:border-[#00C2FF] hover:text-white"
+      className="group inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[rgba(126,137,172,0.2)] bg-[#0B1222] px-2.5 py-1 text-xs font-semibold text-[#D1DBF9] transition hover:border-[#00C2FF] hover:text-white"
     >
-      <span className={`shrink-0 font-mono text-[9px] font-bold ${DIFFICULTY_STYLE[problem.difficulty]}`}>{problem.difficulty[0]}</span>
+      <span className={`shrink-0 font-mono text-[10px] font-bold ${DIFFICULTY_STYLE[problem.difficulty]}`}>{problem.difficulty[0]}</span>
       <span className="truncate">{problem.title}</span>
       <ExternalLink className="h-3 w-3 shrink-0 text-[#7E89AC] group-hover:text-[#00C2FF]" />
     </a>
   );
 }
 
-export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
+/** The last coach report saved in this browser for this user (null until one exists). */
+export function useStoredCoach(userId: string): StoredCoach | null {
   const storageKey = STORAGE_PREFIX + userId;
   const raw = useSyncExternalStore(
     subscribe,
@@ -97,6 +98,13 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
       return null;
     }
   }, [raw]);
+
+  return stored;
+}
+
+export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
+  const storageKey = STORAGE_PREFIX + userId;
+  const stored = useStoredCoach(userId);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -136,14 +144,14 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
         } catch {
           // storage unavailable: show nothing persisted, but the request still succeeded
         }
-        if (!raw) setPlanOpen(false);
+        if (!stored) setPlanOpen(false);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not build your report. Please try again.');
       } finally {
         setLoading(false);
       }
     },
-    [loading, storageKey, raw]
+    [loading, storageKey, stored]
   );
 
   const report = stored?.report ?? null;
@@ -152,15 +160,15 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
 
   return (
     <section
+      id="ai-coach"
       aria-labelledby="ai-coach-title"
-      className="relative overflow-hidden rounded-2xl border border-[#CB3CFF]/25 bg-gradient-to-br from-[#0E1628] via-[#0B1739] to-[#140F2E] p-5 sm:p-6 shadow-lg"
+      className="relative overflow-hidden rounded-2xl border border-[#8B5CF6]/25 bg-[#0E1628] p-5 sm:p-6 shadow-lg"
     >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[#CB3CFF]/10 blur-3xl" />
 
       {/* Header */}
       <div className="relative flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(148,163,184,0.1)] pb-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#CB3CFF]/30 bg-[#CB3CFF]/15 text-[#CB3CFF]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#8B5CF6]/30 bg-[#8B5CF6]/15 text-[#8B5CF6]">
             <BrainCircuit className="h-5 w-5" />
           </div>
           <div>
@@ -168,9 +176,6 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
               <h2 id="ai-coach-title" className="text-base font-bold tracking-tight text-white">
                 AI Coach: Your Weak Spots
               </h2>
-              <span className="rounded-full border border-[#CB3CFF]/30 bg-[#CB3CFF]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#CB3CFF]">
-                GEMINI
-              </span>
             </div>
             <p className="mt-0.5 text-xs text-[#94A3B8]">
               Reads your synced stats, finds where you&apos;re weakest, and builds a 7-day plan from problems you haven&apos;t solved.
@@ -183,7 +188,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
             type="button"
             onClick={() => void analyse(!!report)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#CB3CFF] px-4 py-2 text-xs font-bold text-white shadow-[0_0_18px_rgba(203,60,255,0.35)] transition hover:opacity-95 disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#7C3AED] px-4 py-2 text-xs font-bold text-white transition hover:opacity-95 disabled:opacity-60"
           >
             {loading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             <span>{loading ? 'Analysing...' : report ? 'Refresh analysis' : 'Find my weak spots'}</span>
@@ -199,8 +204,8 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
         )}
 
         {loading && (
-          <div role="status" className="space-y-3 rounded-xl border border-[#CB3CFF]/20 bg-[#081028]/60 p-4">
-            <p className="flex items-center gap-2 text-xs font-mono text-[#CB3CFF]">
+          <div role="status" className="space-y-3 rounded-xl border border-[#8B5CF6]/20 bg-[#0B1222]/60 p-4">
+            <p className="flex items-center gap-2 text-xs font-mono text-[#8B5CF6]">
               <BrainCircuit className="h-3.5 w-3.5 animate-pulse" />
               <span>{step}</span>
               <span className="ml-auto text-[#7E89AC]">{elapsed}s</span>
@@ -210,7 +215,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
               <div className="h-3 w-1/2 animate-pulse rounded bg-[#1A2747]" />
               <div className="h-16 animate-pulse rounded-xl bg-[#131E35]" />
             </div>
-            <p className="text-[10px] text-[#7E89AC]">Usually 10-20 seconds on Gemini&apos;s free tier.</p>
+            <p className="text-[11px] text-[#7E89AC]">Usually 10-20 seconds on Gemini&apos;s free tier.</p>
           </div>
         )}
 
@@ -228,9 +233,9 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
               ['Exactly what to do', 'Why each gap matters in interviews, and how to close it.'],
               ['A 7-day plan', 'Real problems you haven’t solved yet, easiest first.'],
             ].map(([title, text]) => (
-              <li key={title} className="rounded-xl border border-[rgba(148,163,184,0.12)] bg-[#081028]/50 p-3">
+              <li key={title} className="rounded-xl border border-[rgba(148,163,184,0.12)] bg-[#0B1222]/50 p-3">
                 <p className="font-bold text-white">{title}</p>
-                <p className="mt-0.5 text-[11px] text-[#7E89AC]">{text}</p>
+                <p className="mt-0.5 text-xs text-[#7E89AC]">{text}</p>
               </li>
             ))}
           </ul>
@@ -239,7 +244,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
         {report && !loading && (
           <>
             {(report.source === 'estimate' || stored?.notice) && (
-              <p className="flex items-start gap-2 rounded-xl border border-[#FDB52A]/30 bg-[#FDB52A]/10 px-3 py-2 text-[11px] text-[#FDB52A]">
+              <p className="flex items-start gap-2 rounded-xl border border-[#FDB52A]/30 bg-[#FDB52A]/10 px-3 py-2 text-xs text-[#FDB52A]">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>{stored?.notice || 'Quick rule-based analysis (not AI). Refresh for a Gemini report.'}</span>
               </p>
@@ -249,7 +254,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
               <p className="text-sm font-bold text-white">{report.headline}</p>
               {report.summary && <p className="mt-1 text-xs leading-relaxed text-[#AEB9E1]">{report.summary}</p>}
               {solvedSince > 0 && (
-                <p className="mt-2 text-[11px] text-[#00C2FF]">
+                <p className="mt-2 text-xs text-[#00C2FF]">
                   You&apos;ve solved {solvedSince} more problem{solvedSince === 1 ? '' : 's'} since this report. Refresh for an updated analysis.
                 </p>
               )}
@@ -258,28 +263,28 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
             {/* Weaknesses */}
             <div className="grid gap-3 md:grid-cols-2">
               {report.weaknesses.map((w, i) => (
-                <article key={`${w.area}-${i}`} className="space-y-2.5 rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#081028]/70 p-4">
+                <article key={`${w.area}-${i}`} className="space-y-2.5 rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#0B1222]/70 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="flex items-center gap-1.5 text-sm font-bold text-white">
-                      <Target className="h-4 w-4 shrink-0 text-[#CB3CFF]" />
+                      <Target className="h-4 w-4 shrink-0 text-[#8B5CF6]" />
                       <span>{w.area}</span>
                     </h3>
-                    <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${SEVERITY_STYLE[w.severity]}`}>
+                    <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-mono font-bold ${SEVERITY_STYLE[w.severity]}`}>
                       {w.severity.toUpperCase()}
                     </span>
                   </div>
-                  <p className="flex items-start gap-1.5 rounded-lg bg-[#0B1739] px-2.5 py-1.5 text-[11px] font-mono text-[#D1DBF9]">
+                  <p className="flex items-start gap-1.5 rounded-lg bg-[#0E1628] px-2.5 py-1.5 text-xs font-mono text-[#D1DBF9]">
                     <BarChart3 className="mt-0.5 h-3 w-3 shrink-0 text-[#00C2FF]" />
                     <span>{w.evidence}</span>
                   </p>
                   {w.impact && (
-                    <p className="text-[11px] text-[#AEB9E1]">
+                    <p className="text-xs text-[#AEB9E1]">
                       <span className="font-semibold text-white">Why it matters: </span>
                       {w.impact}
                     </p>
                   )}
                   {w.fix && (
-                    <p className="flex items-start gap-1.5 text-[11px] text-[#AEB9E1]">
+                    <p className="flex items-start gap-1.5 text-xs text-[#AEB9E1]">
                       <Lightbulb className="mt-0.5 h-3 w-3 shrink-0 text-[#FDB52A]" />
                       <span>{w.fix}</span>
                     </p>
@@ -303,7 +308,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
                     <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#14CA74]">What&apos;s working</h3>
                     <ul className="space-y-1.5">
                       {report.strengths.map((s) => (
-                        <li key={s} className="flex items-start gap-1.5 text-[11px] text-[#D1DBF9]">
+                        <li key={s} className="flex items-start gap-1.5 text-xs text-[#D1DBF9]">
                           <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-[#14CA74]" />
                           <span>{s}</span>
                         </li>
@@ -316,7 +321,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
                     <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#00C2FF]">Habits</h3>
                     <ul className="space-y-2">
                       {report.habits.map((h) => (
-                        <li key={h.observation} className="text-[11px]">
+                        <li key={h.observation} className="text-xs">
                           <p className="text-[#D1DBF9]">{h.observation}</p>
                           <p className="text-[#7E89AC]">→ {h.suggestion}</p>
                         </li>
@@ -329,7 +334,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
 
             {/* 7-day plan */}
             {report.plan.length > 0 && (
-              <div className="rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#081028]/50">
+              <div className="rounded-xl border border-[rgba(148,163,184,0.14)] bg-[#0B1222]/50">
                 <button
                   type="button"
                   aria-expanded={planOpen}
@@ -337,7 +342,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
                   className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-xs font-bold text-white"
                 >
                   <span className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-[#CB3CFF]" />
+                    <CalendarDays className="h-4 w-4 text-[#8B5CF6]" />
                     Your 7-day plan
                   </span>
                   <ChevronDown className={`h-4 w-4 text-[#7E89AC] transition-transform ${planOpen ? 'rotate-180' : ''}`} />
@@ -346,9 +351,9 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
                   <ol className="space-y-2 border-t border-[rgba(148,163,184,0.1)] px-4 py-3">
                     {report.plan.map((d) => (
                       <li key={d.day} className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
-                        <span className="w-14 shrink-0 font-mono text-[11px] font-bold text-[#CB3CFF]">{d.day}</span>
+                        <span className="w-14 shrink-0 font-mono text-xs font-bold text-[#8B5CF6]">{d.day}</span>
                         <div className="min-w-0 flex-1 space-y-1.5">
-                          <p className="text-[11px] text-[#D1DBF9]">{d.focus}</p>
+                          <p className="text-xs text-[#D1DBF9]">{d.focus}</p>
                           {d.problems.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                               {d.problems.map((p) => (
@@ -364,7 +369,7 @@ export function AiCoach({ userId, totalSolved, hasAccounts }: AiCoachProps) {
               </div>
             )}
 
-            <p className="text-[10px] text-[#64748B]">
+            <p className="text-[11px] text-[#64748B]">
               {report.source === 'ai' ? 'Written by Google Gemini from your synced stats. AI can be wrong; trust the numbers.' : 'Rule-based estimate.'}{' '}
               Based on {report.basedOn.totalSolved} solved problems · <LocalTime iso={report.generatedAt} mode="datetime" />
             </p>

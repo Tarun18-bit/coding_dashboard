@@ -68,7 +68,7 @@ function EmptyState({
         <p className="text-[#94A3B8] mt-1.5 text-xs max-w-md">{message}</p>
         <Link
           href={currentUser ? '/dashboard' : '/leaderboard'}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-4 py-2 text-xs font-bold text-[#090D1A] shadow-[0_0_15px_rgba(0,234,100,0.3)] hover:bg-[#00C853] transition"
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-4 py-2 text-xs font-bold text-[#090D1A] hover:bg-[#00C853] transition"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> {currentUser ? 'Back to Dashboard' : 'View Leaderboard'}
         </Link>
@@ -194,7 +194,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                   {platformLabel} Deep-Dive Analytics
                 </h1>
                 {latestSnap?.rating ? (
-                  <span className="rounded-md border border-[#00EA64]/30 bg-[#00EA64]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#00EA64]">
+                  <span className="rounded-md border border-[#00EA64]/30 bg-[#00EA64]/10 px-2 py-0.5 text-[11px] font-mono font-bold text-[#00EA64]">
                     Rating: {latestSnap.rating}
                   </span>
                 ) : null}
@@ -224,23 +224,23 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
         {/* Summary Metric Cards */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 shadow-lg">
-            <p className="text-[11px] uppercase tracking-wider text-[#94A3B8] font-bold">Total Solved</p>
+            <p className="text-xs uppercase tracking-wider text-[#94A3B8] font-bold">Total Solved</p>
             <p className="mt-2 text-3xl font-bold text-white font-mono">{latestSnap?.solved_total || 0}</p>
           </div>
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 shadow-lg">
-            <p className="text-[11px] uppercase tracking-wider text-[#14CA74] font-bold">Easy</p>
+            <p className="text-xs uppercase tracking-wider text-[#14CA74] font-bold">Easy</p>
             <p className="mt-2 text-3xl font-bold text-[#14CA74] font-mono">{latestSnap?.easy || 0}</p>
           </div>
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 shadow-lg">
-            <p className="text-[11px] uppercase tracking-wider text-[#FDB52A] font-bold">Medium</p>
+            <p className="text-xs uppercase tracking-wider text-[#FDB52A] font-bold">Medium</p>
             <p className="mt-2 text-3xl font-bold text-[#FDB52A] font-mono">{latestSnap?.medium || 0}</p>
           </div>
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 shadow-lg">
-            <p className="text-[11px] uppercase tracking-wider text-[#FF5A65] font-bold">Hard</p>
+            <p className="text-xs uppercase tracking-wider text-[#FF5A65] font-bold">Hard</p>
             <p className="mt-2 text-3xl font-bold text-[#FF5A65] font-mono">{latestSnap?.hard || 0}</p>
           </div>
           <div className="col-span-2 sm:col-span-1 rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 shadow-lg">
-            <p className="text-[11px] uppercase tracking-wider text-[#00C2FF] font-bold flex items-center gap-1">
+            <p className="text-xs uppercase tracking-wider text-[#00C2FF] font-bold flex items-center gap-1">
               <Trophy className="h-3.5 w-3.5" /> Peak Rating
             </p>
             <p className="mt-2 text-3xl font-bold text-[#00C2FF] font-mono">
@@ -268,7 +268,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-[rgba(148,163,184,0.14)] bg-[#090D1A] text-[11px] uppercase tracking-wider text-[#94A3B8]">
+                <thead className="border-b border-[rgba(148,163,184,0.14)] bg-[#090D1A] text-xs uppercase tracking-wider text-[#94A3B8]">
                   <tr>
                     <th className="py-3 px-3.5 rounded-l-xl">Problem</th>
                     <th className="py-3 px-3.5">Verdict</th>
@@ -294,7 +294,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                         </td>
                         <td className="py-3 px-3.5">
                           <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-mono font-bold ${
+                            className={`rounded-full px-2.5 py-0.5 text-[11px] font-mono font-bold ${
                               isAc
                                 ? 'bg-[#14CA74]/15 text-[#14CA74] border border-[#14CA74]/30'
                                 : 'bg-[#FF5A65]/15 text-[#FF5A65] border border-[#FF5A65]/30'
@@ -307,7 +307,7 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                           {(s.tags || []).slice(0, 3).map((tag: string, i: number) => (
                             <span
                               key={i}
-                              className="mr-1.5 inline-block rounded-md bg-[#090D1A] border border-[rgba(148,163,184,0.15)] px-1.5 py-0.5 text-[10px] font-mono text-[#94A3B8]"
+                              className="mr-1.5 inline-block rounded-md bg-[#090D1A] border border-[rgba(148,163,184,0.15)] px-1.5 py-0.5 text-[11px] font-mono text-[#94A3B8]"
                             >
                               #{tag}
                             </span>
@@ -316,13 +316,13 @@ export default async function PlatformDetailPage({ params, searchParams }: Platf
                         <td className="py-3 px-3.5 text-center">
                           <Link
                             href={`/reviewer?problem=${encodeURIComponent(s.title)}&platform=${encodeURIComponent(account.platform)}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-[#CB3CFF]/30 bg-[#CB3CFF]/10 px-2 py-0.5 text-[10px] font-mono font-bold text-[#CB3CFF] hover:bg-[#CB3CFF] hover:text-white transition"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 px-2 py-0.5 text-[11px] font-mono font-bold text-[#8B5CF6] hover:bg-[#8B5CF6] hover:text-white transition"
                           >
                             <Bot className="h-3 w-3" />
                             <span>Inspect</span>
                           </Link>
                         </td>
-                        <td className="py-3 px-3.5 text-right font-mono text-[11px] text-[#64748B]">
+                        <td className="py-3 px-3.5 text-right font-mono text-xs text-[#64748B]">
                           <LocalTime iso={s.submitted_at} />
                         </td>
                       </tr>

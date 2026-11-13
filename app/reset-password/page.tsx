@@ -148,21 +148,19 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-[#090D1A] text-white flex flex-col justify-center items-center px-4 py-12 selection:bg-[#00EA64] selection:text-[#090D1A] relative overflow-hidden">
       {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#00EA64]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[250px] bg-[#0E43FB]/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md space-y-6 relative z-10">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] font-black shadow-[0_0_20px_rgba(0,234,100,0.4)] transition group-hover:scale-105">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] font-black transition group-hover:scale-105">
               <Terminal className="h-5 w-5" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-black tracking-tight text-white group-hover:text-[#00EA64] transition-colors">
                 DashCode
               </span>
-              <span className="rounded bg-[#00EA64]/10 border border-[#00EA64]/30 px-1 py-0.2 text-[9px] font-mono font-bold text-[#00EA64]">
+              <span className="rounded bg-[#00EA64]/10 border border-[#00EA64]/30 px-1 py-0.2 text-[10px] font-mono font-bold text-[#00EA64]">
                 SECURITY
               </span>
             </div>
@@ -185,12 +183,12 @@ export default function ResetPasswordPage() {
               </span>
             </div>
             {initializing ? (
-              <span className="flex items-center gap-1.5 text-[10px] text-[#7E89AC] font-mono">
+              <span className="flex items-center gap-1.5 text-[11px] text-[#7E89AC] font-mono">
                 <Loader2 className="h-3 w-3 animate-spin text-[#00EA64]" />
                 Verifying...
               </span>
             ) : hasSession ? (
-              <span className="flex items-center gap-1 text-[10px] text-[#00EA64] font-mono font-bold">
+              <span className="flex items-center gap-1 text-[11px] text-[#00EA64] font-mono font-bold">
                 <CheckCircle2 className="h-3 w-3" />
                 Session Active
               </span>
@@ -218,7 +216,7 @@ export default function ResetPasswordPage() {
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>Recovery Link Notice</span>
               </div>
-              <p className="text-[11px] text-[#AEB9E1] leading-relaxed">
+              <p className="text-xs text-[#AEB9E1] leading-relaxed">
                 If you arrived here directly without clicking the email link, or if the single-use token expired, please request a fresh reset link from the login page.
               </p>
               <div className="pt-1">
@@ -234,7 +232,7 @@ export default function ResetPasswordPage() {
 
           <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">
                 New Password
               </label>
               <div className="relative">
@@ -251,7 +249,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8]">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -270,7 +268,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#00EA64] py-2.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] active:scale-98 disabled:opacity-50 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#00EA64] py-2.5 text-xs font-bold text-[#090D1A] transition hover:bg-[#00C853] active:scale-98 disabled:opacity-50 cursor-pointer"
             >
               <span>{loading ? 'Updating Password...' : 'Save & Update Password'}</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -279,7 +277,7 @@ export default function ResetPasswordPage() {
 
           {/* Security Note */}
           <div className="pt-2 text-center">
-            <span className="inline-flex items-center gap-1.5 text-[10px] text-[#64748B] font-mono">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-[#64748B] font-mono">
               <ShieldCheck className="h-3 w-3 text-[#00EA64]" />
               End-to-end encrypted with Supabase Auth
             </span>

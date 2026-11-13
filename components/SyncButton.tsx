@@ -113,7 +113,7 @@ export const SyncButton: React.FC<SyncButtonProps> = ({ lastSyncedAt }) => {
         disabled={loading}
         title={status === 'error' ? message : 'Fetch your latest stats from every linked platform'}
         aria-label={loading ? 'Syncing your stats' : 'Sync your stats'}
-        className={`inline-flex items-center gap-2 rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-2.5 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(14,67,251,0.4)] transition-all duration-150 hover:bg-[#0B34C7] hover:shadow-[0_0_25px_rgba(14,67,251,0.6)] active:scale-98 ${
+        className={`inline-flex items-center gap-2 rounded-xl border border-[rgba(37,99,235,0.5)] bg-[#2563EB] px-2.5 sm:px-3.5 py-1.5 text-xs font-bold text-white transition-all duration-150 hover:bg-[#1D4ED8] active:scale-98 ${
           loading ? 'cursor-not-allowed opacity-70' : ''
         }`}
       >

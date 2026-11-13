@@ -57,19 +57,18 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
   const isStreakProtected = initialWorkout.streakProtected;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl space-y-6">
+    <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0E1628] p-6 shadow-xl space-y-6">
       {/* Background ambient glow */}
-      <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-[#FFB016]/10 blur-3xl pointer-events-none" />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(126,137,172,0.14)] pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFB016]/40 bg-[#FFB016]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#FFB016]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFB016]/40 bg-[#FFB016]/10 px-2.5 py-0.5 text-xs font-bold text-[#FFB016]">
               <Flame className="h-3 w-3" />
               <span>POTD &amp; Daily Workout</span>
             </span>
-            <span className="rounded-md border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-2 py-0.5 text-[10px] font-mono text-[#AEB9E1]">
+            <span className="rounded-md border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-2 py-0.5 text-[11px] font-mono text-[#AEB9E1]">
               Focus: {initialWorkout.todayTargetTopic}
             </span>
           </div>
@@ -99,7 +98,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
 
           <div
             title="Time left in today's streak day (resets at 00:00 UTC)"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-mono text-[#AEB9E1]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0B1222] px-3 py-1.5 text-xs font-mono text-[#AEB9E1]"
           >
             <Clock className="h-3.5 w-3.5 text-[#00C2FF]" />
             <span>{timeLeft || 'Calculating...'}</span>
@@ -124,16 +123,16 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
               key={problem.id}
               className={`group relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 ${
                 problem.isSolved
-                  ? 'border-[#14CA74]/40 bg-gradient-to-b from-[#0B1739] to-[#0A1330] shadow-[0_0_20px_rgba(20,202,116,0.15)]'
-                  : 'border-[rgba(126,137,172,0.18)] bg-[#0A1330] hover:border-[#0E43FB]/60'
+                  ? 'border-[#14CA74]/40 bg-[#0E1628]'
+                  : 'border-[rgba(126,137,172,0.18)] bg-[#0B1222] hover:border-[#2563EB]/60'
               }`}
             >
               {/* Card Header */}
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7E89AC]">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#7E89AC]">
                   {problem.tier}
                 </span>
-                <span className={`rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${tierColor}`}>
+                <span className={`rounded-md border px-2 py-0.5 text-[11px] font-mono font-bold uppercase ${tierColor}`}>
                   {problem.difficulty} • ~{problem.estimatedMinutes}m
                 </span>
               </div>
@@ -163,7 +162,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
                 >
                   {problem.isSolved ? (
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#14CA74]">
-                      <CheckCircle2 className="h-4 w-4 drop-shadow-[0_0_8px_rgba(20,202,116,0.8)]" />
+                      <CheckCircle2 className="h-4 w-4 drop-" />
                       <span>Completed</span>
                     </span>
                   ) : (
@@ -180,8 +179,8 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
                   rel="noreferrer"
                   className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition shadow-sm ${
                     problem.isSolved
-                      ? 'border border-[rgba(126,137,172,0.18)] bg-[#081028] text-[#AEB9E1] hover:text-white'
-                      : 'bg-gradient-to-r from-[#0E43FB] to-[#00C2FF] text-white hover:scale-105 shadow-[0_0_12px_rgba(14,67,251,0.4)]'
+                      ? 'border border-[rgba(126,137,172,0.18)] bg-[#0B1222] text-[#AEB9E1] hover:text-white'
+                      : 'bg-[#2563EB] text-white hover:scale-105'
                   }`}
                 >
                   <span>{problem.isSolved ? 'Revisit' : 'Solve Now'}</span>
@@ -194,14 +193,14 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, 
       </div>
 
       {/* Progress Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(126,137,172,0.14)] bg-[#081028]/60 p-4 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[rgba(126,137,172,0.14)] bg-[#0B1222]/60 p-4 text-xs">
         <div className="flex items-center gap-2">
           <Trophy className="h-4 w-4 text-[#FDB52A]" />
           <span className="text-[#AEB9E1]">
             Daily Workout Progress: <strong className="text-white font-mono">{solvedCount} / 3</strong> completed
           </span>
         </div>
-        <p className="text-[11px] text-[#7E89AC]">
+        <p className="text-xs text-[#7E89AC]">
           Solving any 1 problem today (UTC) keeps your streak going.
         </p>
       </div>

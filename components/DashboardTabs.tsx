@@ -44,6 +44,7 @@ import type { UpcomingContest } from '@/lib/contests-calendar';
 
 import { RevisionQueue } from '@/components/RevisionQueue';
 import { AiCoach } from '@/components/AiCoach';
+import { TodayPanel } from '@/components/TodayPanel';
 import { LocalTime } from '@/components/LocalTime';
 
 // Code-split heavy Recharts library so initial dashboard render is ultra-fast
@@ -101,38 +102,25 @@ export function DashboardTabs({
   }, []);
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard, badge: `${stats.totalSolved} solved` },
-    { id: 'practice', label: 'Practice & Roadmaps', icon: BookOpen, badge: 'POTD Ready' },
-    { id: 'interview', label: 'Interview Prep', icon: Briefcase, badge: 'FAANG' },
-    { id: 'rpg', label: 'Skills & Achievements', icon: Trophy, badge: `Lvl ${rpgProfile.level}` },
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'practice', label: 'Practice & Roadmaps', icon: BookOpen },
+    { id: 'interview', label: 'Interview Prep', icon: Briefcase },
+    { id: 'rpg', label: 'Achievements', icon: Trophy },
   ] as const;
 
   return (
     <div className="space-y-6">
-      {/* HackerRank-style Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.15)] bg-gradient-to-r from-[#0E1628] via-[#101B33] to-[#0E1628] p-5 sm:p-6 shadow-xl">
-        <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-gradient-to-br from-[#00EA64]/10 to-[#0E43FB]/10 blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#E2E8F0] to-[#00EA64]">{activeUsername}</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl">
-              {rpgProfile.title} • Level {rpgProfile.level} • {stats.totalSolved} verified solutions synced across {stats.accounts.length} platforms.
+      {/* Header + "Today": what to do right now comes first */}
+      <div className="rounded-2xl border border-[rgba(148,163,184,0.12)] bg-[#0E1628] p-5 sm:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Welcome back, {activeUsername}</h1>
+            <p className="mt-1 text-sm text-[#94A3B8]">
+              {stats.totalSolved} problems solved across {stats.accounts.length} platform{stats.accounts.length === 1 ? '' : 's'}
+              {stats.streaks.longestStreak > 0 ? ` · best streak ${stats.streaks.longestStreak} days` : ''}
             </p>
           </div>
-
-          {/* Quick Action Pill Banner */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-2 rounded-xl border border-[rgba(148,163,184,0.15)] bg-[#090D1A]/80 px-3.5 py-2">
-              <Flame className="h-4 w-4 text-[#FFB016] animate-pulse" />
-              <div>
-                <p className="text-[10px] uppercase font-mono text-[#64748B] font-bold">Daily Streak</p>
-                <p className="text-sm font-mono font-bold text-white">{stats.streaks.currentStreak} Days</p>
-              </div>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-2">
             <ExportResumeModal
               username={activeUsername}
               totalSolved={stats.totalSolved}
@@ -145,17 +133,17 @@ export function DashboardTabs({
               rpgLevel={rpgProfile?.level}
               buttonVariant="hero"
             />
-
             <BadgeModal username={activeUsername} buttonVariant="hero" />
-
-            <button
-              onClick={() => setActiveTab('practice')}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-4 py-2.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] hover:scale-[1.02] cursor-pointer"
-            >
-              <Zap className="h-4 w-4" />
-              <span>Daily Workout</span>
-            </button>
           </div>
+        </div>
+
+        <div className="mt-5">
+          <TodayPanel
+            userId={stats.user.id}
+            currentStreak={stats.streaks.currentStreak}
+            workout={dailyWorkout}
+            onOpenPractice={() => setActiveTab('practice')} onOpenOverview={() => setActiveTab('overview')}
+          />
         </div>
       </div>
 
@@ -167,22 +155,17 @@ export function DashboardTabs({
           return (
             <button
               key={tab.id}
+              type="button"
+              aria-pressed={isActive}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-[#00EA64]/10 text-[#00EA64] border border-[#00EA64]/30 shadow-[0_0_15px_rgba(0,234,100,0.15)]'
+                  ? 'bg-[#00EA64]/10 text-[#00EA64] border border-[#00EA64]/30'
                   : 'text-[#94A3B8] hover:text-white hover:bg-[#131E35]/60 border border-transparent'
               }`}
             >
               <Icon className={`h-4 w-4 ${isActive ? 'text-[#00EA64]' : 'text-[#64748B]'}`} />
               <span>{tab.label}</span>
-              {tab.badge && (
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
-                  isActive ? 'bg-[#00EA64]/20 text-[#00EA64]' : 'bg-[#1E293B] text-[#94A3B8]'
-                }`}>
-                  {tab.badge}
-                </span>
-              )}
             </button>
           );
         })}
@@ -247,9 +230,6 @@ export function DashboardTabs({
                   Connected Coding Platforms
                 </h2>
               </div>
-              <span className="rounded-md bg-[#00EA64]/10 border border-[#00EA64]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#00EA64]">
-                {stats.accounts.length} ONLINE
-              </span>
             </div>
 
             {stats.accounts.length === 0 ? (
@@ -349,7 +329,7 @@ export function DashboardTabs({
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[rgba(148,163,184,0.12)] bg-[#090D1A] text-[10px] uppercase font-mono tracking-wider text-[#94A3B8]">
+                  <thead className="border-b border-[rgba(148,163,184,0.12)] bg-[#090D1A] text-[11px] uppercase font-mono tracking-wider text-[#94A3B8]">
                     <tr>
                       <th className="py-3 px-4 rounded-l-lg">Platform</th>
                       <th className="py-3 px-4">Challenge</th>
@@ -363,7 +343,7 @@ export function DashboardTabs({
                     {stats.recentSubmissions.slice(0, 6).map((sub) => (
                       <tr key={sub.id} className="hover:bg-[#131E35]/50 transition-colors">
                         <td className="py-3 px-4">
-                          <span className="font-mono text-[10px] font-bold text-[#94A3B8] uppercase">
+                          <span className="font-mono text-[11px] font-bold text-[#94A3B8] uppercase">
                             {sub.platform}
                           </span>
                         </td>
@@ -378,7 +358,7 @@ export function DashboardTabs({
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`rounded px-2.5 py-0.5 text-[10px] font-mono font-bold ${
+                            className={`rounded px-2.5 py-0.5 text-[11px] font-mono font-bold ${
                               sub.verdict === 'AC'
                                 ? 'bg-[#00EA64]/15 text-[#00EA64] border border-[#00EA64]/30'
                                 : 'bg-[#FF5A65]/15 text-[#FF5A65] border border-[#FF5A65]/30'
@@ -389,18 +369,18 @@ export function DashboardTabs({
                         </td>
                         <td className="py-3 px-4 text-[#94A3B8]">
                           {sub.tags?.slice(0, 2).map((t: string, i: number) => (
-                            <span key={i} className="mr-1.5 rounded bg-[#131E35] border border-[rgba(148,163,184,0.12)] px-1.5 py-0.5 text-[10px] font-mono text-[#94A3B8]">
+                            <span key={i} className="mr-1.5 rounded bg-[#131E35] border border-[rgba(148,163,184,0.12)] px-1.5 py-0.5 text-[11px] font-mono text-[#94A3B8]">
                               #{t}
                             </span>
                           ))}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-[11px] text-[#64748B]">
+                        <td className="py-3 px-4 text-right font-mono text-xs text-[#64748B]">
                           <LocalTime iso={sub.submittedAt} />
                         </td>
                         <td className="py-3 px-4 text-right">
                           <Link
                             href={`/reviewer?problem=${encodeURIComponent(sub.title)}&platform=${encodeURIComponent(sub.platform)}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00EA64] hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#00EA64] hover:underline"
                           >
                             <Bot className="h-3 w-3" />
                             <span>Inspect</span>
@@ -441,7 +421,7 @@ export function DashboardTabs({
           {stats.accounts.length > 0 && <RevisionQueue items={stats.revisionQueue || []} />}
 
           {/* Curated Roadmaps Kit Banner */}
-          <div className="relative overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.15)] bg-gradient-to-r from-[#0E1628] via-[#101B33] to-[#0E1628] p-6 shadow-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.15)] bg-[#0E1628] p-6 shadow-xl">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2 max-w-xl">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#00EA64]/30 bg-[#00EA64]/10 px-3 py-1 text-xs font-bold text-[#00EA64]">
@@ -459,18 +439,18 @@ export function DashboardTabs({
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {sheetProgress && (
                   <div className="rounded-xl border border-[rgba(148,163,184,0.15)] bg-[#090D1A] px-5 py-3 text-center min-w-[140px]">
-                    <p className="text-[10px] font-bold text-[#64748B] uppercase">Blind 75 Progress</p>
+                    <p className="text-[11px] font-bold text-[#64748B] uppercase">Blind 75 Progress</p>
                     <p className="text-2xl font-black font-mono text-[#00EA64]">
                       {sheetProgress.percent}%
                     </p>
-                    <p className="text-[11px] font-mono text-[#94A3B8]">
+                    <p className="text-xs font-mono text-[#94A3B8]">
                       {sheetProgress.solvedProblems} / {sheetProgress.totalProblems} Solved
                     </p>
                   </div>
                 )}
                 <Link
                   href="/sheets"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-6 py-3.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(0,234,100,0.3)] transition hover:bg-[#00C853] hover:scale-105"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00EA64] px-6 py-3.5 text-xs font-bold text-[#090D1A] transition hover:bg-[#00C853] hover:scale-105"
                 >
                   <BookOpen className="h-4 w-4" />
                   <span>Explore Roadmaps</span>
@@ -510,12 +490,9 @@ export function DashboardTabs({
       {activeTab === 'interview' && (
         <div className="space-y-6">
           {/* Quick Mock Interview Arena Launcher */}
-          <div className="rounded-2xl border border-[rgba(253,181,42,0.3)] bg-gradient-to-r from-[#0E1628] via-[#1A1822] to-[#0E1628] p-6 shadow-xl">
+          <div className="rounded-2xl border border-[rgba(253,181,42,0.3)] bg-[#2563EB] p-6 shadow-xl">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
               <div className="space-y-1.5 max-w-xl">
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-[#FDB52A]/10 border border-[#FDB52A]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#FDB52A]">
-                  ★ LIVE SIMULATOR
-                </span>
                 <h3 className="text-xl font-extrabold text-white">
                   Mock Interview Arena
                 </h3>
@@ -525,7 +502,7 @@ export function DashboardTabs({
               </div>
               <Link
                 href="/mock-interview"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FDB52A] to-[#FF9800] px-6 py-3.5 text-xs font-bold text-[#090D1A] shadow-[0_0_20px_rgba(253,181,42,0.3)] transition hover:scale-105"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2563EB] px-6 py-3.5 text-xs font-bold text-[#090D1A] transition hover:scale-105"
               >
                 <span>Enter Arena Room</span>
                 <ArrowRight className="h-3.5 w-3.5" />
