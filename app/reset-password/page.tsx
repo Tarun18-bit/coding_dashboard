@@ -102,8 +102,8 @@ export default function ResetPasswordPage() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      setErrorMsg('Use at least 8 characters, with both letters and digits.');
       return;
     }
 
@@ -242,7 +242,7 @@ export default function ResetPasswordPage() {
                 <input
                   type="password"
                   required
-                  placeholder="At least 6 characters"
+                  placeholder="8+ characters, letters and digits"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#090D1A] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:border-[#00EA64] focus:outline-hidden transition"

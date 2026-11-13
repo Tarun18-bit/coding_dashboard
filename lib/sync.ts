@@ -8,7 +8,6 @@ import { leetcodeFetcher, fetchLeetCodeProblemMeta } from './platforms/leetcode'
 import { codechefFetcher } from './platforms/codechef';
 import type { PlatformFetcher } from './platforms/types';
 
-export const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
 const SYNC_CACHE_WINDOW_MS = 60 * 1000;
 
 export function getFetcher(platform: string): PlatformFetcher | null {
@@ -175,22 +174,18 @@ export async function syncUser(
   opts: { force?: boolean; minIntervalMs?: number; handleOverrides?: Partial<Record<string, string>> } = {}
 ): Promise<AccountSyncResult[]> {
   const force = !!opts.force;
-  await ensurePublicUser(userId, userId === DEFAULT_USER_ID ? 'default_user' : 'user');
+  await ensurePublicUser(userId, 'user');
 
   const { data: userAccounts } = await supabaseAdmin
     .from('accounts')
     .select('platform, handle')
     .eq('user_id', userId);
 
-  let targets: { platform: string; handle: string }[] = userAccounts || [];
-  if (targets.length === 0 && userId === DEFAULT_USER_ID) {
-    // Demo profile with no account rows yet: seed with the default handles
-    targets = [
-      { platform: 'codeforces', handle: opts.handleOverrides?.codeforces || process.env.DEFAULT_CODEFORCES_HANDLE || 'oggy_18' },
-      { platform: 'leetcode', handle: opts.handleOverrides?.leetcode || process.env.DEFAULT_LEETCODE_USERNAME || 'txrun_18' },
-      { platform: 'codechef', handle: opts.handleOverrides?.codechef || process.env.DEFAULT_CODECHEF_HANDLE || 'txrun_18' },
-    ];
-  }
+  // Trusted callers (the scheduled job) may sync a different handle than the stored one
+  const targets: { platform: string; handle: string }[] = (userAccounts || []).map((a) => ({
+    platform: a.platform,
+    handle: opts.handleOverrides?.[a.platform] || a.handle,
+  }));
 
   const results = await Promise.all(
     targets.map((t) => syncAccount(userId, t.platform, t.handle, force, opts.minIntervalMs))
@@ -224,7 +219,6 @@ export async function syncAllUsers(budgetMs: number, minIntervalMs = 45 * 60 * 1
       queue.push(row.user_id);
     }
   }
-  if (!seen.has(DEFAULT_USER_ID)) queue.push(DEFAULT_USER_ID);
 
   let synced = 0;
   let failed = 0;

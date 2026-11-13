@@ -1,4 +1,4 @@
--- Migration 003: daily per-user usage limits (AI reviews, C++/Java runs, account links).
+-- Migration 003: daily per-user usage limits (AI reviews, AI coach, C++/Java runs, account links).
 -- Safe to run more than once. Run in Supabase: SQL Editor -> paste -> Run.
 
 CREATE TABLE IF NOT EXISTS usage_counters (
@@ -35,6 +35,7 @@ $$;
 
 -- Only the server (service role) may call it
 REVOKE ALL ON FUNCTION consume_usage(UUID, TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION consume_usage(UUID, TEXT, INTEGER) TO service_role;
 
 -- Old counters are useless after a day; keep the table tiny
 DELETE FROM usage_counters WHERE day < (NOW() AT TIME ZONE 'UTC')::date - 7;

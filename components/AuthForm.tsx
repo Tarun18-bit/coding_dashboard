@@ -28,7 +28,7 @@ function friendlyAuthError(message: string): string {
   if (m.includes('email not confirmed')) return 'Please confirm your email first: open the link we sent you, then sign in.';
   if (m.includes('already registered') || m.includes('already been registered')) return 'An account with this email already exists. Sign in instead.';
   if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Please wait a minute and try again.';
-  if (m.includes('password should be')) return 'Password must be at least 6 characters.';
+  if (m.includes('password should') || m.includes('weak password')) return 'Use at least 8 characters, with both letters and digits.';
   if (m.includes('fetch') || m.includes('network')) return 'Network error. Check your connection and try again.';
   return message || 'Authentication failed';
 }
@@ -299,9 +299,11 @@ export function AuthForm({ initialMode, next, initialError = '' }: AuthFormProps
                     id="auth-password"
                     type="password"
                     required
-                    minLength={6}
+                    minLength={mode === 'signup' ? 8 : 6}
+                    pattern={mode === 'signup' ? '(?=.*[A-Za-z])(?=.*[0-9]).{8,}' : undefined}
+                    title={mode === 'signup' ? 'At least 8 characters, with letters and digits' : undefined}
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                    placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
+                    placeholder={mode === 'signup' ? '8+ characters, letters and digits' : '••••••••'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#090D1A] pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-[#64748B] focus:border-[#00EA64] focus:outline-hidden transition"

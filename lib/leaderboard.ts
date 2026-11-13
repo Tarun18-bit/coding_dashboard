@@ -30,7 +30,6 @@ export function clearLeaderboardCache() {
  * Called automatically after any user syncs their accounts.
  */
 export async function updateUserLeaderboardCache(userId: string): Promise<void> {
-  if (userId === '00000000-0000-0000-0000-000000000001') return;
 
   try {
     const stats = await getDashboardStats(userId);

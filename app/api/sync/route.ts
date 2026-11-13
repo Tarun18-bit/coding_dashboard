@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { syncUser, syncAllUsers, DEFAULT_USER_ID } from '@/lib/sync';
+import { syncUser, syncAllUsers } from '@/lib/sync';
 
 // Vercel Hobby allows 60s; the background job stays inside this budget
 export const maxDuration = 60;
@@ -55,8 +55,8 @@ async function handleSync(req: NextRequest) {
     return NextResponse.json({ success: true, mode: 'all-users', message: 'Background sync started' }, { status: 202 });
   }
 
-  // Only the trusted cron caller may target another user or override demo handles
-  const targetUserId = isCron ? searchParams.get('user_id') || DEFAULT_USER_ID : sessionUserId!;
+  // Only the trusted cron caller may target another user (by id) or override handles
+  const targetUserId = isCron ? searchParams.get('user_id')! : sessionUserId!;
 
   const now = Date.now();
   const lastSync = lastSyncTimeByTarget.get(targetUserId);

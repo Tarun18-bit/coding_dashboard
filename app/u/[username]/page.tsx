@@ -57,10 +57,6 @@ const findProfileUser = cache(async (decodedUsername: string): Promise<{ id: str
     return { id: u.id, username: u.username };
   }
 
-  // 3. Demo profile aliases
-  if (['default', 'demo', 'txrun_18', 'oggy_18'].includes(decodedUsername)) {
-    return { id: '00000000-0000-0000-0000-000000000001', username: 'txrun_18' };
-  }
   return null;
 });
 

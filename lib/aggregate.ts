@@ -248,7 +248,7 @@ function emptyStats(userId: string): DashboardStats {
 }
 
 export async function getDashboardStats(
-  userId = '00000000-0000-0000-0000-000000000001',
+  userId: string,
   forceRefresh = false
 ): Promise<DashboardStats> {
   if (!forceRefresh) {
