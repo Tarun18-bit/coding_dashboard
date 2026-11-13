@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/db';
+import { supabaseAdmin, escapeLike } from '@/lib/db';
 import { getDashboardStats } from '@/lib/aggregate';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: BadgeParams) {
   const { data: userRecord } = await supabaseAdmin
     .from('users')
     .select('id, username')
-    .ilike('username', decodedUsername)
+    .ilike('username', escapeLike(decodedUsername))
     .neq('username', 'default_user')
     .maybeSingle();
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, { params }: BadgeParams) {
     const { data: account } = await supabaseAdmin
       .from('accounts')
       .select('user_id')
-      .ilike('handle', decodedUsername)
+      .ilike('handle', escapeLike(decodedUsername))
       .limit(1)
       .maybeSingle();
 
@@ -48,15 +48,20 @@ export async function GET(request: NextRequest, { params }: BadgeParams) {
     }
   }
 
-  // 3. Fallback to primary active user if not found
+  // 3. Unknown name: say so (never show another user's stats under this name)
   if (!user) {
-    const { data: firstUser } = await supabaseAdmin
-      .from('users')
-      .select('id, username')
-      .neq('username', 'default_user')
-      .limit(1)
-      .maybeSingle();
-    user = firstUser || { id: '00000000-0000-0000-0000-000000000001', username: decodedUsername };
+    const notFoundSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 80" width="520" height="80" fill="none">
+  <rect width="520" height="80" rx="14" fill="#0B1739" stroke="#26335a"/>
+  <text x="24" y="36" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">DashCode</text>
+  <text x="24" y="58" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#7E89AC">No DashCode profile found for this username.</text>
+</svg>`;
+    return new NextResponse(notFoundSvg, {
+      status: 404,
+      headers: {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=60, s-maxage=60',
+      },
+    });
   }
 
   const targetUserId = user.id;

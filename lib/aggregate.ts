@@ -220,7 +220,7 @@ function inferTags(title: string, problemId: string): string[] {
   if (/tree|bst|trie/.test(combined)) tags.push('trees');
   if (/graph|island|network|course-schedule/.test(combined)) tags.push('graphs');
   if (/search|find-minimum|peak/.test(combined)) tags.push('binary search');
-  if (/\bdp\b|subsequence|palindrom|robber|coin-change|climbing/.test(combined)) tags.push('dynamic programming');
+  if (/\bdp\b|subsequence|robber|coin-change|climbing/.test(combined)) tags.push('dynamic programming');
   if (/two-sum|three-sum|3sum|pointer|water/.test(combined)) tags.push('two pointers');
   if (/array|matrix|duplicate|sum/.test(combined)) tags.push('arrays');
   if (/string|parenthes|anagram|word/.test(combined)) tags.push('strings');

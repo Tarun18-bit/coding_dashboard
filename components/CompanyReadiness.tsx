@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CompanyReadinessResult } from '@/lib/company-readiness';
-import { Briefcase, TrendingUp, AlertTriangle, ExternalLink, ChevronRight, CheckCircle2, Sparkles, ShieldCheck, Target } from 'lucide-react';
+import type { CompanyReadinessResult } from '@/lib/company-readiness';
+import Link from 'next/link';
+import { Briefcase, TrendingUp, ExternalLink, ChevronRight, CheckCircle2, Sparkles, ShieldCheck, Target } from 'lucide-react';
 
 interface CompanyReadinessProps {
   results: CompanyReadinessResult[];
@@ -27,11 +28,11 @@ export const CompanyReadiness: React.FC<CompanyReadinessProps> = ({ results }) =
             </h2>
             <span className="rounded-full bg-[#CB3CFF]/15 border border-[#CB3CFF]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#CB3CFF] flex items-center gap-1">
               <Sparkles className="h-2.5 w-2.5" />
-              AI GAP ANALYSIS
+              GAP ANALYSIS
             </span>
           </div>
           <p className="text-xs text-[#7E89AC] mt-1">
-            Real interview question weights mapped against your multi-platform problem portfolio
+            Estimated topic weights for each company, matched against the problems you&apos;ve solved
           </p>
         </div>
 
@@ -42,6 +43,8 @@ export const CompanyReadiness: React.FC<CompanyReadinessProps> = ({ results }) =
             return (
               <button
                 key={r.company.id}
+                type="button"
+                aria-pressed={isSelected}
                 onClick={() => setSelectedId(r.company.id)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   isSelected
@@ -175,79 +178,79 @@ export const CompanyReadiness: React.FC<CompanyReadinessProps> = ({ results }) =
           </div>
         </div>
 
-        {/* Right Column: Curated Real Interview Questions Asked at this Company */}
+        {/* Right Column: publicly reported questions for this company (each one linked to its source) */}
         <div className="lg:col-span-1 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1] flex items-center gap-1.5">
-              <span>Verified OA &amp; Onsite Rounds</span>
-            </h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#AEB9E1]">Reported Interview Questions</h4>
             <span className="rounded bg-[#14CA74]/15 border border-[#14CA74]/30 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#14CA74]">
-              ✓ VERIFIED
+              SOURCED
             </span>
           </div>
           <p className="text-[11px] text-[#7E89AC] px-1">
-            Confirmed from {current.company.name} OAs &amp; technical loops via CodinzHub &amp; candidate reports.
+            Each question links to the public interview report or OA write-up it comes from. Practice them under a timer in the Mock Arena.
           </p>
 
           <div className="space-y-2.5 rounded-2xl border border-[rgba(126,137,172,0.16)] bg-[#0A1330] p-4 max-h-[460px] overflow-y-auto">
-            {current.curatedSuggestions.map((prob, i) => {
-              const diffColor =
-                prob.difficulty === 'Easy'
-                  ? 'text-[#14CA74] border-[#14CA74]/30 bg-[#14CA74]/10'
-                  : prob.difficulty === 'Medium'
-                  ? 'text-[#FDB52A] border-[#FDB52A]/30 bg-[#FDB52A]/10'
-                  : 'text-[#FF5A65] border-[#FF5A65]/30 bg-[#FF5A65]/10';
+            {current.curatedSuggestions.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#7E89AC] space-y-2">
+                <p>No sourced {current.company.name} questions in the bank yet.</p>
+                <Link href="/mock-interview" className="inline-flex items-center gap-1 font-semibold text-[#00C2FF] hover:underline">
+                  Practice another company <ChevronRight className="h-3 w-3" />
+                </Link>
+              </div>
+            ) : (
+              current.curatedSuggestions.map((prob) => {
+                const diffColor =
+                  prob.difficulty === 'Easy'
+                    ? 'text-[#14CA74] border-[#14CA74]/30 bg-[#14CA74]/10'
+                    : prob.difficulty === 'Medium'
+                    ? 'text-[#FDB52A] border-[#FDB52A]/30 bg-[#FDB52A]/10'
+                    : 'text-[#FF5A65] border-[#FF5A65]/30 bg-[#FF5A65]/10';
 
-              return (
-                <div
-                  key={i}
-                  className="rounded-xl border border-[rgba(126,137,172,0.14)] bg-[#0B1739] p-3.5 space-y-2.5 transition hover:border-[#0E43FB]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <a
-                      href={prob.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-center gap-1.5 font-bold text-xs text-white hover:text-[#00C2FF] transition"
-                    >
-                      <span>{prob.title}</span>
-                      <ExternalLink className="h-3 w-3 text-[#7E89AC] group-hover:text-[#00C2FF]" />
-                    </a>
-                    <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${diffColor}`}>
-                      {prob.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Verified Round Tag */}
-                  {prob.verifiedRound && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-[#00C2FF] font-medium bg-[#0E43FB]/15 border border-[#0E43FB]/30 rounded-lg px-2 py-1">
-                      <Target className="h-3 w-3 shrink-0 text-[#00C2FF]" />
-                      <span className="truncate">{prob.verifiedRound}</span>
+                return (
+                  <div
+                    key={prob.id}
+                    className="rounded-xl border border-[rgba(126,137,172,0.14)] bg-[#0B1739] p-3.5 space-y-2.5 transition hover:border-[#0E43FB]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        href="/mock-interview"
+                        className="group flex items-center gap-1.5 font-bold text-xs text-white hover:text-[#00C2FF] transition"
+                        title="Practice in the Mock Arena"
+                      >
+                        <span>{prob.title}</span>
+                        <ChevronRight className="h-3 w-3 text-[#7E89AC] group-hover:text-[#00C2FF]" />
+                      </Link>
+                      <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-mono font-bold ${diffColor}`}>
+                        {prob.difficulty}
+                      </span>
                     </div>
-                  )}
 
-                  {/* Source Verification Badge & Notes */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] pt-1 border-t border-[rgba(126,137,172,0.1)]">
-                    <span className="text-[#7E89AC] capitalize font-mono">
-                      {prob.topic}
-                    </span>
+                    {prob.reportedRound && (
+                      <div className="flex items-center gap-1.5 text-[10px] text-[#00C2FF] font-medium bg-[#0E43FB]/15 border border-[#0E43FB]/30 rounded-lg px-2 py-1">
+                        <Target className="h-3 w-3 shrink-0 text-[#00C2FF]" />
+                        <span className="truncate">{prob.reportedRound}</span>
+                      </div>
+                    )}
 
-                    {prob.sourceName && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] pt-1 border-t border-[rgba(126,137,172,0.1)]">
+                      <span className="text-[#7E89AC] font-mono">{prob.topic}</span>
                       <a
-                        href={prob.sourceUrl || prob.url}
+                        href={prob.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#14CA74] hover:underline"
-                        title="View verification source"
+                        title={prob.sourceName}
                       >
                         <ShieldCheck className="h-3 w-3 text-[#14CA74]" />
-                        <span>{prob.sourceName}</span>
+                        <span>Source</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
                       </a>
-                    )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

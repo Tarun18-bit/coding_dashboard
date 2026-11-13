@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { CompareProfile } from '@/lib/compare';
+import React, { useState, useTransition } from 'react';
+import type { CompareProfile } from '@/lib/compare';
 import {
   Swords,
   Trophy,
-  Flame,
-  Award,
   Zap,
   ArrowRight,
-  TrendingUp,
-  Search,
   UserPlus,
   AlertCircle,
   Loader2,
@@ -34,18 +30,16 @@ export const CompareView: React.FC<CompareViewProps> = ({
   const router = useRouter();
   const [input1, setInput1] = useState(u1Query || '');
   const [input2, setInput2] = useState(u2Query || '');
-  const [isComparing, setIsComparing] = useState(false);
-
-  useEffect(() => {
-    setIsComparing(false);
-  }, [user1, user2, u1Query, u2Query]);
+  // Pending until the new comparison has rendered (Next keeps router.push inside the transition)
+  const [isComparing, startCompare] = useTransition();
 
   const handleCompare = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input1.trim()) return;
-    setIsComparing(true);
     const query2 = input2.trim() ? `&u2=${encodeURIComponent(input2.trim())}` : '';
-    router.push(`/compare?u1=${encodeURIComponent(input1.trim())}${query2}`);
+    startCompare(() => {
+      router.push(`/compare?u1=${encodeURIComponent(input1.trim())}${query2}`);
+    });
   };
 
   // Helper to calculate advantage % for side-by-side bars
@@ -74,12 +68,14 @@ export const CompareView: React.FC<CompareViewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] items-center gap-4">
             {/* User 1 Input */}
             <div className="relative">
-              <label className="block text-[11px] font-bold uppercase text-[#00C2FF] mb-1.5">
+              <label htmlFor="compare-p1" className="block text-[11px] font-bold uppercase text-[#00C2FF] mb-1.5">
                 Player 1 (Left)
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="compare-p1"
                   type="text"
+                  autoComplete="off"
                   value={input1}
                   onChange={(e) => setInput1(e.target.value)}
                   placeholder="Your Handle / Username"
@@ -95,6 +91,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
                 disabled={isComparing}
                 className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#0E43FB] to-[#CB3CFF] text-white shadow-[0_0_20px_rgba(203,60,255,0.4)] transition hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 title="Run Head-to-Head Comparison"
+                aria-label="Run head-to-head comparison"
               >
                 {isComparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Swords className="h-6 w-6" />}
               </button>
@@ -102,12 +99,14 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
             {/* User 2 Input */}
             <div className="relative">
-              <label className="block text-[11px] font-bold uppercase text-[#CB3CFF] mb-1.5">
+              <label htmlFor="compare-p2" className="block text-[11px] font-bold uppercase text-[#CB3CFF] mb-1.5">
                 Player 2 (Right)
               </label>
               <div className="relative flex items-center">
                 <input
+                  id="compare-p2"
                   type="text"
+                  autoComplete="off"
                   value={input2}
                   onChange={(e) => setInput2(e.target.value)}
                   placeholder="Enter rival username, CF handle, or LC handle"
@@ -520,10 +519,21 @@ export const CompareView: React.FC<CompareViewProps> = ({
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A1330] border border-[rgba(126,137,172,0.2)] text-[#FF5A65]">
             <Swords className="h-7 w-7" />
           </div>
-          <h3 className="text-xl font-bold text-white">Coder &quot;{u1Query}&quot; Not Found</h3>
-          <p className="text-sm text-[#AEB9E1] max-w-md mx-auto">
-            Please enter your username or public platform handle (Codeforces / LeetCode) in the Player 1 input above.
-          </p>
+          {u1Query ? (
+            <>
+              <h3 className="text-xl font-bold text-white">Coder &quot;{u1Query}&quot; Not Found</h3>
+              <p className="text-sm text-[#AEB9E1] max-w-md mx-auto">
+                We checked DashCode usernames and public Codeforces / LeetCode profiles. Check the spelling in the Player 1 box above.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold text-white">Pick two coders to compare</h3>
+              <p className="text-sm text-[#AEB9E1] max-w-md mx-auto">
+                Enter a DashCode username or any public Codeforces / LeetCode handle in each box above, then press Compare Now.
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

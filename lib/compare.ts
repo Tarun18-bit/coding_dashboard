@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/db';
+import { supabaseAdmin, escapeLike } from '@/lib/db';
 import { getDashboardStats } from '@/lib/aggregate';
 import { codeforcesFetcher } from '@/lib/platforms/codeforces';
 import { leetcodeFetcher } from '@/lib/platforms/leetcode';
@@ -35,11 +35,11 @@ export async function getCompareProfile(identifier: string): Promise<CompareProf
   try {
     // 1. Check local users table and accounts table in parallel (1 round-trip instead of 2)
     const [{ data: directUser }, { data: account }] = await Promise.all([
-      supabaseAdmin.from('users').select('id, username').ilike('username', cleanId).maybeSingle(),
+      supabaseAdmin.from('users').select('id, username').ilike('username', escapeLike(cleanId)).maybeSingle(),
       supabaseAdmin
         .from('accounts')
         .select('user_id, users(id, username)')
-        .ilike('handle', cleanId)
+        .ilike('handle', escapeLike(cleanId))
         .limit(1)
         .maybeSingle(),
     ]);

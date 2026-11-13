@@ -2,8 +2,9 @@ name: Automated Data Sync
 
 on:
   schedule:
-    # Runs once every hour (avoids exhausting GitHub Actions monthly free tier minutes)
-    - cron: '0 * * * *'
+    # Once an hour, at :17. GitHub delays or drops scheduled runs at the top of the hour
+    # (its busiest moment), so an off-peak minute runs far more reliably.
+    - cron: '17 * * * *'
   workflow_dispatch: # Allows manual on-demand trigger from GitHub Actions UI
 
 jobs:

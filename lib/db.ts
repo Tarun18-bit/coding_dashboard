@@ -26,3 +26,11 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
     autoRefreshToken: false,
   },
 });
+
+/**
+ * Escapes LIKE/ILIKE wildcards so user input matches literally ("a_b" must not match "axb").
+ * Use with .ilike() for case-insensitive exact matches on usernames and handles.
+ */
+export function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}

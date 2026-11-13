@@ -15,27 +15,32 @@ import {
   Flame, 
   ChevronDown,
   Sparkles,
-  FileText,
-  Share2,
-  Code,
-  Plus
 } from 'lucide-react';
 import { BadgeModal } from '@/components/BadgeModal';
-import { ExportResumeModal } from '@/components/ExportResumeModal';
+import { ExportResumeModal, type ExportResumeModalProps } from '@/components/ExportResumeModal';
+import type { DashboardStats } from '@/lib/aggregate';
+import type { RpgProfile } from '@/lib/gamification';
 import { ShareButton } from '@/components/ShareButton';
 import { AccountModal } from '@/components/AccountModal';
 import { SyncButton } from '@/components/SyncButton';
 import { UserNav } from '@/components/UserNav';
-import { createClient } from '@/lib/supabase/client';
+
+interface NavbarUser {
+  id: string;
+  email?: string | null;
+  username?: string;
+}
 
 interface NavbarProps {
-  currentUser?: any;
+  /** The signed-in user from the server, or null for visitors */
+  currentUser?: NavbarUser | null;
   activeUsername?: string;
-  stats?: any;
-  rpgProfile?: any;
+  /** Dashboard only: powers the streak pill, auto-sync and the export tools */
+  stats?: Pick<DashboardStats, 'streaks' | 'accounts' | 'totalSolved' | 'difficultyBreakdown' | 'strengths'>;
+  rpgProfile?: Pick<RpgProfile, 'title' | 'level'>;
   resumeData?: {
-    accountsSummary: any[];
-    readinessSummary: any[];
+    accountsSummary: NonNullable<ExportResumeModalProps['accounts']>;
+    readinessSummary: NonNullable<ExportResumeModalProps['companyReadiness']>;
   };
 }
 
@@ -49,34 +54,18 @@ export function Navbar({
   const pathname = usePathname();
   const [competeOpen, setCompeteOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
-  const [clientUser, setClientUser] = useState<any>(currentUser ?? null);
 
   const competeRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (currentUser !== undefined) {
-      setClientUser(currentUser);
-      return;
-    }
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        setClientUser({
-          id: data.user.id,
-          email: data.user.email,
-          username: data.user.user_metadata?.user_name || data.user.email?.split('@')[0],
-        });
-      }
-    }).catch(() => {});
-  }, [currentUser]);
+  const effectiveUser = currentUser ?? null;
+  const effectiveUsername = activeUsername || effectiveUser?.username || effectiveUser?.email?.split('@')[0] || '';
 
-  const effectiveUser = currentUser ?? clientUser;
-  const effectiveUsername =
-    activeUsername ||
-    effectiveUser?.username ||
-    effectiveUser?.email?.split('@')[0] ||
-    '';
+  // Oldest sync across linked accounts (dashboard only): drives the automatic refresh
+  const syncTimes = (stats?.accounts ?? [])
+    .map((a) => (a.lastSyncedAt ? new Date(a.lastSyncedAt).getTime() : NaN))
+    .filter((t) => Number.isFinite(t));
+  const oldestSync = syncTimes.length > 0 ? new Date(Math.min(...syncTimes)).toISOString() : null;
 
   // Close dropdowns on click outside or Escape
   useEffect(() => {
@@ -123,17 +112,18 @@ export function Navbar({
         {/* Left: Brand + Consolidated Nav links */}
         <div className="flex items-center gap-5 sm:gap-7">
           <Link
-            href="/dashboard"
+            href={effectiveUser ? '/dashboard' : '/'}
+            aria-label="DashCode home"
             className="flex items-center gap-2.5 group transition-transform hover:scale-105 shrink-0"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00EA64] text-[#090D1A] font-black shadow-[0_0_18px_rgba(0,234,100,0.4)]">
               <Terminal className="h-5 w-5" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-black tracking-tight text-white group-hover:text-[#00EA64] transition-colors">
+              <span className={`${effectiveUser ? 'hidden min-[420px]:inline' : ''} text-base font-black tracking-tight text-white group-hover:text-[#00EA64] transition-colors`}>
                 DashCode
               </span>
-              <span className="rounded bg-[#00EA64]/10 border border-[#00EA64]/30 px-1 py-0.2 text-[9px] font-mono font-bold text-[#00EA64]">
+              <span className="hidden sm:inline rounded bg-[#00EA64]/10 border border-[#00EA64]/30 px-1 py-0.2 text-[9px] font-mono font-bold text-[#00EA64]">
                 PREP
               </span>
             </div>
@@ -209,7 +199,7 @@ export function Navbar({
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Daily Streak Pill */}
           {stats?.streaks && (
-            <div className="flex items-center gap-1.5 rounded-xl border border-[rgba(255,176,22,0.25)] bg-[#1A1810] px-2.5 py-1 text-xs font-mono font-bold text-[#FFB016]">
+            <div title="Daily streak" className="hidden sm:flex items-center gap-1.5 rounded-xl border border-[rgba(255,176,22,0.25)] bg-[#1A1810] px-2.5 py-1 text-xs font-mono font-bold text-[#FFB016]">
               <Flame className="h-3.5 w-3.5 text-[#FFB016] animate-pulse" />
               <span>{stats.streaks.currentStreak}d</span>
             </div>
@@ -218,7 +208,7 @@ export function Navbar({
           {/* Sync & Add Platform require a logged-in session */}
           {effectiveUser && (
             <>
-              <SyncButton />
+              <SyncButton lastSyncedAt={oldestSync} />
               <AccountModal />
             </>
           )}
@@ -227,6 +217,10 @@ export function Navbar({
           {effectiveUser && (
           <div className="relative" ref={toolsRef}>
             <button
+              type="button"
+              aria-expanded={toolsOpen}
+              aria-haspopup="menu"
+              aria-label="Profile and export tools"
               onClick={() => setToolsOpen(!toolsOpen)}
               className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(148,163,184,0.18)] bg-[#0E1628] px-3 py-1.5 text-xs font-semibold text-[#94A3B8] transition hover:border-[#00EA64] hover:text-white cursor-pointer"
               title="Profile & Export Tools"
@@ -264,7 +258,7 @@ export function Navbar({
           </div>
           )}
 
-          <div className="h-4 w-px bg-[rgba(148,163,184,0.18)] mx-0.5" />
+          <div className="hidden sm:block h-4 w-px bg-[rgba(148,163,184,0.18)] mx-0.5" />
 
           {/* User Nav */}
           <UserNav user={effectiveUser} />

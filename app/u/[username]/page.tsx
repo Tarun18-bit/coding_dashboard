@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/db';
+import { supabaseAdmin, escapeLike } from '@/lib/db';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { getDashboardStats } from '@/lib/aggregate';
@@ -21,8 +21,9 @@ import { getProfile } from '@/lib/profile';
 import { LocalTime } from '@/components/LocalTime';
 import { ShareButton } from '@/components/ShareButton';
 import { BadgeModal } from '@/components/BadgeModal';
-import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ArrowLeft, ExternalLink, Activity, Swords } from 'lucide-react';
+import { Terminal, Trophy, CheckCircle2, TrendingUp, Flame, ExternalLink, Activity, Swords } from 'lucide-react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
 
@@ -58,7 +59,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
   let { data: user } = await supabaseAdmin
     .from('users')
     .select('id, username')
-    .ilike('username', decodedUsername)
+    .ilike('username', escapeLike(decodedUsername))
     .maybeSingle();
 
   // 2. Fallback: if username not matched directly, check if handle exists in accounts table
@@ -66,7 +67,7 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
     const { data: account } = await supabaseAdmin
       .from('accounts')
       .select('user_id, users(id, username)')
-      .ilike('handle', decodedUsername)
+      .ilike('handle', escapeLike(decodedUsername))
       .limit(1)
       .maybeSingle();
 
@@ -81,25 +82,8 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
     user = { id: '00000000-0000-0000-0000-000000000001', username: 'txrun_18' };
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#081028] text-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B1739] border border-[rgba(126,137,172,0.2)] text-[#00C2FF] mb-4 shadow-xl">
-          <Terminal className="h-7 w-7" />
-        </div>
-        <h1 className="text-xl font-bold">User &quot;{decodedUsername}&quot; Not Found</h1>
-        <p className="text-[#7E89AC] mt-1.5 text-xs max-w-sm">
-          No coding progress profile was found under this username or platform handle.
-        </p>
-        <Link
-          href="/"
-          className="mt-6 inline-flex items-center gap-2 rounded-xl border border-[rgba(14,67,251,0.5)] bg-[#0E43FB] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(14,67,251,0.4)] hover:bg-[#0B34C7] transition"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Return to Dashboard
-        </Link>
-      </div>
-    );
-  }
+  // Unknown username or handle: a real 404 (status code + the site's not-found page)
+  if (!user) notFound();
 
   const stats = await getDashboardStats(user.id);
   // Contests load in the browser (ContestCalendar fetches them), so three slow external
@@ -266,7 +250,11 @@ export default async function PublicProfilePage({ params }: PublicProfileProps) 
         {/* Daily Smart Workout & POTD */}
         {dailyWorkout && (
           <section>
-            <DailyWorkoutCard initialWorkout={dailyWorkout} />
+            <DailyWorkoutCard
+              initialWorkout={dailyWorkout}
+              currentStreak={stats.streaks.currentStreak}
+              readOnly={!(authUser && authUser.id === user.id)}
+            />
           </section>
         )}
 

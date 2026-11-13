@@ -98,6 +98,73 @@ async function fetchLeetCodeGraphQL(
   throw new Error(`LeetCode request failed after ${retries} attempts. Last error: ${getErrorMessage(lastError) || 'Network error'}`);
 }
 
+export interface LeetCodeProblemMeta {
+  difficulty: 'Easy' | 'Medium' | 'Hard' | null;
+  tags: string[];
+}
+
+// Problem difficulty and topics never change, so lookups are cached for the instance's lifetime
+const problemMetaCache = new Map<string, LeetCodeProblemMeta>();
+const META_BATCH_SIZE = 40;
+
+// LeetCode topic names → the tag vocabulary used across DashCode analytics
+const LEETCODE_TAG_ALIASES: Record<string, string> = {
+  array: 'arrays',
+  string: 'strings',
+  tree: 'trees',
+  'binary tree': 'trees',
+  'binary search tree': 'trees',
+  graph: 'graphs',
+  'depth-first search': 'dfs/bfs',
+  'breadth-first search': 'dfs/bfs',
+  'heap (priority queue)': 'heap',
+};
+
+export function normalizeLeetCodeTag(name: string): string {
+  const t = name.trim().toLowerCase();
+  return LEETCODE_TAG_ALIASES[t] ?? t;
+}
+
+/**
+ * Real difficulty and topic tags for LeetCode problems, many slugs per request (aliased GraphQL
+ * fields). Unknown slugs and failed batches are simply absent from the result.
+ */
+export async function fetchLeetCodeProblemMeta(slugs: string[]): Promise<Map<string, LeetCodeProblemMeta>> {
+  const result = new Map<string, LeetCodeProblemMeta>();
+  const missing: string[] = [];
+  for (const raw of new Set(slugs.map((x) => x.trim().toLowerCase()))) {
+    if (!/^[a-z0-9-]{1,120}$/.test(raw)) continue; // also keeps the query free of injected syntax
+    const cached = problemMetaCache.get(raw);
+    if (cached) result.set(raw, cached);
+    else missing.push(raw);
+  }
+
+  for (let i = 0; i < missing.length; i += META_BATCH_SIZE) {
+    const batch = missing.slice(i, i + META_BATCH_SIZE);
+    const query = `query problemMeta { ${batch
+      .map((slug, k) => `q${k}: question(titleSlug: "${slug}") { difficulty topicTags { name } }`)
+      .join(' ')} }`;
+    try {
+      const data = await fetchLeetCodeGraphQL(query, {}, 1);
+      batch.forEach((slug, k) => {
+        const q = data[`q${k}`] as { difficulty?: string; topicTags?: { name?: string }[] } | null | undefined;
+        if (!q) return;
+        const difficulty = q.difficulty === 'Easy' || q.difficulty === 'Medium' || q.difficulty === 'Hard' ? q.difficulty : null;
+        const tags = Array.from(
+          new Set((q.topicTags || []).map((t) => (t?.name ? normalizeLeetCodeTag(t.name) : '')).filter(Boolean))
+        ).slice(0, 6);
+        const meta: LeetCodeProblemMeta = { difficulty, tags };
+        if (problemMetaCache.size > 5000) problemMetaCache.clear();
+        problemMetaCache.set(slug, meta);
+        result.set(slug, meta);
+      });
+    } catch (error) {
+      console.warn('[LeetCode] Problem metadata lookup failed:', getErrorMessage(error));
+    }
+  }
+  return result;
+}
+
 const COMPLETE_USER_QUERY = `
   query userCompleteData($username: String!, $limit: Int!) {
     matchedUser(username: $username) {
@@ -242,6 +309,9 @@ export class LeetCodeFetcher implements PlatformFetcher {
         return [];
       }
 
+      // Real tags/difficulty straight from LeetCode; keyword guesses below are only a fallback
+      const meta = await fetchLeetCodeProblemMeta(subs.map((x) => x.titleSlug || ''));
+
       return subs.map((submission) => {
         const slug = (submission.titleSlug || '').toLowerCase().trim();
         const title = (submission.title || '').toLowerCase().trim();
@@ -270,7 +340,7 @@ export class LeetCodeFetcher implements PlatformFetcher {
         if (combined.includes('binary-search') || (combined.includes('search') && !combined.includes('word-search')) || combined.includes('find-minimum') || combined.includes('peak')) {
           if (!tags.includes('binary search')) tags.push('binary search');
         }
-        if (combined.includes('dp') || combined.includes('subsequence') || combined.includes('palindrome') || combined.includes('robber') || combined.includes('coin-change') || combined.includes('climbing')) {
+        if (combined.includes('dp') || combined.includes('subsequence') || combined.includes('robber') || combined.includes('coin-change') || combined.includes('climbing')) {
           if (!tags.includes('dynamic programming')) tags.push('dynamic programming');
         }
         if (combined.includes('two-sum') || combined.includes('three-sum') || combined.includes('pointer') || combined.includes('container-with-most-water') || combined.includes('trap')) {
@@ -292,6 +362,12 @@ export class LeetCodeFetcher implements PlatformFetcher {
         // Default tag if none matched
         if (tags.length === 0) {
           tags.push('algorithms');
+        }
+
+        const known = meta.get(slug);
+        if (known) {
+          if (known.tags.length > 0) tags.splice(0, tags.length, ...known.tags);
+          if (known.difficulty) difficulty = known.difficulty;
         }
 
         return {

@@ -6,6 +6,8 @@ export interface SessionUser {
   id: string;
   email: string | null;
   username: string;
+  /** True when the public.users row already exists */
+  hasPublicRow?: boolean;
 }
 
 /** The logged-in user (from the Supabase session cookie), or null. */
@@ -28,6 +30,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       id: user.id,
       email: user.email ?? null,
       username: dbUsername || user.user_metadata?.user_name || user.email?.split('@')[0] || 'coder',
+      hasPublicRow: !!dbUsername,
     };
   } catch {
     return null;
@@ -38,6 +41,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export async function requireSessionUser(): Promise<SessionUser | null> {
   const user = await getSessionUser();
   if (!user) return null;
+  if (user.hasPublicRow) return user;
   const row = await ensurePublicUser(user.id, user.username);
   return { ...user, username: row.username };
 }

@@ -1,6 +1,5 @@
 import { getDashboardStats } from '@/lib/aggregate';
-import type { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/server';
+import { requireSessionUser } from '@/lib/auth';
 import { calculateCompanyReadiness } from '@/lib/company-readiness';
 import { getUserSheetProgress } from '@/lib/sheets';
 import { getDailyWorkout } from '@/lib/potd';
@@ -16,21 +15,14 @@ export const metadata = { title: 'Dashboard', description: 'Your unified coding 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  let authUser: User | null = null;
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    authUser = data?.user ?? null;
-  } catch {
-    // Graceful fallback when offline or database paused
+  // Personal page: visitors sign in first. Also makes sure the public user row exists, so a brand-new
+  // account's /u/ profile, leaderboard entry and clans work from the first visit.
+  const sessionUser = await requireSessionUser().catch(() => null);
+  if (!sessionUser) {
+    redirect('/login?next=/dashboard');
   }
 
-  // Protect dashboard: require login so visitors don't see another user's personal stats
-  if (!authUser) {
-    redirect('/login');
-  }
-
-  const activeUserId = authUser.id;
+  const activeUserId = sessionUser.id;
   const [stats, sheetProgress, dailyWorkout, profile] = await Promise.all([
     getDashboardStats(activeUserId),
     getUserSheetProgress(activeUserId, 'blind75').catch(() => null),
@@ -54,18 +46,12 @@ export default async function DashboardPage() {
     maxCompanyPercent
   );
 
-  const currentUser = authUser
-    ? {
-        id: authUser.id,
-        email: authUser.email,
-        username: authUser.user_metadata?.user_name || authUser.email?.split('@')[0],
-      }
-    : null;
+  const currentUser = { id: sessionUser.id, email: sessionUser.email ?? undefined, username: sessionUser.username };
 
   // The public username in the database (may differ from the email prefix if that name was taken),
   // so profile, badge and share links point at the right /u/ page
   const dbUsername = stats.user.username && stats.user.username !== 'default_user' ? stats.user.username : null;
-  const activeUsername = dbUsername || currentUser?.username || stats.accounts[0]?.handle || 'coder';
+  const activeUsername = dbUsername || currentUser.username || stats.accounts[0]?.handle || 'coder';
   const readinessSummary = companyReadiness.map((c) => ({
     company: c.company.name,
     score: c.overallScore,

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   PRESET_SAMPLES,
@@ -55,7 +56,12 @@ function complexityClass(bigO: string, isSpace = false): string {
   return isSpace ? 'Memory' : 'Growth';
 }
 
-export const AiReviewer: React.FC = () => {
+interface AiReviewerProps {
+  /** Reviews call Gemini on the server, which needs an account (daily free quota per user) */
+  isLoggedIn?: boolean;
+}
+
+export const AiReviewer: React.FC<AiReviewerProps> = ({ isLoggedIn = true }) => {
   const [selectedPreset, setSelectedPreset] = useState<PresetSample>(PRESET_SAMPLES[0]);
   const [code, setCode] = useState(PRESET_SAMPLES[0].code);
   const [language, setLanguage] = useState(PRESET_SAMPLES[0].language);
@@ -157,7 +163,7 @@ export const AiReviewer: React.FC = () => {
       }, 0);
     } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-      handleAnalyze();
+      if (isLoggedIn) handleAnalyze();
     }
   };
 
@@ -489,7 +495,17 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
               <span className="hidden sm:inline text-[10px] text-[#7E89AC]">
                 Press <kbd className="rounded border border-[rgba(126,137,172,0.3)] bg-[#0A1330] px-1 py-0.5 text-[10px] font-mono text-white">Ctrl+Enter</kbd> to run
               </span>
+              {!isLoggedIn ? (
+                <Link
+                  href="/login?next=/reviewer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0E43FB] via-[#00C2FF] to-[#14CA74] px-5 py-2 text-xs font-bold text-white shadow-[0_0_20px_rgba(14,67,251,0.5)] transition hover:opacity-95"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Sign in for an AI Review</span>
+                </Link>
+              ) : (
               <button
+                type="button"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !code.trim()}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0E43FB] via-[#00C2FF] to-[#14CA74] px-5 py-2 text-xs font-bold text-white shadow-[0_0_20px_rgba(14,67,251,0.5)] transition hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
@@ -506,6 +522,7 @@ ${result.followUpQuestions.map((q, i) => `### Q${i + 1}: ${q.question}\n- **Inte
                   </>
                 )}
               </button>
+              )}
             </div>
           </div>
 

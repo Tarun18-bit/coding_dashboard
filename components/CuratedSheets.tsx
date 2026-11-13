@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { SheetProgress, SheetType } from '@/lib/sheets';
+import React, { useState, useMemo } from 'react';
+import { useManualSolves } from '@/components/useManualSolves';
+import type { SheetProgress, SheetType } from '@/lib/sheets';
 import {
   CheckCircle2,
   Circle,
@@ -22,38 +23,13 @@ interface CuratedSheetsProps {
   isLoggedIn?: boolean;
 }
 
-const MANUAL_SOLVES_KEY = 'dashcode_manual_sheet_solves_v1';
-
 export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, isLoggedIn = true }) => {
   const [activeSheet, setActiveSheet] = useState<SheetType>('blind75');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Solved' | 'Unsolved'>('All');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
-  const [manualOverrides, setManualOverrides] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(MANUAL_SOLVES_KEY);
-      if (raw) {
-        setManualOverrides(JSON.parse(raw));
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, []);
-
-  const toggleProblemSolved = (problemId: string, currentSolved: boolean) => {
-    setManualOverrides((prev) => {
-      const next = { ...prev, [problemId]: !currentSolved };
-      try {
-        localStorage.setItem(MANUAL_SOLVES_KEY, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  };
+  const [manualOverrides, toggleProblemSolved] = useManualSolves();
 
   // Recompute sheet progress merging server auto-sync with manual overrides
   const computedSheets = useMemo(() => {
@@ -186,6 +162,8 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
           {/* Sheet Selector Tabs */}
           <div className="inline-flex flex-wrap rounded-2xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] p-1.5 gap-1.5 text-xs">
             <button
+              type="button"
+              aria-pressed={activeSheet === 'blind75'}
               onClick={() => setActiveSheet('blind75')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'blind75'
@@ -201,6 +179,8 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
             </button>
 
             <button
+              type="button"
+              aria-pressed={activeSheet === 'neetcode150'}
               onClick={() => setActiveSheet('neetcode150')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'neetcode150'
@@ -216,6 +196,8 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
             </button>
 
             <button
+              type="button"
+              aria-pressed={activeSheet === 'striver'}
               onClick={() => setActiveSheet('striver')}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all cursor-pointer ${
                 activeSheet === 'striver'
@@ -224,7 +206,7 @@ export const CuratedSheets: React.FC<CuratedSheetsProps> = ({ initialProgress, i
               }`}
             >
               <Award className="h-3.5 w-3.5" />
-              <span>Striver SDE Sheet</span>
+              <span title="The LeetCode-hosted problems from Striver's SDE sheet">Striver SDE (LeetCode)</span>
               <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-mono">
                 {computedSheets.striver?.solvedProblems}/{computedSheets.striver?.totalProblems}
               </span>

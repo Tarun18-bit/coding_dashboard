@@ -7,6 +7,8 @@ export interface SheetProblem {
   sheets: ('blind75' | 'neetcode150' | 'striver')[];
 }
 
+// Blind 75 and NeetCode 150 follow neetcode.io/practice exactly (75 and 150 problems, NeetCode's
+// topic groups). Striver SDE entries are the sheet's LeetCode-hosted problems.
 export const CURATED_PROBLEMS: SheetProblem[] = [
   // --- Arrays & Hashing ---
   {
@@ -50,6 +52,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'encode-and-decode-strings',
+    title: 'Encode and Decode Strings',
+    difficulty: 'Medium',
+    category: 'Arrays & Hashing',
+    url: 'https://leetcode.com/problems/encode-and-decode-strings/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
     id: 'product-of-array-except-self',
     title: 'Product of Array Except Self',
     difficulty: 'Medium',
@@ -58,12 +68,12 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150'],
   },
   {
-    id: 'encode-and-decode-strings',
-    title: 'Encode and Decode Strings',
+    id: 'valid-sudoku',
+    title: 'Valid Sudoku',
     difficulty: 'Medium',
     category: 'Arrays & Hashing',
-    url: 'https://leetcode.com/problems/encode-and-decode-strings/',
-    sheets: ['blind75', 'neetcode150'],
+    url: 'https://leetcode.com/problems/valid-sudoku/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'longest-consecutive-sequence',
@@ -74,16 +84,8 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
-    id: 'set-matrix-zeroes',
-    title: 'Set Matrix Zeroes',
-    difficulty: 'Medium',
-    category: 'Arrays & Hashing',
-    url: 'https://leetcode.com/problems/set-matrix-zeroes/',
-    sheets: ['striver'],
-  },
-  {
     id: 'pascals-triangle',
-    title: "Pascal's Triangle",
+    title: 'Pascal\'s Triangle',
     difficulty: 'Easy',
     category: 'Arrays & Hashing',
     url: 'https://leetcode.com/problems/pascals-triangle/',
@@ -98,14 +100,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['striver'],
   },
   {
-    id: 'maximum-subarray',
-    title: 'Maximum Subarray (Kadane)',
-    difficulty: 'Medium',
-    category: 'Arrays & Hashing',
-    url: 'https://leetcode.com/problems/maximum-subarray/',
-    sheets: ['blind75', 'striver', 'neetcode150'],
-  },
-  {
     id: 'sort-colors',
     title: 'Sort Colors (0s, 1s, 2s)',
     difficulty: 'Medium',
@@ -113,15 +107,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/sort-colors/',
     sheets: ['striver'],
   },
-  {
-    id: 'best-time-to-buy-and-sell-stock',
-    title: 'Best Time to Buy and Sell Stock',
-    difficulty: 'Easy',
-    category: 'Arrays & Hashing',
-    url: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
-  },
-
   // --- Two Pointers ---
   {
     id: 'valid-palindrome',
@@ -161,10 +146,17 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     difficulty: 'Hard',
     category: 'Two Pointers',
     url: 'https://leetcode.com/problems/trapping-rain-water/',
+    sheets: ['neetcode150', 'striver'],
+  },
+  // --- Sliding Window ---
+  {
+    id: 'best-time-to-buy-and-sell-stock',
+    title: 'Best Time to Buy and Sell Stock',
+    difficulty: 'Easy',
+    category: 'Sliding Window',
+    url: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/',
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
-
-  // --- Sliding Window ---
   {
     id: 'longest-substring-without-repeating-characters',
     title: 'Longest Substring Without Repeating Characters',
@@ -205,7 +197,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/sliding-window-maximum/',
     sheets: ['neetcode150', 'striver'],
   },
-
   // --- Stack ---
   {
     id: 'valid-parentheses',
@@ -232,11 +223,27 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['neetcode150'],
   },
   {
+    id: 'generate-parentheses',
+    title: 'Generate Parentheses',
+    difficulty: 'Medium',
+    category: 'Stack',
+    url: 'https://leetcode.com/problems/generate-parentheses/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'daily-temperatures',
     title: 'Daily Temperatures',
     difficulty: 'Medium',
     category: 'Stack',
     url: 'https://leetcode.com/problems/daily-temperatures/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'car-fleet',
+    title: 'Car Fleet',
+    difficulty: 'Medium',
+    category: 'Stack',
+    url: 'https://leetcode.com/problems/car-fleet/',
     sheets: ['neetcode150'],
   },
   {
@@ -247,7 +254,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/largest-rectangle-in-histogram/',
     sheets: ['neetcode150', 'striver'],
   },
-
   // --- Binary Search ---
   {
     id: 'binary-search',
@@ -263,7 +269,7 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     difficulty: 'Medium',
     category: 'Binary Search',
     url: 'https://leetcode.com/problems/search-a-2d-matrix/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
+    sheets: ['neetcode150', 'striver'],
   },
   {
     id: 'koko-eating-bananas',
@@ -290,6 +296,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'time-based-key-value-store',
+    title: 'Time Based Key-Value Store',
+    difficulty: 'Medium',
+    category: 'Binary Search',
+    url: 'https://leetcode.com/problems/time-based-key-value-store/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'median-of-two-sorted-arrays',
     title: 'Median of Two Sorted Arrays',
     difficulty: 'Hard',
@@ -297,7 +311,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
     sheets: ['neetcode150', 'striver'],
   },
-
   // --- Linked List ---
   {
     id: 'reverse-linked-list',
@@ -313,6 +326,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     difficulty: 'Easy',
     category: 'Linked List',
     url: 'https://leetcode.com/problems/merge-two-sorted-lists/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'linked-list-cycle',
+    title: 'Linked List Cycle',
+    difficulty: 'Easy',
+    category: 'Linked List',
+    url: 'https://leetcode.com/problems/linked-list-cycle/',
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
@@ -332,12 +353,36 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
-    id: 'linked-list-cycle',
-    title: 'Linked List Cycle',
-    difficulty: 'Easy',
+    id: 'copy-list-with-random-pointer',
+    title: 'Copy List with Random Pointer',
+    difficulty: 'Medium',
     category: 'Linked List',
-    url: 'https://leetcode.com/problems/linked-list-cycle/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
+    url: 'https://leetcode.com/problems/copy-list-with-random-pointer/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'add-two-numbers',
+    title: 'Add Two Numbers',
+    difficulty: 'Medium',
+    category: 'Linked List',
+    url: 'https://leetcode.com/problems/add-two-numbers/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'find-the-duplicate-number',
+    title: 'Find the Duplicate Number',
+    difficulty: 'Medium',
+    category: 'Linked List',
+    url: 'https://leetcode.com/problems/find-the-duplicate-number/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'lru-cache',
+    title: 'LRU Cache',
+    difficulty: 'Medium',
+    category: 'Linked List',
+    url: 'https://leetcode.com/problems/lru-cache/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'merge-k-sorted-lists',
@@ -347,7 +392,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/merge-k-sorted-lists/',
     sheets: ['blind75', 'neetcode150'],
   },
-
+  {
+    id: 'reverse-nodes-in-k-group',
+    title: 'Reverse Nodes in k-Group',
+    difficulty: 'Hard',
+    category: 'Linked List',
+    url: 'https://leetcode.com/problems/reverse-nodes-in-k-group/',
+    sheets: ['neetcode150'],
+  },
   // --- Trees ---
   {
     id: 'invert-binary-tree',
@@ -364,6 +416,22 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     category: 'Trees',
     url: 'https://leetcode.com/problems/maximum-depth-of-binary-tree/',
     sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'diameter-of-binary-tree',
+    title: 'Diameter of Binary Tree',
+    difficulty: 'Easy',
+    category: 'Trees',
+    url: 'https://leetcode.com/problems/diameter-of-binary-tree/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'balanced-binary-tree',
+    title: 'Balanced Binary Tree',
+    difficulty: 'Easy',
+    category: 'Trees',
+    url: 'https://leetcode.com/problems/balanced-binary-tree/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'same-tree',
@@ -383,7 +451,7 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
   },
   {
     id: 'lowest-common-ancestor-of-a-binary-search-tree',
-    title: 'Lowest Common Ancestor of a BST',
+    title: 'Lowest Common Ancestor of a Binary Search Tree',
     difficulty: 'Medium',
     category: 'Trees',
     url: 'https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/',
@@ -396,6 +464,22 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     category: 'Trees',
     url: 'https://leetcode.com/problems/binary-tree-level-order-traversal/',
     sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'binary-tree-right-side-view',
+    title: 'Binary Tree Right Side View',
+    difficulty: 'Medium',
+    category: 'Trees',
+    url: 'https://leetcode.com/problems/binary-tree-right-side-view/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'count-good-nodes-in-binary-tree',
+    title: 'Count Good Nodes in Binary Tree',
+    difficulty: 'Medium',
+    category: 'Trees',
+    url: 'https://leetcode.com/problems/count-good-nodes-in-binary-tree/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'validate-binary-search-tree',
@@ -415,7 +499,7 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
   },
   {
     id: 'construct-binary-tree-from-preorder-and-inorder-traversal',
-    title: 'Construct Binary Tree from Preorder and Inorder',
+    title: 'Construct Binary Tree from Preorder and Inorder Traversal',
     difficulty: 'Medium',
     category: 'Trees',
     url: 'https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/',
@@ -437,7 +521,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/',
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
-
   // --- Tries ---
   {
     id: 'implement-trie-prefix-tree',
@@ -463,7 +546,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/word-search-ii/',
     sheets: ['blind75', 'neetcode150'],
   },
-
   // --- Heap / Priority Queue ---
   {
     id: 'kth-largest-element-in-a-stream',
@@ -474,6 +556,46 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['neetcode150'],
   },
   {
+    id: 'last-stone-weight',
+    title: 'Last Stone Weight',
+    difficulty: 'Easy',
+    category: 'Heap / Priority Queue',
+    url: 'https://leetcode.com/problems/last-stone-weight/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'k-closest-points-to-origin',
+    title: 'K Closest Points to Origin',
+    difficulty: 'Medium',
+    category: 'Heap / Priority Queue',
+    url: 'https://leetcode.com/problems/k-closest-points-to-origin/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'kth-largest-element-in-an-array',
+    title: 'Kth Largest Element in an Array',
+    difficulty: 'Medium',
+    category: 'Heap / Priority Queue',
+    url: 'https://leetcode.com/problems/kth-largest-element-in-an-array/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'task-scheduler',
+    title: 'Task Scheduler',
+    difficulty: 'Medium',
+    category: 'Heap / Priority Queue',
+    url: 'https://leetcode.com/problems/task-scheduler/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'design-twitter',
+    title: 'Design Twitter',
+    difficulty: 'Medium',
+    category: 'Heap / Priority Queue',
+    url: 'https://leetcode.com/problems/design-twitter/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'find-median-from-data-stream',
     title: 'Find Median from Data Stream',
     difficulty: 'Hard',
@@ -481,7 +603,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/find-median-from-data-stream/',
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
-
   // --- Backtracking ---
   {
     id: 'subsets',
@@ -500,12 +621,28 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'combination-sum-ii',
+    title: 'Combination Sum II',
+    difficulty: 'Medium',
+    category: 'Backtracking',
+    url: 'https://leetcode.com/problems/combination-sum-ii/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'permutations',
     title: 'Permutations',
     difficulty: 'Medium',
     category: 'Backtracking',
     url: 'https://leetcode.com/problems/permutations/',
     sheets: ['neetcode150', 'striver'],
+  },
+  {
+    id: 'subsets-ii',
+    title: 'Subsets II',
+    difficulty: 'Medium',
+    category: 'Backtracking',
+    url: 'https://leetcode.com/problems/subsets-ii/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'word-search',
@@ -516,6 +653,22 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150'],
   },
   {
+    id: 'palindrome-partitioning',
+    title: 'Palindrome Partitioning',
+    difficulty: 'Medium',
+    category: 'Backtracking',
+    url: 'https://leetcode.com/problems/palindrome-partitioning/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'letter-combinations-of-a-phone-number',
+    title: 'Letter Combinations of a Phone Number',
+    difficulty: 'Medium',
+    category: 'Backtracking',
+    url: 'https://leetcode.com/problems/letter-combinations-of-a-phone-number/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'n-queens',
     title: 'N-Queens',
     difficulty: 'Hard',
@@ -523,7 +676,6 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/n-queens/',
     sheets: ['neetcode150', 'striver'],
   },
-
   // --- Graphs ---
   {
     id: 'number-of-islands',
@@ -534,6 +686,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'max-area-of-island',
+    title: 'Max Area of Island',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/max-area-of-island/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'clone-graph',
     title: 'Clone Graph',
     difficulty: 'Medium',
@@ -542,12 +702,36 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'walls-and-gates',
+    title: 'Walls and Gates',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/walls-and-gates/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'rotting-oranges',
+    title: 'Rotting Oranges',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/rotting-oranges/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'pacific-atlantic-water-flow',
     title: 'Pacific Atlantic Water Flow',
     difficulty: 'Medium',
     category: 'Graphs',
     url: 'https://leetcode.com/problems/pacific-atlantic-water-flow/',
     sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'surrounded-regions',
+    title: 'Surrounded Regions',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/surrounded-regions/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'course-schedule',
@@ -566,14 +750,86 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['neetcode150'],
   },
   {
+    id: 'graph-valid-tree',
+    title: 'Graph Valid Tree',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/graph-valid-tree/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'number-of-connected-components-in-an-undirected-graph',
+    title: 'Number of Connected Components in an Undirected Graph',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'redundant-connection',
+    title: 'Redundant Connection',
+    difficulty: 'Medium',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/redundant-connection/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'word-ladder',
+    title: 'Word Ladder',
+    difficulty: 'Hard',
+    category: 'Graphs',
+    url: 'https://leetcode.com/problems/word-ladder/',
+    sheets: ['neetcode150'],
+  },
+  // --- Advanced Graphs ---
+  {
+    id: 'network-delay-time',
+    title: 'Network Delay Time',
+    difficulty: 'Medium',
+    category: 'Advanced Graphs',
+    url: 'https://leetcode.com/problems/network-delay-time/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'reconstruct-itinerary',
+    title: 'Reconstruct Itinerary',
+    difficulty: 'Hard',
+    category: 'Advanced Graphs',
+    url: 'https://leetcode.com/problems/reconstruct-itinerary/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'min-cost-to-connect-all-points',
+    title: 'Min Cost to Connect All Points',
+    difficulty: 'Medium',
+    category: 'Advanced Graphs',
+    url: 'https://leetcode.com/problems/min-cost-to-connect-all-points/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'swim-in-rising-water',
+    title: 'Swim in Rising Water',
+    difficulty: 'Hard',
+    category: 'Advanced Graphs',
+    url: 'https://leetcode.com/problems/swim-in-rising-water/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'alien-dictionary',
     title: 'Alien Dictionary',
     difficulty: 'Hard',
-    category: 'Graphs',
+    category: 'Advanced Graphs',
     url: 'https://leetcode.com/problems/alien-dictionary/',
     sheets: ['blind75', 'neetcode150'],
   },
-
+  {
+    id: 'cheapest-flights-within-k-stops',
+    title: 'Cheapest Flights Within K Stops',
+    difficulty: 'Medium',
+    category: 'Advanced Graphs',
+    url: 'https://leetcode.com/problems/cheapest-flights-within-k-stops/',
+    sheets: ['neetcode150'],
+  },
   // --- 1-D Dynamic Programming ---
   {
     id: 'climbing-stairs',
@@ -584,28 +840,12 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150'],
   },
   {
-    id: 'coin-change',
-    title: 'Coin Change',
-    difficulty: 'Medium',
+    id: 'min-cost-climbing-stairs',
+    title: 'Min Cost Climbing Stairs',
+    difficulty: 'Easy',
     category: '1-D Dynamic Programming',
-    url: 'https://leetcode.com/problems/coin-change/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
-  },
-  {
-    id: 'longest-increasing-subsequence',
-    title: 'Longest Increasing Subsequence',
-    difficulty: 'Medium',
-    category: '1-D Dynamic Programming',
-    url: 'https://leetcode.com/problems/longest-increasing-subsequence/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
-  },
-  {
-    id: 'word-break',
-    title: 'Word Break',
-    difficulty: 'Medium',
-    category: '1-D Dynamic Programming',
-    url: 'https://leetcode.com/problems/word-break/',
-    sheets: ['blind75', 'neetcode150', 'striver'],
+    url: 'https://leetcode.com/problems/min-cost-climbing-stairs/',
+    sheets: ['neetcode150'],
   },
   {
     id: 'house-robber',
@@ -624,6 +864,22 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150'],
   },
   {
+    id: 'longest-palindromic-substring',
+    title: 'Longest Palindromic Substring',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/longest-palindromic-substring/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'palindromic-substrings',
+    title: 'Palindromic Substrings',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/palindromic-substrings/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
     id: 'decode-ways',
     title: 'Decode Ways',
     difficulty: 'Medium',
@@ -631,7 +887,46 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/decode-ways/',
     sheets: ['blind75', 'neetcode150'],
   },
-
+  {
+    id: 'coin-change',
+    title: 'Coin Change',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/coin-change/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'maximum-product-subarray',
+    title: 'Maximum Product Subarray',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/maximum-product-subarray/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'word-break',
+    title: 'Word Break',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/word-break/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'longest-increasing-subsequence',
+    title: 'Longest Increasing Subsequence',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/longest-increasing-subsequence/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'partition-equal-subset-sum',
+    title: 'Partition Equal Subset Sum',
+    difficulty: 'Medium',
+    category: '1-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/partition-equal-subset-sum/',
+    sheets: ['neetcode150'],
+  },
   // --- 2-D Dynamic Programming ---
   {
     id: 'unique-paths',
@@ -650,6 +945,54 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150', 'striver'],
   },
   {
+    id: 'best-time-to-buy-and-sell-stock-with-cooldown',
+    title: 'Best Time to Buy and Sell Stock with Cooldown',
+    difficulty: 'Medium',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'coin-change-ii',
+    title: 'Coin Change II',
+    difficulty: 'Medium',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/coin-change-ii/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'target-sum',
+    title: 'Target Sum',
+    difficulty: 'Medium',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/target-sum/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'interleaving-string',
+    title: 'Interleaving String',
+    difficulty: 'Medium',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/interleaving-string/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'longest-increasing-path-in-a-matrix',
+    title: 'Longest Increasing Path in a Matrix',
+    difficulty: 'Hard',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/longest-increasing-path-in-a-matrix/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'distinct-subsequences',
+    title: 'Distinct Subsequences',
+    difficulty: 'Hard',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/distinct-subsequences/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'edit-distance',
     title: 'Edit Distance',
     difficulty: 'Medium',
@@ -657,8 +1000,31 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/edit-distance/',
     sheets: ['neetcode150', 'striver'],
   },
-
+  {
+    id: 'burst-balloons',
+    title: 'Burst Balloons',
+    difficulty: 'Hard',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/burst-balloons/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'regular-expression-matching',
+    title: 'Regular Expression Matching',
+    difficulty: 'Hard',
+    category: '2-D Dynamic Programming',
+    url: 'https://leetcode.com/problems/regular-expression-matching/',
+    sheets: ['neetcode150'],
+  },
   // --- Greedy ---
+  {
+    id: 'maximum-subarray',
+    title: 'Maximum Subarray',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/maximum-subarray/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
   {
     id: 'jump-game',
     title: 'Jump Game',
@@ -668,6 +1034,14 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     sheets: ['blind75', 'neetcode150'],
   },
   {
+    id: 'jump-game-ii',
+    title: 'Jump Game II',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/jump-game-ii/',
+    sheets: ['neetcode150'],
+  },
+  {
     id: 'gas-station',
     title: 'Gas Station',
     difficulty: 'Medium',
@@ -675,7 +1049,38 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/gas-station/',
     sheets: ['neetcode150'],
   },
-
+  {
+    id: 'hand-of-straights',
+    title: 'Hand of Straights',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/hand-of-straights/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'merge-triplets-to-form-target-triplet',
+    title: 'Merge Triplets to Form Target Triplet',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/merge-triplets-to-form-target-triplet/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'partition-labels',
+    title: 'Partition Labels',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/partition-labels/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'valid-parenthesis-string',
+    title: 'Valid Parenthesis String',
+    difficulty: 'Medium',
+    category: 'Greedy',
+    url: 'https://leetcode.com/problems/valid-parenthesis-string/',
+    sheets: ['neetcode150'],
+  },
   // --- Intervals ---
   {
     id: 'insert-interval',
@@ -701,8 +1106,104 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     url: 'https://leetcode.com/problems/non-overlapping-intervals/',
     sheets: ['blind75', 'neetcode150'],
   },
-
+  {
+    id: 'meeting-rooms',
+    title: 'Meeting Rooms',
+    difficulty: 'Easy',
+    category: 'Intervals',
+    url: 'https://leetcode.com/problems/meeting-rooms/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'meeting-rooms-ii',
+    title: 'Meeting Rooms II',
+    difficulty: 'Medium',
+    category: 'Intervals',
+    url: 'https://leetcode.com/problems/meeting-rooms-ii/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'minimum-interval-to-include-each-query',
+    title: 'Minimum Interval to Include Each Query',
+    difficulty: 'Hard',
+    category: 'Intervals',
+    url: 'https://leetcode.com/problems/minimum-interval-to-include-each-query/',
+    sheets: ['neetcode150'],
+  },
+  // --- Math & Geometry ---
+  {
+    id: 'rotate-image',
+    title: 'Rotate Image',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/rotate-image/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'spiral-matrix',
+    title: 'Spiral Matrix',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/spiral-matrix/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'set-matrix-zeroes',
+    title: 'Set Matrix Zeroes',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/set-matrix-zeroes/',
+    sheets: ['blind75', 'neetcode150', 'striver'],
+  },
+  {
+    id: 'happy-number',
+    title: 'Happy Number',
+    difficulty: 'Easy',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/happy-number/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'plus-one',
+    title: 'Plus One',
+    difficulty: 'Easy',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/plus-one/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'powx-n',
+    title: 'Pow(x, n)',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/powx-n/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'multiply-strings',
+    title: 'Multiply Strings',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/multiply-strings/',
+    sheets: ['neetcode150'],
+  },
+  {
+    id: 'detect-squares',
+    title: 'Detect Squares',
+    difficulty: 'Medium',
+    category: 'Math & Geometry',
+    url: 'https://leetcode.com/problems/detect-squares/',
+    sheets: ['neetcode150'],
+  },
   // --- Bit Manipulation ---
+  {
+    id: 'single-number',
+    title: 'Single Number',
+    difficulty: 'Easy',
+    category: 'Bit Manipulation',
+    url: 'https://leetcode.com/problems/single-number/',
+    sheets: ['neetcode150'],
+  },
   {
     id: 'number-of-1-bits',
     title: 'Number of 1 Bits',
@@ -734,5 +1235,21 @@ export const CURATED_PROBLEMS: SheetProblem[] = [
     category: 'Bit Manipulation',
     url: 'https://leetcode.com/problems/missing-number/',
     sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'sum-of-two-integers',
+    title: 'Sum of Two Integers',
+    difficulty: 'Medium',
+    category: 'Bit Manipulation',
+    url: 'https://leetcode.com/problems/sum-of-two-integers/',
+    sheets: ['blind75', 'neetcode150'],
+  },
+  {
+    id: 'reverse-integer',
+    title: 'Reverse Integer',
+    difficulty: 'Medium',
+    category: 'Bit Manipulation',
+    url: 'https://leetcode.com/problems/reverse-integer/',
+    sheets: ['neetcode150'],
   },
 ];

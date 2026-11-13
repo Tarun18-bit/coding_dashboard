@@ -11,9 +11,21 @@ import { consumeDailyQuota, quotaMessage } from '@/lib/usage';
 export const maxDuration = 60;
 
 // Tried in order; a model that no longer exists (404) falls through to the next
-const MODEL_CANDIDATES = [process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash'].filter(
-  (m): m is string => !!m
+// Fast models first: the free tier's flagship is often overloaded, and a review has ~50s in total.
+// Duplicates are removed so an env override doesn't get tried twice.
+const MODEL_CANDIDATES = Array.from(
+  new Set(
+    [process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash'].filter(
+      (m): m is string => !!m
+    )
+  )
 );
+
+/** Keep thinking short: reviews need structure more than deep reasoning, and speed matters. */
+function thinkingConfigFor(model: string): Record<string, unknown> {
+  if (/2\.5/.test(model)) return { thinkingBudget: 0 };
+  return { thinkingLevel: model.includes('lite') ? 'minimal' : 'low' };
+}
 const MAX_CODE_CHARS = 20_000;
 const PER_USER_COOLDOWN_MS = 5_000;
 const lastReviewByUser = new Map<string, number>();
@@ -70,7 +82,7 @@ Analyze the candidate's solution precisely:
 - qualityScore: 0-100 considering correctness, complexity, readability and edge-case handling. Incorrect code must score below 50.
 - strengths, bottlenecks (bugs, inefficiencies, style issues) and edgeCasesToWatch: 2-5 short items each.
 - optimizedCode: a complete, correct, idiomatic solution in the same language. If the code is already optimal, return a cleaned-up version.
-- followUpQuestions: exactly 5 realistic interviewer follow-ups for this problem, each with the interviewer's intent and a concise suggested approach.
+- followUpQuestions: exactly 3 realistic interviewer follow-ups for this problem, each with the interviewer's intent and a concise suggested approach.
 If the problem is not stated, infer it from the code. Be concise and concrete.`;
 
 function asStringArray(v: unknown, max = 8): string[] {
@@ -151,64 +163,88 @@ export async function POST(req: NextRequest) {
   // Vercel stops the function at 60s, so all attempts share one time budget
   const deadline = Date.now() + 50_000;
   let lastStatus = 0;
+  let timedOut = false;
+  let callIndex = 0;
   for (const model of MODEL_CANDIDATES) {
+    let useThinkingConfig = true;
     for (let attempt = 0; attempt < 2; attempt++) {
-    const remaining = deadline - Date.now();
-    if (remaining < 5_000) break;
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: 'application/json',
-            responseSchema: RESPONSE_SCHEMA,
-          },
-        }),
-        signal: AbortSignal.timeout(Math.min(35_000, remaining)),
-      });
-
-      if (res.status === 404) break; // model retired/renamed: try the next one
-      if (res.status >= 500 || res.status === 503) {
-        // Overloaded/unavailable (common on the free tier): retry once, then try the next model
-        lastStatus = res.status;
-        console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(next model)');
-        if (attempt === 0 && deadline - Date.now() > 10_000) await new Promise((r) => setTimeout(r, 1500));
-        continue;
-      }
-      if (res.status === 429) {
-        return NextResponse.json(
-          { success: false, error: "Today's free AI review quota is used up. Try again later." },
-          { status: 429 }
-        );
-      }
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('[Review] Gemini error', model, res.status, text.slice(0, 300));
-        return NextResponse.json({ success: false, error: `AI service error (HTTP ${res.status})` }, { status: 502 });
-      }
-
-      const data = await res.json();
-      const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
-        .map((p: { text?: string; thought?: boolean }) => (p.thought ? '' : p.text ?? ''))
-        .join('');
-      let parsed: Record<string, unknown>;
+      const remaining = deadline - Date.now();
+      if (remaining < 6_000) break;
+      // The first call gets the most time; later ones are capped so a fallback still fits
+      const callTimeout = Math.min(callIndex === 0 ? 28_000 : 20_000, remaining);
+      callIndex++;
       try {
-        parsed = JSON.parse(text);
-      } catch {
-        console.error('[Review] Unparseable Gemini output', text.slice(0, 300));
-        return NextResponse.json({ success: false, error: 'The AI returned an unreadable answer. Try again.' }, { status: 502 });
+        const generationConfig: Record<string, unknown> = {
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+          responseSchema: RESPONSE_SCHEMA,
+        };
+        if (useThinkingConfig) generationConfig.thinkingConfig = thinkingConfigFor(model);
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            generationConfig,
+          }),
+          signal: AbortSignal.timeout(callTimeout),
+        });
+
+        if (res.status === 404) break; // model retired/renamed: try the next one
+        if (res.status === 400 && useThinkingConfig) {
+          // This model rejects our thinking settings: retry it once with the defaults
+          useThinkingConfig = false;
+          continue;
+        }
+        if (res.status >= 500) {
+          // Overloaded/unavailable (common on the free tier): retry once, then try the next model
+          lastStatus = res.status;
+          console.warn('[Review] Gemini', model, 'returned', res.status, attempt === 0 ? '(retrying)' : '(next model)');
+          if (attempt === 0 && deadline - Date.now() > 12_000) await new Promise((r) => setTimeout(r, 1000));
+          continue;
+        }
+        if (res.status === 429) {
+          return NextResponse.json(
+            { success: false, error: "Today's free AI review quota is used up. Try again later." },
+            { status: 429 }
+          );
+        }
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('[Review] Gemini error', model, res.status, text.slice(0, 300));
+          return NextResponse.json({ success: false, error: `AI service error (HTTP ${res.status})` }, { status: 502 });
+        }
+
+        const data = await res.json();
+        const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
+          .map((p: { text?: string; thought?: boolean }) => (p.thought ? '' : p.text ?? ''))
+          .join('');
+        let parsed: Record<string, unknown>;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          console.error('[Review] Unparseable Gemini output', model, text.slice(0, 300));
+          lastStatus = 502;
+          break; // try the next model rather than failing the whole review
+        }
+        return NextResponse.json({ success: true, model, result: coerceReview(parsed) });
+      } catch (error) {
+        const isTimeout = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+        console.error('[Review] Request', isTimeout ? 'timed out' : 'failed', model, error);
+        if (isTimeout) timedOut = true;
+        lastStatus = 504;
+        break; // network error/timeout: try the next model
       }
-      return NextResponse.json({ success: true, model, result: coerceReview(parsed) });
-    } catch (error) {
-      console.error('[Review] Request failed or timed out', model, error);
-      lastStatus = 504;
-      break; // network error/timeout: try the next model
     }
-    }
+  }
+
+  if (timedOut && lastStatus === 504) {
+    return NextResponse.json(
+      { success: false, error: 'Gemini took too long to answer (free tier is busy). Please try again in a minute.' },
+      { status: 504 }
+    );
   }
 
   return NextResponse.json(

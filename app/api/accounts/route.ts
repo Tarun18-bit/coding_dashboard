@@ -89,6 +89,18 @@ export async function POST(req: NextRequest) {
       fetcher.fetchRecentSubmissions(cleanHandle, 50).catch(() => []),
     ]);
 
+    // Don't link a handle we can't read (typo, or the platform is down): nothing would ever sync
+    if (!profile) {
+      const label = cleanPlatform === 'leetcode' ? 'LeetCode' : cleanPlatform === 'codechef' ? 'CodeChef' : 'Codeforces';
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Couldn't find @${cleanHandle} on ${label}. Check the spelling, or try again in a minute if ${label} is down.`,
+        },
+        { status: 404 }
+      );
+    }
+
     // Resolve canonical handle casing from platform response if available
     const rawJson = profile?.rawJson as
       | { matchedUser?: { username?: string }; userInfo?: { handle?: string } }
@@ -246,7 +258,7 @@ export async function DELETE(req: NextRequest) {
     if (accountId) {
       query = query.eq('id', accountId);
     } else if (platform) {
-      query = query.ilike('platform', platform);
+      query = query.eq('platform', platform.toLowerCase());
     }
 
     const { data: matchingAccounts, error: findErr } = await query;

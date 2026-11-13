@@ -4,7 +4,7 @@ import { updateUserLeaderboardCache } from './leaderboard';
 import { saveSnapshot } from './snapshots';
 import { ensurePublicUser } from './users';
 import { codeforcesFetcher } from './platforms/codeforces';
-import { leetcodeFetcher } from './platforms/leetcode';
+import { leetcodeFetcher, fetchLeetCodeProblemMeta } from './platforms/leetcode';
 import { codechefFetcher } from './platforms/codechef';
 import type { PlatformFetcher } from './platforms/types';
 
@@ -94,6 +94,13 @@ export async function syncAccount(
       if (subError) throw subError;
     }
 
+    if (platform === 'leetcode') {
+      // Older stored solves may carry guessed tags; correct a batch of them per sync
+      await refreshLeetCodeMetadata(account.id, new Set(submissions.map((sub) => sub.problemId))).catch((err) =>
+        console.warn('[Sync] LeetCode metadata refresh skipped:', errorMessage(err))
+      );
+    }
+
     if (contests.length > 0) {
       await supabaseAdmin.from('contests').delete().eq('account_id', account.id);
       const { error: contestError } = await supabaseAdmin.from('contests').insert(
@@ -116,6 +123,47 @@ export async function syncAccount(
     console.error(`[Sync] ${platform}/${handle} failed:`, error);
     return { status: 'error', platform, handle, error: errorMessage(error) };
   }
+}
+
+const META_REFRESH_PER_SYNC = 40;
+
+/**
+ * Replaces guessed tags/difficulty on stored LeetCode solves with LeetCode's real metadata.
+ * Rows missing a difficulty go first, then a random sample, so every row is corrected within a
+ * few syncs. Only rows whose data actually differs are written.
+ */
+async function refreshLeetCodeMetadata(accountId: string, skip: Set<string>): Promise<void> {
+  const { data: rows, error } = await supabaseAdmin
+    .from('submissions')
+    .select('problem_id, difficulty, tags')
+    .eq('account_id', accountId)
+    .limit(1000);
+  if (error || !rows || rows.length === 0) return;
+
+  const byProblem = new Map<string, { difficulty: string | null; tags: string[] }>();
+  for (const r of rows as { problem_id: string | null; difficulty: string | null; tags: string[] | null }[]) {
+    if (!r.problem_id || skip.has(r.problem_id) || byProblem.has(r.problem_id)) continue;
+    byProblem.set(r.problem_id, { difficulty: r.difficulty, tags: r.tags || [] });
+  }
+  const missingDifficulty = [...byProblem.keys()].filter((id) => !byProblem.get(id)!.difficulty);
+  const others = [...byProblem.keys()].filter((id) => byProblem.get(id)!.difficulty).sort(() => Math.random() - 0.5);
+  const candidates = [...missingDifficulty, ...others].slice(0, META_REFRESH_PER_SYNC);
+  if (candidates.length === 0) return;
+
+  const meta = await fetchLeetCodeProblemMeta(candidates);
+  const updates: PromiseLike<unknown>[] = [];
+  for (const [slug, m] of meta) {
+    const current = byProblem.get(slug);
+    if (!current) continue;
+    const tags = m.tags.length > 0 ? m.tags : current.tags;
+    const difficulty = m.difficulty ?? current.difficulty;
+    const same = difficulty === current.difficulty && tags.length === current.tags.length && tags.every((t, i) => t === current.tags[i]);
+    if (same) continue;
+    updates.push(
+      supabaseAdmin.from('submissions').update({ tags, difficulty }).eq('account_id', accountId).eq('problem_id', slug)
+    );
+  }
+  await Promise.all(updates);
 }
 
 /**

@@ -260,7 +260,7 @@ export function DashboardTabs({
                   </p>
                 </div>
                 <div className="flex items-center justify-center pt-1">
-                  <AccountModal />
+                  <AccountModal alwaysShowLabel />
                 </div>
               </div>
             ) : (
@@ -429,7 +429,7 @@ export function DashboardTabs({
                 </div>
                 <span className="text-xs font-mono text-[#94A3B8]">Targeting Algorithmic Weaknesses</span>
               </div>
-              <DailyWorkoutCard initialWorkout={dailyWorkout} />
+              <DailyWorkoutCard initialWorkout={dailyWorkout} currentStreak={stats.streaks.currentStreak} />
             </div>
           )}
 

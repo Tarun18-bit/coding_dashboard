@@ -34,7 +34,7 @@ const CACHE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes cache
 
 export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
   if (cachedContests && Date.now() - cachedContests.timestamp < CACHE_WINDOW_MS) {
-    return cachedContests.data;
+    return dropFinished(cachedContests.data);
   }
 
   const contests: UpcomingContest[] = [];
@@ -43,8 +43,9 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
     // 1. Codeforces API
     fetch('https://codeforces.com/api/contest.list?gym=false', {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(3000),
-      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(5000),
+      // Our own 15-minute cache below is the only cache: Next's data cache served week-old lists
+      cache: 'no-store',
     }).then((r) => r.json()),
 
     // 2. LeetCode GraphQL
@@ -57,8 +58,9 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
       body: JSON.stringify({
         query: 'query upcomingContests { upcomingContests { title titleSlug startTime duration } }',
       }),
-      signal: AbortSignal.timeout(3000),
-      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(5000),
+      // Our own 15-minute cache below is the only cache: Next's data cache served week-old lists
+      cache: 'no-store',
     }).then((r) => r.json()),
 
     // 3. CodeChef API
@@ -67,8 +69,9 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
         Accept: 'application/json',
       },
-      signal: AbortSignal.timeout(3000),
-      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(5000),
+      // Our own 15-minute cache below is the only cache: Next's data cache served week-old lists
+      cache: 'no-store',
     }).then((r) => r.json()),
   ]);
 
@@ -153,5 +156,14 @@ export async function fetchUpcomingContests(): Promise<UpcomingContest[]> {
     cachedContests = { timestamp: Date.now(), data: contests };
   }
 
-  return contests;
+  return dropFinished(contests);
+}
+
+/** Contests that haven't ended yet (cached lists age, and CodeChef lists running ones as "future"). */
+function dropFinished(list: UpcomingContest[]): UpcomingContest[] {
+  const now = Date.now();
+  return list.filter((c) => {
+    const end = new Date(c.endTime || c.startTime).getTime();
+    return !Number.isFinite(end) || end > now;
+  });
 }

@@ -50,7 +50,10 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
     };
   }, [hasInitial]);
 
+  // Hide contests that have already finished (the list can be up to an hour old)
   const filtered = contests.filter((c) => {
+    const end = new Date(c.endTime || c.startTime).getTime();
+    if (Number.isFinite(end) && end <= now) return false;
     if (filter === 'all') return true;
     return c.platform.toLowerCase() === filter.toLowerCase();
   });
@@ -86,6 +89,7 @@ export const ContestCalendar: React.FC<ContestCalendarProps> = ({ initialContest
 
   const getCountdownString = (isoString: string) => {
     const diff = new Date(isoString).getTime() - now;
+    // Finished contests are filtered out above, so a start in the past means it is running now
     if (diff <= 0) return 'Live Now!';
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);

@@ -1,52 +1,31 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DailyWorkout } from '@/lib/potd';
+import { useManualSolves } from '@/components/useManualSolves';
+import type { DailyWorkout } from '@/lib/potd';
 import {
   Flame,
   CheckCircle2,
   Circle,
   ExternalLink,
   Clock,
-  Zap,
   ShieldCheck,
   ShieldAlert,
-  Sparkles,
   Trophy,
 } from 'lucide-react';
 
 interface DailyWorkoutProps {
   initialWorkout: DailyWorkout;
+  /** Current daily streak (days), to word the status pill */
+  currentStreak?: number;
+  /** Someone else's public profile: show progress, but no "Mark Done" toggles */
+  readOnly?: boolean;
 }
 
-const MANUAL_SOLVES_KEY = 'dashcode_manual_sheet_solves_v1';
-
-export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }) => {
+export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout, currentStreak = 0, readOnly = false }) => {
   const [timeLeft, setTimeLeft] = useState('');
-  const [manualOverrides, setManualOverrides] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(MANUAL_SOLVES_KEY);
-      if (raw) {
-        setManualOverrides(JSON.parse(raw));
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const toggleSolved = (problemId: string, currentSolved: boolean) => {
-    setManualOverrides((prev) => {
-      const next = { ...prev, [problemId]: !currentSolved };
-      try {
-        localStorage.setItem(MANUAL_SOLVES_KEY, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  };
+  // Local "Mark Done" ticks (shared with the roadmap sheets)
+  const [manualOverrides, toggleSolved] = useManualSolves();
 
   // Countdown to next UTC midnight
   useEffect(() => {
@@ -69,11 +48,13 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
 
   const enrichedProblems = initialWorkout.problems.map((p) => ({
     ...p,
-    isSolved: manualOverrides[p.id] !== undefined ? manualOverrides[p.id] : p.isSolved,
+    // A visitor's local ticks never apply to someone else's profile
+    isSolved: !readOnly && manualOverrides[p.id] !== undefined ? manualOverrides[p.id] : p.isSolved,
   }));
 
   const solvedCount = enrichedProblems.filter((p) => p.isSolved).length;
-  const isStreakProtected = initialWorkout.streakProtected || solvedCount > 0;
+  // Only real (synced) solves today keep a streak alive; local "Mark Done" ticks don't
+  const isStreakProtected = initialWorkout.streakProtected;
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-[rgba(126,137,172,0.18)] bg-[#0B1739] p-6 shadow-xl space-y-6">
@@ -102,16 +83,24 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
           {isStreakProtected ? (
             <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#14CA74]/30 bg-[#14CA74]/10 px-3 py-1.5 text-xs font-bold text-[#14CA74]">
               <ShieldCheck className="h-4 w-4" />
-              <span>Streak Protected</span>
+              <span>Solved Today</span>
             </div>
-          ) : (
+          ) : currentStreak > 0 ? (
             <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#FF5A65]/30 bg-[#FF5A65]/10 px-3 py-1.5 text-xs font-bold text-[#FF5A65]">
               <ShieldAlert className="h-4 w-4" />
-              <span>Streak at Risk</span>
+              <span>{currentStreak}-Day Streak at Risk</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#FFB016]/30 bg-[#FFB016]/10 px-3 py-1.5 text-xs font-bold text-[#FFB016]">
+              <Flame className="h-4 w-4" />
+              <span>Start a Streak</span>
             </div>
           )}
 
-          <div className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-mono text-[#AEB9E1]">
+          <div
+            title="Time left in today's streak day (resets at 00:00 UTC)"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(126,137,172,0.18)] bg-[#0A1330] px-3 py-1.5 text-xs font-mono text-[#AEB9E1]"
+          >
             <Clock className="h-3.5 w-3.5 text-[#00C2FF]" />
             <span>{timeLeft || 'Calculating...'}</span>
           </div>
@@ -123,7 +112,6 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
         {enrichedProblems.map((problem) => {
           const isEasy = problem.difficulty === 'Easy';
           const isMed = problem.difficulty === 'Medium';
-          const isHard = problem.difficulty === 'Hard';
 
           const tierColor = isEasy
             ? 'text-[#14CA74] border-[#14CA74]/30 bg-[#14CA74]/10'
@@ -167,9 +155,11 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
               <div className="flex items-center justify-between border-t border-[rgba(126,137,172,0.14)] pt-3.5">
                 <button
                   type="button"
+                  disabled={readOnly}
+                  aria-pressed={problem.isSolved}
                   onClick={() => toggleSolved(problem.id, problem.isSolved)}
-                  title={problem.isSolved ? 'Click to mark pending' : 'Click to mark completed'}
-                  className="cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none"
+                  title={readOnly ? undefined : problem.isSolved ? 'Click to mark pending' : 'Click to mark completed'}
+                  className="cursor-pointer transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-[#14CA74] disabled:cursor-default disabled:hover:scale-100"
                 >
                   {problem.isSolved ? (
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#14CA74]">
@@ -179,7 +169,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7E89AC] hover:text-[#14CA74] transition-colors">
                       <Circle className="h-4 w-4 opacity-70" />
-                      <span>Mark Done</span>
+                      <span>{readOnly ? 'Not yet' : 'Mark Done'}</span>
                     </span>
                   )}
                 </button>
@@ -212,7 +202,7 @@ export const DailyWorkoutCard: React.FC<DailyWorkoutProps> = ({ initialWorkout }
           </span>
         </div>
         <p className="text-[11px] text-[#7E89AC]">
-          Solving any 1 problem maintains your streak for today!
+          Solving any 1 problem today (UTC) keeps your streak going.
         </p>
       </div>
     </div>
