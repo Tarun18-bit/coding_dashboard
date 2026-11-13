@@ -66,9 +66,16 @@ export async function generateMetadata({ params }: PublicProfileProps): Promise<
   const user = await findProfileUser(decoded).catch(() => null);
   if (!user) return { title: 'Profile not found', robots: { index: false } };
   const name = (user.username === 'default_user' ? decoded : user.username).slice(0, 40);
+  const title = `@${name}'s coding profile`;
+  const description = `${name}'s solved problems, streaks, ratings and topic strengths across Codeforces, LeetCode and CodeChef, on DashCode.`;
+  const url = `/u/${encodeURIComponent(name)}`;
+  // The preview image comes from ./opengraph-image.tsx (their live stats)
   return {
     title: `${name}'s coding profile`,
-    description: `${name}'s solved problems, streaks, ratings and topic strengths across Codeforces, LeetCode and CodeChef.`,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: 'profile', title, description, url, siteName: 'DashCode' },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

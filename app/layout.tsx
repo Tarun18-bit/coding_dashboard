@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     url: APP_URL,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "DashCode | Competitive Programming Dashboard & Interview Prep",
     description: DESCRIPTION,
   },
