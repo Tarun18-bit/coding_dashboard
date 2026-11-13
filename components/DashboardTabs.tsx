@@ -43,6 +43,7 @@ import type { RpgProfile } from '@/lib/gamification';
 import type { UpcomingContest } from '@/lib/contests-calendar';
 
 import { RevisionQueue } from '@/components/RevisionQueue';
+import { AiCoach } from '@/components/AiCoach';
 import { LocalTime } from '@/components/LocalTime';
 
 // Code-split heavy Recharts library so initial dashboard render is ultra-fast
@@ -233,6 +234,9 @@ export function DashboardTabs({
               />
             </div>
           </div>
+
+          {/* AI Coach: weak spots + 7-day plan from the user's own stats */}
+          <AiCoach userId={stats.user.id} totalSolved={stats.totalSolved} hasAccounts={stats.accounts.length > 0} />
 
           {/* Connected Platforms (Full Width 3-Column Grid) */}
           <div className="rounded-2xl border border-[rgba(148,163,184,0.14)] bg-[#0E1628] p-5 sm:p-6 shadow-lg">

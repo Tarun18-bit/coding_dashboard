@@ -5,6 +5,7 @@ export const DAILY_LIMITS = {
   ai_review: 25,
   code_run: 40,
   account_link: 20,
+  ai_coach: 6,
 } as const;
 
 export type UsageKind = keyof typeof DAILY_LIMITS;
@@ -29,6 +30,13 @@ export async function consumeDailyQuota(
 
 export function quotaMessage(kind: UsageKind): string {
   const limit = DAILY_LIMITS[kind];
-  const what = kind === 'ai_review' ? 'AI reviews' : kind === 'code_run' ? 'C++/Java runs' : 'account links';
+  const what =
+    kind === 'ai_review'
+      ? 'AI reviews'
+      : kind === 'code_run'
+        ? 'C++/Java runs'
+        : kind === 'ai_coach'
+          ? 'AI coach reports'
+          : 'account links';
   return `You've used all ${limit} ${what} for today. The limit resets at 00:00 UTC (05:30 IST).`;
 }
