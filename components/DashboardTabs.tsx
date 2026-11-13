@@ -137,7 +137,7 @@ export function DashboardTabs({
               totalSolved={stats.totalSolved}
               difficulty={stats.difficultyBreakdown}
               streaks={stats.streaks}
-              accounts={stats.accounts.map((a) => ({ platform: a.platform, handle: a.handle, rating: a.latestSnapshot?.rating ?? null }))}
+              accounts={stats.accounts.map((a) => ({ platform: a.platform, handle: a.handle, rating: a.latestSnapshot?.rating ?? null, solved: a.latestSnapshot?.solvedTotal || 0 }))}
               companyReadiness={companyReadiness.map((c) => ({ company: c.company.name, score: c.overallScore }))}
               strengths={stats.strengths || []}
               rpgTitle={rpgProfile?.title}
