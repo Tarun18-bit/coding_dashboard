@@ -176,17 +176,28 @@ function activity(stats: DashboardStats) {
     totalCount90 += c;
     if (c > 0 && (d.getUTCDay() === 0 || d.getUTCDay() === 6)) weekendCount += c;
   }
+  // Unique new problems from daily snapshots (the heatmap counts every submission, not problems)
+  const history = stats.progressHistory || [];
+  const solvedAsOf = (daysAgo: number) => {
+    const cutoff = new Date(today - daysAgo * DAY_MS).toISOString().slice(0, 10);
+    const before = history.filter((h) => h.date <= cutoff);
+    return before.length ? before[before.length - 1].totalSolved : null;
+  };
+  const base7 = solvedAsOf(7);
+  const base30 = solvedAsOf(30);
   const lastActive = [...byDay.entries()]
     .filter(([, c]) => c > 0)
     .map(([d]) => d)
     .sort()
     .at(-1);
   return {
-    solvesLast7,
-    solvesLast30,
+    newProblemsSolvedLast7: base7 === null ? null : Math.max(0, stats.totalSolved - base7),
+    newProblemsSolvedLast30: base30 === null ? null : Math.max(0, stats.totalSolved - base30),
+    submissionsLast7: solvesLast7,
+    submissionsLast30: solvesLast30,
     activeDaysLast30,
     daysSinceLastSolve: lastActive ? Math.floor((today - new Date(lastActive).getTime()) / DAY_MS) : null,
-    weekendShareLast90: totalCount90 > 0 ? Math.round((weekendCount / totalCount90) * 100) : null,
+    weekendSubmissionSharePercentLast90: totalCount90 > 0 ? Math.round((weekendCount / totalCount90) * 100) : null,
     currentStreak: stats.streaks.currentStreak,
     longestStreak: stats.streaks.longestStreak,
     totalActiveDays: stats.streaks.totalActiveDays,
@@ -262,6 +273,7 @@ You receive one student's real progress data as JSON (solved counts, topics, Nee
 Find their most important weaknesses and tell them exactly what to do next.
 
 Rules:
+- "activity.submissions*" count every submission (including retries); "newProblemsSolved*" count distinct new problems. Don't call submissions "solves".
 - Every weakness MUST cite specific numbers from the data in "evidence" (for example "2 of 13 Graphs problems solved", "only 26% of solves are Medium or Hard"). Never invent numbers, problems, companies or history.
 - Rank weaknesses by how much fixing them would improve interview and contest results. Give 3 or 4.
 - "practice" and plan "problems" must be slugs copied exactly from CANDIDATE PROBLEMS. Prefer Easy/Medium first for topics the student has barely touched.
@@ -518,7 +530,9 @@ export function heuristicCoachReport(input: CoachInput, candidates: CoachProblem
   const top = weaknesses[0];
   return {
     headline: top ? `Your biggest gap right now: ${top.area}.` : 'Solid coverage so far: keep raising the difficulty.',
-    summary: `${stats.totalSolved} problems solved across ${stats.accounts.length} platform${stats.accounts.length === 1 ? '' : 's'}, ${act.solvesLast30} in the last 30 days. ${
+    summary: `${stats.totalSolved} problems solved across ${stats.accounts.length} platform${stats.accounts.length === 1 ? '' : 's'}${
+      act.newProblemsSolvedLast30 !== null ? `, ${act.newProblemsSolvedLast30} of them in the last 30 days` : ''
+    }. ${
       top ? `Closing the gaps below will lift both interview readiness and contest results.` : 'Mix in harder problems and timed practice next.'
     }`,
     weaknesses: weaknesses.slice(0, 4),
