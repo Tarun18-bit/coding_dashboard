@@ -37,7 +37,8 @@ A full-stack competitive programming and interview-prep dashboard. Track your **
 
 | Layer | Tools |
 | --- | --- |
-| **Framework & runtime** | Next.js 16 (App Router, Route Handlers, `proxy.ts`), React 19, TypeScript, Node.js |
+| **Backend runtime** | **Node.js** (20.9+). Runs every API route, server-rendered page and background sync, locally and on Vercel |
+| **Framework** | Next.js 16 (App Router, Route Handlers, `proxy.ts`), React 19, TypeScript |
 | **Styling & UI** | Tailwind CSS v4, Recharts, Lucide React, `next/og` for link-preview images |
 | **Database** | Supabase Postgres with Row Level Security; all table access goes through the server (service role) |
 | **Auth** | Supabase Auth (email + password) via `@supabase/ssr` cookies |
@@ -51,7 +52,26 @@ A full-stack competitive programming and interview-prep dashboard. Track your **
 
 ---
 
+## ⚙️ How the Backend Works (Node.js)
+
+There is no separate Express server: **Next.js runs on Node.js**, so all server code in `app/` and `lib/` executes in Node.
+
+- **API routes** (`app/api/**`): sync, account linking, profiles, clans, account deletion, AI review, AI coach and the code runner. Each request checks the login cookie and reaches Supabase with the server-only service-role key.
+- **Server-rendered pages**: `/dashboard`, `/leaderboard`, `/u/<username>` and others read the database and compute stats and streaks in Node before sending HTML.
+- **External calls**: Node fetches data from Codeforces, LeetCode and CodeChef, calls Google Gemini and sends C++/Java code to Judge0 (base64-encoded with Node's `Buffer`).
+- **Background work and caching**: `after()` runs syncs after the response is sent; short-lived in-memory caches and cooldowns live in the Node process.
+- **Generated assets**: SVG README badges and Open Graph link-preview images.
+- **Tooling**: `npm run dev`, `npm run build`, ESLint and the maintenance scripts in `scripts/`.
+
+Python and TypeScript mock-interview code, charts and UI interactions run in the browser instead.
+
+---
+
 ## 🚀 Quickstart & Local Setup
+
+### Prerequisites
+- **Node.js 20.9 or newer** (required by Next.js 16) and npm
+- A free [Supabase](https://supabase.com) project
 
 ### 1. Clone & Install
 ```bash
